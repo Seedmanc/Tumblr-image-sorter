@@ -121,9 +121,8 @@ var retry=false;														//flag indicating a second attempt of getting tags
 var filename;															
 var folder = ''; 
 var DBrec;																//raw DB record
-var j=n=m=t=false;														//flags indicating readyness of plugins loaded simultaneously
+var J=N=M=T=false;														//flags indicating readyness of plugins loaded simultaneously
 var runonce=true; 														//flag ensuring that main() is only executed once
-var unsorted=false;														
 
 var style=" 							\
 	div#output {						\
@@ -260,8 +259,6 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 		alert('Error getting image: '+this.status);
 };
 
-document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
-
 function toggleSettings(){
 	$('table#port td').not('.settings').toggle();
 	$('table#translations').css('top',($('table#port').height()+30)+'px');
@@ -278,18 +275,20 @@ function debugSwitch(checkbox){
 	location.reload();
 };
 
+document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
+
 function onDOMcontentLoaded(){ 											//load plugins and databases
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){
 //		$.noConflict(); 
 		$('body')[0].appendChild(uu);
-		j=true; 
+		J=true; 
 		mutex();}
 	);
 	names = new SwfStore({												//auxiliary database for names that don't have folders
 		namespace: "names",
 		swf_url: storeUrl,  
 		onready: function(){	
-			n=true;
+			N=true;
 			mutex();
 		},
 		onerror: function() {
@@ -300,7 +299,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		namespace: "meta",
 		swf_url: storeUrl,   
 		onready: function(){	
-			m=true;
+			M=true;
 			mutex();
 		},
 		onerror: function() {
@@ -329,7 +328,7 @@ function getTags(){														//manages tags acquisition for current image fi
 			function(){getTags(); },false);								//if no tags found yet the second check is scheduled to the end of image load
 	} 
 	else if ((DBrec!=null) || (debug)){		
-		t=true;	 														//proceed only if tags were found or we're in debug mode
+		T=true;	 														//proceed only if tags were found or we're in debug mode
 		mutex();
 	}
 	else
@@ -360,8 +359,8 @@ function trimObj(obj){ 													//remove trailing whitespace in object keys 
 	};
 }; 
 
-function mutex(){														//checks readiness of plugin and database when they're loading simultaneously 
-	if (j && n && m && t)												//when everything is loaded, proceed further
+function mutex(){														//checks readiness of plugin and databases when they're loading simultaneously 
+	if (J && N && M && T)												//when everything is loaded, proceed further
 		main();
 };
 
@@ -381,6 +380,8 @@ function main(){ 														//launch tag processing and handle afterwork
 	updateHeight();														//otherwise changing DOM in Opera messes up vertical scrolling	
 	xhr.open("get",document.location.href,  true); 						//reget the image to attach it to downloadify button
 	xhr.send();  	
+	if ((!debug)&&(!unsorted))
+		cleanup(false);													//until the save button is clicked only remove names and meta-related stuff if it is not needed
  };	
  runonce=false;
 };
@@ -636,11 +637,12 @@ function getFname(fullName, full){										//source URL processing for filename
 	return fullName.substring(fullName.lastIndexOf('/')+1 ); 			//function is used both for URLs and folder paths which have opposite slashes
 };
 
-function dl(glob){														//make downloadify button with base64 encoded image file as parameter
+function dl(base64data){														//make downloadify button with base64 encoded image file as parameter
 																		//which will both cause save file dialog with custom filename and copy save path to clipboard
 	Downloadify.create( 'down'  ,{
-		filename: function(){return filename ;}, 
-		data: glob,
+		filename: function(){return filename ;}, 						//is this called "stateless"?
+		data: base64data,
+		data: base64data,
 		dataType:'base64',
 		downloadImage: 'http://puu.sh/bNGSc/9ce20e2d5b.png',
 		onError: function(){ alert('Downloadify error'); },
@@ -653,12 +655,10 @@ function dl(glob){														//make downloadify button with base64 encoded im
 		textcopy: function(){if (DBrec) {return folder+filename ;} else return '';}	
 	});																	//if no database record is found, don't change the clipboard
 
-	if ((!debug)&&(!unsorted)) 
-		cleanup(false);													//until the button is clicked only remove names and meta-related stuff if it is not needed
 };
 
 function onCmplt(){														//mark image as saved in the tag database
-	if (DBrec)	{													//it is used to mark saved images on tumblr pages
+	if (DBrec)	{														//it is used to mark saved images on tumblr pages
 		DBrec=DBrec.split(','); 									
 		DBrec.shift();
 		DBrec.unshift('1');								
