@@ -279,7 +279,6 @@ document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);
 
 function onDOMcontentLoaded(){ 											//load plugins and databases
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){
-//		$.noConflict(); 
 		$('body')[0].appendChild(uu);
 		J=true; 
 		mutex();}
@@ -321,18 +320,19 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 };
 
 function getTags(){														//manages tags acquisition for current image file name from db
-	DBrec=tagsDB.get(getFname(document.location.href));				//first attempt at getting taglist for current filename is done upon the beginning of image load
-	if ((DBrec==null)&&(!retry)&&(document.readyState!='complete')) {
-		retry=true;
-		window.addEventListener('load', 
-			function(){getTags(); },false);								//if no tags found yet the second check is scheduled to the end of image load
-	} 
-	else if ((DBrec!=null) || (debug)){		
-		T=true;	 														//proceed only if tags were found or we're in debug mode
-		mutex();
-	}
-	else
-		cleanup(true);													//if nothing is found remove all flash objects and databases from the page as if nothing happened
+	DBrec=tagsDB.get(getFname(document.location.href));					//first attempt at getting taglist for current filename is done upon the beginning of image load
+		
+	if ((DBrec!=null) || (debug)) {										//if tags are found, all is fine, report readiness
+		T=true;															//or if we're in debug mode, proceed anyway
+		mutex();		
+	} else 
+		if ((retry) || (document.readyState=='complete'))				//otherwise if we ran out of attempts or it's too late 
+			cleanUp(true)												//remove everything extra as if nothing happened
+		else {
+			retry=true;													//but before that schedule a second attempt at retrieving tags to image load end
+			window.addEventListener('load',function(){getTags(); },false);
+		};
+
 };
 
 function isANSI(s) {													//some tags might be already in roman and do not require translation
