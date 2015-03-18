@@ -105,7 +105,7 @@
 																		//these tags will not count towards any category and won't be included into filename
 
 	var storeUrl='http://puu.sh/dyFtc/196a6da5b6.swf';					//flash databases are bound to the URL.  									
-	debug=false;														//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
+	debug=	true;														//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
 																		//also enables export and import of names and meta tag databases to/from a text file
 																		//also will cause "downloadify" button to appear even if no DB record was found 
 // ==/Settings=========================================================
@@ -113,16 +113,17 @@
 
 var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};//external script loader function
 
+																		//communication between functions here is mostly done via global variables
  tagsDB=null;
  names=null ;
- meta=null ; 
-var retry=false;
-var filename;
+ meta=null ; 															//these three must be deletable on cleanup
+var retry=false;														//flag indicating a second attempt of getting tags
+var filename;															
 var folder = ''; 
-var myValue;
-var a=b=c=d=false;
-var runonce=true; 
-var unsorted=false;
+var DBrec;																//raw DB record
+var j=n=m=t=false;														//flags indicating readyness of plugins loaded simultaneously
+var runonce=true; 														//flag ensuring that main() is only executed once
+var unsorted=false;														
 
 var style=" 							\
 	div#output {						\
@@ -281,14 +282,14 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){
 //		$.noConflict(); 
 		$('body')[0].appendChild(uu);
-		d=true; 
+		j=true; 
 		mutex();}
 	);
 	names = new SwfStore({												//auxiliary database for names that don't have folders
 		namespace: "names",
 		swf_url: storeUrl,  
 		onready: function(){	
-			a=true;
+			n=true;
 			mutex();
 		},
 		onerror: function() {
@@ -299,7 +300,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		namespace: "meta",
 		swf_url: storeUrl,   
 		onready: function(){	
-			b=true;
+			m=true;
 			mutex();
 		},
 		onerror: function() {
@@ -315,21 +316,20 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 			tagsDB.config.debug=debug;
 			getTags();
 		},
-		//debug: debug,
 		onerror: function() {
 			alert('tagsDB failed to load');}
 	});
 };
 
 function getTags(){														//manages tags acquisition for current image file name from db
-	myValue=tagsDB.get(getFname(document.location.href));				//first attempt at getting taglist for current filename is done upon the beginning of image load
-	if ((myValue==null)&&(!retry)&&(document.readyState!='complete')) {
+	DBrec=tagsDB.get(getFname(document.location.href));				//first attempt at getting taglist for current filename is done upon the beginning of image load
+	if ((DBrec==null)&&(!retry)&&(document.readyState!='complete')) {
 		retry=true;
 		window.addEventListener('load', 
 			function(){getTags(); },false);								//if no tags found yet the second check is scheduled to the end of image load
 	} 
-	else if ((myValue!=null) || (debug)){		
-		c=true;	 														//proceed only if tags were found or we're in debug mode
+	else if ((DBrec!=null) || (debug)){		
+		t=true;	 														//proceed only if tags were found or we're in debug mode
 		mutex();
 	}
 	else
@@ -361,21 +361,20 @@ function trimObj(obj){ 													//remove trailing whitespace in object keys 
 }; 
 
 function mutex(){														//checks readiness of plugin and database when they're loading simultaneously 
-	if (a && b && c && d)												//when everything is loaded, proceed further
+	if (j && n && m && t)												//when everything is loaded, proceed further
 		main();
 };
 
 function main(){ 														//launch tag processing and handle afterwork
-  if (runonce){				 											//some parts of the script just keep executing several times instead of only one
+ if (runonce){				 											//some parts of the script just keep executing several times instead of only one
 	$( "<style>"+style+"</style>" ).appendTo( "head" );
 	$(tb).attr('cellspacing','5');
 	$('div#output').append(port);	
 	toggleSettings();	
 	$('div#output').append(tb);	
-	if (debug) {
-		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute');
-		//$('table#translations').css('top',($('table#port').height()+30)+'px');
-	} else 
+	if (debug) 
+		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute')
+	else 
 		$("div[id^='SwfStore_animage_']").css('top','-2000px').css('left','-2000px').css("position",'absolute');
 	$('input#debug').prop('checked',debug);
 	unsorted=analyzeTags();
@@ -387,12 +386,12 @@ function main(){ 														//launch tag processing and handle afterwork
 };
 
 function analyzeTags() {   												//this is where the tag matching magic occurs
- 	if (!myValue) return;												//if there are any tags, that is
+ 	if (!DBrec) return;													//if there are any tags, that is
 	folder='';
 	filename=getFname(document.location.href, true);
-    document.title=myValue;												//show raw DB record while the image is loading because why not
+    document.title=DBrec;												//show raw DB record while the image is loading because why not
 	
-	tags=myValue.split(','); 	
+	tags=DBrec.split(','); 	
 	tags.shift();														//first value in the list is "saved" flag, not tag
  
 	fldrs=[];
@@ -522,7 +521,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 																		// to avoid typing them in manually				
 		folder=folders["!!unsorted"]+'\\';   							//mark image as going to "unsorted" folder if it still has untranslated tags
 		filename=fn+ ' '+filename;
-		document.title='✗ ';											//no match ;_;
+		document.title='? ';											//no match ;_;
 	} else															
 	 if ((fldrs.length==1)&&(nms.length==0)){							//otherwise if there's only one tag and it's a folder tag, assign the image right there
 		folder=fldrs[0]+'\\';
@@ -543,7 +542,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 														
 	folder=folder.replace(/\/|\||>|<|\?|"/g,'-');
 
-	if (myValue.split(',')[0]=='1') document.title+=' - already saved';	//indicate if the image has been marked as saved already
+	if (DBrec.split(',')[0]=='1') document.title+=' - already saved';	//indicate if the image has been marked as saved already
 		
 	return unsorted;
 };
@@ -651,7 +650,7 @@ function dl(glob){														//make downloadify button with base64 encoded im
 		height: 30,
 		transparent: true,
 		append: true,
-		textcopy: function(){if (myValue) {return folder+filename ;} else return '';}	
+		textcopy: function(){if (DBrec) {return folder+filename ;} else return '';}	
 	});																	//if no database record is found, don't change the clipboard
 
 	if ((!debug)&&(!unsorted)) 
@@ -659,14 +658,14 @@ function dl(glob){														//make downloadify button with base64 encoded im
 };
 
 function onCmplt(){														//mark image as saved in the tag database
-	if (myValue)	{													//it is used to mark saved images on tumblr pages
-		myValue=myValue.split(','); 									
-		myValue.shift();
-		myValue.unshift('1');								
-		myValue=myValue.join(',');							
-		tagsDB.set( getFname(document.location.href) ,myValue);
-		myValue=tagsDB.get(getFname(document.location.href));
-		if (myValue.split(',')[0]=='1') document.title+=' - saved now';}
+	if (DBrec)	{													//it is used to mark saved images on tumblr pages
+		DBrec=DBrec.split(','); 									
+		DBrec.shift();
+		DBrec.unshift('1');								
+		DBrec=DBrec.join(',');							
+		tagsDB.set( getFname(document.location.href) ,DBrec);
+		DBrec=tagsDB.get(getFname(document.location.href));
+		if (DBrec.split(',')[0]=='1') document.title+=' - saved now';}
 	if (!debug)
 		cleanup(true);													//remove all the flashes, including the button itself
 }
