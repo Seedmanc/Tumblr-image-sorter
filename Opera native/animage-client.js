@@ -381,7 +381,7 @@ function main(){ 														//launch tag processing and handle afterwork
 	xhr.open("get",document.location.href,  true); 						//reget the image to attach it to downloadify button
 	xhr.send();  	
 	if ((!debug)&&(!unsorted))
-		cleanup(false);													//until the save button is clicked only remove names and meta-related stuff if it is not needed
+		cleanup(false);													//until the save button is clicked only remove aux databases if they're not needed
  };	
  runonce=false;
 };
@@ -785,8 +785,7 @@ function cleanup(full){													//remove variables and flash objects from me
 	delete meta;
 	x=$('object');
 	$.each(x,function(i,v){
-		if ((i==2)&&(!full)) 
-			return false
-		else
-			v.parentNode.removeChild(v)});					
+		if ((full)||(v.id.search(/SwfStore_(names|meta)_\d/gi)!=-1))
+			v.parentNode.removeChild(v);
+	});					
 };
