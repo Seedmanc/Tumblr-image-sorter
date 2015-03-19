@@ -327,9 +327,9 @@ function getTags(){														//manages tags acquisition for current image fi
 		mutex();		
 	} else 
 		if ((retry) || (document.readyState=='complete'))				//otherwise if we ran out of attempts or it's too late 
-			cleanUp(true)												//remove everything extra as if nothing happened
+			cleanup(true)												//remove everything extra as if nothing happened
 		else {
-			retry=true;													//but before that schedule a second attempt at retrieving tags to image load end
+			retry=true;													//but if not schedule a second attempt at retrieving tags to image load end
 			window.addEventListener('load',function(){getTags(); },false);
 		};
 
@@ -403,8 +403,11 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	
 	tags=$.map(tags,function(v,i){										//some formatting is applied to taglist before processing
 		v=v.replace(/’/g,"\'");				
-		v=v.replace(/"/g,"''");		
-		v=v.toLowerCase();										
+		v=v.replace(/"/g,"''");										
+		v=v.replace(/(ou$)|(ou )/gim,'o ').trim();						//eliminate variations in writing 'ō' as o/ou at the end of the name in favor of 'o'
+																		//I dunno if it should be done in the middle of the name as well
+		v=v.toLowerCase();
+		
 		$.each(tags, function(ii,vv){
 			if (ii==i) return true;
 			sp=vv.split(' ');
@@ -412,9 +415,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 				if (sp.join('')==v)
 					tags[ii]='';										//some bloggers put kanji tags both with and without spaces, remove duplicates with spaces
 			}
-		);
-		v=v.replace(/(ou$)|(ou )/gim,'o ').trim();						//eliminate variations in writing 'ō' as o/ou at the end of the name in favor of 'o'
-																		//I dunno if it should be done in the middle of the name as well
+		);																
 		if ((ignore[v])||(!v)) return null								//remove ignored tags so that they don't affect tag amount
 		else return v;
 	});
@@ -442,7 +443,6 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	});
 																		//2nd sorting stage, now we know how many tags of each category there are
 																		//it's time to filter the "ansi" category further
-
 	$.each(fldrs.concat(nms.concat(mt)), function(i,v){					//some bloggers put both kanji and translated names into tags
 		x=getFname(v).toLowerCase();									
 		if (x.indexOf('!')==0) x=x.replace('!','');
@@ -452,23 +452,19 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	});
 	
 	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);				//unsorted flag is set if there are tags outside of 3 main categories with databases
-//	if (unsorted) 
-		mt=mt.concat(Object.keys(ansi));
+	mt=mt.concat(Object.keys(ansi));									//ansi tags have to go somewhere until assigned a category manually
 		
 	fldrs2=[];						
 
 	fldrs=$.grep(fldrs,function(v,i){									//a trick to process folders for meta tags, having subfolders for names inside
 		if (getFname(v).indexOf('!')==0) {								//such folders must have "!" as the first symbol 
 			folders['!!solo']=v;										// replace solo folder with metatag folder, explained in 3rd sorting stage
-			if (true)//(fldrs.length==2)||(unsorted))  									//if there are two tags one might be the metafolder tag and the other name tag
-				mt.push(getFname(v).replace('!',''));						// in this case meta tag will be added to filename because the image goes into name folder,
-																			// not directly to meta
-																		////not sure, but I think it should add the meta tag into filename regardless of anything
-			if (fldrs.concat(nms).length==1)
-				folder+=v+'\\'											//in the very rare case when there are no name tags at all we still put the image to meta folder
+			folders['!!group']=v;										// same for group folder
+			if (fldrs.concat(nms).length==1)							//in the rare case when there are no name tags at all we put the image to meta folder
+				folder+=v+'\\'											// no need to put meta tag into filename this way, since the image will be in the same folder
 			else
-				folders['!!group']=v;	 								//if there are more tags they all belong to the metatag folder, taking place of the "group" one,
-				return false;											// explained in 3rd  stage
+				mt.push(getFname(v).replace('!',''));	 				//usually it needs to be done though
+			return false;												//exclude processed meta tags from folder category
 			}
 		else
 			return true;												//return all the non-meta folder tags
@@ -780,6 +776,7 @@ function cleanup(full){													//remove variables and flash objects from me
 	if (full) {
 		delete tagsDB;													//non-full removal leaves tag database and downloadify button in place
 		$('table#port').remove();
+		$('table#translations').remove();
 	};
 	delete names;														//without removal there would be a noticeable lag upon tab closing in Opera
 	delete meta;
