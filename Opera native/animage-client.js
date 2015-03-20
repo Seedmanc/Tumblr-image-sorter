@@ -455,22 +455,25 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	mt=mt.concat(Object.keys(ansi));									//ansi tags have to go somewhere until assigned a category manually
 		
 	fldrs2=[];						
-
 	fldrs=$.grep(fldrs,function(v,i){									//a trick to process folders for meta tags, having subfolders for names inside
-		if (getFname(v).indexOf('!')==0) {								//such folders must have "!" as the first symbol 
-			folders['!!solo']=v;										// replace solo folder with metatag folder, explained in 3rd sorting stage
-			folders['!!group']=v;										// same for group folder
+		fmeta=getFname(v);
+		if ((fmeta.indexOf('!')==0)&&(fmeta.indexOf('!!')==-1)) {		//such folders must have "!" as the first symbol, not counting the special folders having "!!" there
+			fldrs2.push(fmeta);
 			if (fldrs.concat(nms).length==1)							//in the rare case when there are no name tags at all we put the image to meta folder
 				folder+=v+'\\'											// no need to put meta tag into filename this way, since the image will be in the same folder
 			else
-				mt.push(getFname(v).replace('!',''));	 				//usually it needs to be done though
+				mt.push(fmeta.replace('!',''));	 						//usually it needs to be done though
 			return false;												//exclude processed meta tags from folder category
 			}
 		else
 			return true;												//return all the non-meta folder tags
 		}
 	);
-		
+	if (fldrs2.length==1) {												//make sure only one folder meta tags exists
+		folders['!!solo']=fldrs2[0];									// replace solo folder with metatag folder, explained in 3rd sorting stage
+		folders['!!group']=fldrs2[0];									// same for group folder
+	};	
+	
 	fn="";			
 	fldrs2=$.map(fldrs,function(vl,ix){
 		return getFname(vl);											//extract names from folder paths
@@ -637,8 +640,7 @@ function dl(base64data){														//make downloadify button with base64 enco
 																		//which will both cause save file dialog with custom filename and copy save path to clipboard
 	Downloadify.create( 'down'  ,{
 		filename: function(){return filename ;}, 						//is this called "stateless"?
-		data: base64data,
-		data: base64data,
+		data: base64data, 
 		dataType:'base64',
 		downloadImage: 'http://puu.sh/bNGSc/9ce20e2d5b.png',
 		onError: function(){ alert('Downloadify error'); },
