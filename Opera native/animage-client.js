@@ -4,7 +4,7 @@
 // @version	1.0
 // @author		Seedmanc
 // @include	http://scenario.myweb.hinet.net/*
-// @include	http://*.media.tumblr.com/*
+// @include	http*://*.media.tumblr.com/*
 // @include	https://mywareroom.files.wordpress.com/*
 // @include	http://mywareroom.files.wordpress.com/*
 // @include	http://e.blog.xuite.net/* 
@@ -36,7 +36,6 @@
 		"	遠藤綾	"	:	"	!Lucky Star\\Endo Aya	",
 		"	福原香織	"	:	"	!Lucky Star\\Fukuhara Kaori	",
 		"	長谷川静香	"	:	"	!Lucky Star\\Hasegawa Shizuka	",
-		"	平野綾	"	:	"	!Lucky Star\\Hirano Aya	",
 		"	加藤英美里	"	:	"	!Lucky Star\\Kato Emiri	",
 		"	今野宏美	"	:	"	!Lucky Star\\Konno Hiromi	", 
 		"	井上麻里奈	"	:	"	!Minami-ke\\Inoue Marina	",
@@ -343,17 +342,23 @@ function isANSI(s) {													//some tags might be already in roman and do no
 }
 
 function trimObj(obj){ 													//remove trailing whitespace in object keys and values,
+	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;
+	exclrgxp=/\/|:|\||>|<|\?|"/g;
+	roota=root.split('\\')
+	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) {
+		alert('Illegal characters in root folder path "'+root+'"');
+		throw new Error('Illegal characters in root');
+	};
+
 	for (var key in obj) {												// also convert keys to lower case for better matching
 		if (obj.hasOwnProperty(key)) { 									// also make sure that folder names have no illegal characters
-			rgxp=/\/|:|\||>|<|\?|"/g;
 			t=obj[key].trim();
 			k=key.trim().toLowerCase();
 			delete obj[key];
 			obj[k]=t;
-			if (rgxp.test(obj[k])) {
+			if (exclrgxp.test(obj[k])) {
 				alert('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"');
-				throw new Error('Illegal character in database error');
-				return false;											//can't continue until the problem is fixed
+				throw new Error('Illegal character in database error');	//can't continue until the problem is fixed
 			};
 		};
 	};
@@ -390,7 +395,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
  	if (!DBrec) return;													//if there are any tags, that is
 	folder='';
 	filename=getFname(document.location.href, true);
-    document.title=DBrec;												//show raw DB record while the image is loading because why not
+    document.title=DBrec;												//show raw DB record while the page is loading because why not
 	
 	tags=DBrec.split(','); 	
 	tags.shift();														//first value in the list is "saved" flag, not tag
@@ -450,9 +455,6 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		delete ansi[x];													//I have to again check for both orders even though I deleted one of them before
 		delete ansi[y];													// but at the time of deletion there is no way to know yet which one would match the kanji tag
 	});
-	
-	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);				//unsorted flag is set if there are tags outside of 3 main categories with databases
-	mt=mt.concat(Object.keys(ansi));									//ansi tags have to go somewhere until assigned a category manually
 		
 	fldrs2=[];						
 	fldrs=$.grep(fldrs,function(v,i){									//a trick to process folders for meta tags, having subfolders for names inside
@@ -477,7 +479,9 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	fn="";			
 	fldrs2=$.map(fldrs,function(vl,ix){
 		return getFname(vl);											//extract names from folder paths
-	});					
+	});		
+	
+	mt=mt.concat(Object.keys(ansi));									//ansi tags have to go somewhere until assigned a category manually	
 	filename=(mkUniq(fldrs2.concat(nms)).concat(['']).concat(mkUniq(mt)).join(',').replace(/\s/g,'_').replace(/\,/g,' ')+' '+filename).trim();																	
 																		//format the filename in a booru-compatible way, replacing spaces with underscores,
 																		// first come the names alphabetically sorted, then the meta sorted separately 
@@ -485,22 +489,21 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 																		// any existing commas will be replaced with spaces as well	
 																		//this way the images are ready to be uploaded to boorus using the mass booru uploader script
 	document.title='';
+	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);				//unsorted flag is set if there are tags outside of 3 main categories 
 	tb.setAttribute("hidden","hidden");		
 																		//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
 	if (unsorted)  {													//if there are any untranslated tags, make a table with text fields to provide manual translation
 		tb.removeAttribute("hidden");									//build the table with manual translation inputs 
 		options='';
 		tbd=tb.appendChild(document.createElement('tbody'));
-		$.each(ansi, function(i,v){										//first process the roman tags
+		$.each(ansi, function(i,v){										//first process the unassigned roman tags
 			row1=tbd.insertRow(0);
 			cell1=row1.insertCell(0);  
 			cell1.id=i;
-			if (i.split(' ').length==2)									//for roman tags consisting of 2 words enable button for swapping their order
-				swp='<input type="button" value="swap" onclick="swap(this)" />'
-			else 														//script can't know which name/surname order is correct so the choice is left to user
-				swp='<input type="button" value="swap" disabled="disabled" />';
-				
+			swp='<input type="button" value="swap" onclick="swap(this)" id="swap" />'
 			cell1.innerHTML=tagcell+i+'</a><br>'+swp+'</td></tr></table>'; 
+			if (i.split(' ').length!=2)									//for roman tags consisting of 2 words enable button for swapping their order
+				$(cell1).find('input#swap').attr('disabled','disabled');//script can't know which name/surname order is correct so the choice is left to user
 			
 			$(cell1).attr('class','cell ansi');
 			$(cell1).find('input[type="radio"]').attr('name',i);			
@@ -530,42 +533,42 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		filename=filename.join(' ').trim();
 		document.title='✓ '; 											//100% match, yay
 	} else
-	 if ((nms.length==1)&&(fldrs.length==0)){							//if there's only one name tag without a folder for it, goes into default "solo" folder
+	 if ((fldrs.length==0)&&(nms.length==1)){							//if there's only one name tag without a folder for it, goes into default "solo" folder
 		folder=folders['!!solo']+'\\'; 									// unless we had a !metafolder tag earlier, then the solo folder would have been 
 																		// replaced with the appropriate !meta folder
 	} else 
-	 if (nms.length+fldrs.length>0)										//otherwise if there are several name tags, folder or not, move to the default "group" folder
+	 if (nms.length+fldrs.length>1)										//otherwise if there are several name tags, folder or not, move to the default "group" folder
 		folder=folders['!!group']+'\\';									// same as the above applies for meta
-	filename=filename.replace(/\/|\\|:|\||>|<|\?|"/g,'-').trim();		//make sure there are no forbidden characters in the resulting path
+	filename=filename.replace(/\/|\\|:|\||>|<|\?|"/g,'-').trim();		//make sure there are no forbidden characters in the resulting name
 	document.title+=' \\'+folder+filename;
 	folder=root+folder;													//if no name or folder tags were found, folder will be set to root directory
 														
-	folder=folder.replace(/\/|\||>|<|\?|"/g,'-');
+	folder=folder.replace(/\/|\||>|<|\?|"/g,'-');						//perhaps this is redundant
 
-	if (DBrec.split(',')[0]=='1') document.title+=' - already saved';	//indicate if the image has been marked as saved already
+	if (DBrec.split(',')[0]=='1') document.title+=' (already saved)';	//indicate if the image has been marked as saved before
 		
 	return unsorted;
 };
 
 function ignor3(anc){													//remove clicked tag from results for current session (until page reload)
 	ignore[anc.innerText]=true;											//this way you don't have to fill in the "ignore" list, 
-																		// you'll still be able to control which tags will be counted
+																		// while still being able to control which tags will be counted
 	$(anc).parent().parent().parent().parent().parent().parent().attr('hidden','hidden');
 	$(anc).parent().parent().parent().parent().parent().parent().attr('ignore','ignore');
 																		//a long way up from tag link to tag cell table
-	//if (($("table#translations").height()+120) <  $(window).height())	 																
-		$.each($('datalist').find('option'), function(i,v){				//hide these tags from the drop-down lists of translations too
-			if (v.value==anc.innerText)									// but only if there is no vertical scrollbar from large height of tag table
-				v.parentNode.removeChild(v);							// for some reason in Opera changing <options> of datalists after creation 
-			}															// messes up the calculated height of the page or something with scrollbars
-		);	 															//if you hid the wrong tags, just reload the page to restore them
+															
+	$.each($('datalist').find('option'), function(i,v){					//hide these tags from the drop-down lists of translations too
+		if (v.value==anc.innerText)										 
+			v.parentNode.removeChild(v);								 
+		}																 
+	);	 																//if you hid the wrong tags, just reload the page to restore them
 		
-	updateHeight();
+	updateHeight();														//fix vertical scroll behaviour in Opera
 };
 
 function swap(txt){														//swap roman tags consisting of 2 words
-																		//same as the above about scrollbar and options
-	data=$('datalist');													//these are most likely the names so can have different writing orders
+																		
+	data=$('datalist');													//these are most likely the names so they can have different writing orders
 	set=[];
 	$.each(data.find('option'), function(i,v){
 		if (v.value==$(txt).prev().prev()[0].innerText)
@@ -582,8 +585,7 @@ function swap(txt){														//swap roman tags consisting of 2 words
 			v.value=text.join(' ');
 			}
 		);
-	};
-	
+	};	
 };
 
 function selected(inp){													//hide the corresponding roman tag from results when it has been selected 
@@ -611,20 +613,13 @@ function mkUniq(arr){													//sorts an array and ensures uniqueness of its
 	to={};
 	$.each(arr, function(i,v){
 		to[v]=true;}); //.toLowerCase()?
-	arr2=[];
-	$.each(to, function(ii,vv){
-		if (to.hasOwnProperty(ii))
-			arr2.push(ii);
-		}
-	);
-	return arr2.sort();													//I thought key names are already sorted in an object but for some reason they're not
+	arr2=Object.keys(to);
+	return arr2;//.sort();													//I thought key names are already sorted in an object but for some reason they're not
 };
 
 function getFname(fullName, full){										//source URL processing for filename
 	full=full || false;
-	if (fullName.indexOf('?')!=-1)										//first remove url parameters 
-		fullName=fullName.substring(0,fullName.indexOf('?'));
-	fullName=fullName.replace(/\#/g,'');
+	fullName=fullName.replace(/(#|\?).*$/gim,'');						//first remove url parameters
 	if (fullName.indexOf('xuite')!=-1) {								//this blog names their images as "(digit).jpg" causing filename collisions
 		i=fullName.lastIndexOf('/');
 		fullName=fullName.substr(0,i)+'-'+fullName.substr(i+1);			//add parent catalog name to the filename to ensure uniqueness
@@ -636,12 +631,12 @@ function getFname(fullName, full){										//source URL processing for filename
 	return fullName.substring(fullName.lastIndexOf('/')+1 ); 			//function is used both for URLs and folder paths which have opposite slashes
 };
 
-function dl(base64data){														//make downloadify button with base64 encoded image file as parameter
+function dl(base64data){												//make downloadify button with base64 encoded image file as parameter
 																		//which will both cause save file dialog with custom filename and copy save path to clipboard
 	Downloadify.create( 'down'  ,{
 		filename: function(){return filename ;}, 						//is this called "stateless"?
 		data: base64data, 
-		dataType:'base64',
+		dataType: 'base64',
 		downloadImage: 'http://puu.sh/bNGSc/9ce20e2d5b.png',
 		onError: function(){ alert('Downloadify error'); },
 		onComplete: onCmplt,
@@ -776,10 +771,9 @@ function updateHeight(){
 
 function cleanup(full){													//remove variables and flash objects from memory
 	if (full) {
-		delete tagsDB;													//non-full removal leaves tag database and downloadify button in place
-		$('table#port').remove();
+		delete tagsDB;													
 		$('table#translations').remove();
-	};
+	};																	//non-full removal leaves tag database and downloadify button in place
 	delete names;														//without removal there would be a noticeable lag upon tab closing in Opera
 	delete meta;
 	x=$('object');

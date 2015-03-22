@@ -8,6 +8,7 @@
 // @include	http://*.tumblr.com/tag*/*
 // @include	http://*.tumblr.com/
 // @include	http://*.tumblr.com/image/*
+// @include	http://*.tumblr.com/search/*
 // @exclude	http://*.media.tumblr.com/*
 
 // @run-at document-start
