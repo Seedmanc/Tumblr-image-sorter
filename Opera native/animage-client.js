@@ -266,6 +266,7 @@ function toggleSettings(){
 		sign.innerText=sign.innerText.replace(/\+/gi,'-')
 	else
 		sign.innerText=sign.innerText.replace(/\-/gi,'+');
+	updateHeight();
 };
 
 function debugSwitch(checkbox){
@@ -273,7 +274,7 @@ function debugSwitch(checkbox){
 	tagsDB.set(':debug:',debug );
 	location.reload();
 };
-
+var ro=true;
 document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
 
 function onDOMcontentLoaded(){ 											//load plugins and databases
@@ -291,8 +292,8 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		},
 		onerror: function() {
 			document.title+=' ✗ names failed to load';}
-	});
-
+	});												//TODO: delay aux DB loading until & if they're actually needed? 
+	
 	meta = new SwfStore({												//auxiliary database for meta tags such as franchise name or costume/accessories
 		namespace: "meta",
 		swf_url: storeUrl,   
@@ -303,35 +304,52 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		onerror: function() {
 			document.title+=' ✗ meta failed to load';}
 	});
-																			
+	
 	tagsDB = new SwfStore({												//loading tag database, holds pairs "filename	is_saved,tag1,tag2,...,tagN"
 		namespace: "animage",
 		swf_url: storeUrl,  
 		debug: debug,
-		onready: function(){  
-			debug =(tagsDB.get(':debug:')=='true');
-			tagsDB.config.debug=debug;
-			getTags();
+		onready: function(){ 											//Opera seems to have a bug where loading multiple flash DBs causes double
+		 	if (ro) {													// calling of onready functions
+				document.querySelectorAll("div[id^='SwfStore_animage_']")[0]['style']="top: -2000px; left: -2000px; position: absolute;";
+				fixTimeout();											//this might load before jQuery so have to use vanilla js
+			}															
+			ro=false;
 		},
 		onerror: function() {
 			alert('tagsDB failed to load');}
 	});
 };
+var intrvl; 
+function fixTimeout(){													//poll readiness of flashDB plugin until it's actually ready, because onready() and .ready lie
+	try {
+		clearTimeout(intrvl);
+		debug =(tagsDB.get(':debug:')=='true');
+		tagsDB.config.debug=debug;
+		getTags();		
+	}
+	catch(err)	{
+		if ((err instanceof TypeError)||(err instanceof ReferenceError))//retry accessing flashDB after 200ms, usually either a this.swf.get or a tagDB error happens
+			intrvl=setTimeout(function(){ fixTimeout();}, 200)			//I wonder if this can potentially lead to looping
+		else {
+			document.title+=err.name+':'+err.message;					
+			throw err;
+		};
+	} 
+}
 
 function getTags(){														//manages tags acquisition for current image file name from db
 	DBrec=tagsDB.get(getFname(document.location.href));					//first attempt at getting taglist for current filename is done upon the beginning of image load
-		
 	if ((DBrec!=null) || (debug)) {										//if tags are found, all is fine, report readiness
 		T=true;															//or if we're in debug mode, proceed anyway
 		mutex();		
 	} else 
 		if ((retry) || (document.readyState=='complete'))				//otherwise if we ran out of attempts or it's too late 
-			cleanup(true)												//remove everything extra as if nothing happened
+			cleanup(false)												//remove extra stuff as if nothing happened
 		else {
 			retry=true;													//but if not schedule a second attempt at retrieving tags to image load end
 			window.addEventListener('load',function(){getTags(); },false);
 		};
-
 };
 
 function isANSI(s) {													//some tags might be already in roman and do not require translation
@@ -343,7 +361,7 @@ function isANSI(s) {													//some tags might be already in roman and do no
 
 function trimObj(obj){ 													//remove trailing whitespace in object keys and values,
 	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;
-	exclrgxp=/\/|:|\||>|<|\?|"/g;
+	exclrgxp=/\/|:|\||>|<|\?|"/g;										// also make sure that folder names have no illegal characters
 	roota=root.split('\\')
 	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) {
 		alert('Illegal characters in root folder path "'+root+'"');
@@ -351,7 +369,7 @@ function trimObj(obj){ 													//remove trailing whitespace in object keys 
 	};
 
 	for (var key in obj) {												// also convert keys to lower case for better matching
-		if (obj.hasOwnProperty(key)) { 									// also make sure that folder names have no illegal characters
+		if (obj.hasOwnProperty(key)) { 									
 			t=obj[key].trim();
 			k=key.trim().toLowerCase();
 			delete obj[key];
@@ -377,14 +395,19 @@ function main(){ 														//launch tag processing and handle afterwork
 	toggleSettings();	
 	$('div#output').append(tb);	
 	if (debug) 
-		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute')
-	else 
-		$("div[id^='SwfStore_animage_']").css('top','-2000px').css('left','-2000px').css("position",'absolute');
+		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute');
 	$('input#debug').prop('checked',debug);
 	unsorted=analyzeTags();
 	updateHeight();														//otherwise changing DOM in Opera messes up vertical scrolling	
-	xhr.open("get",document.location.href,  true); 						//reget the image to attach it to downloadify button
-	xhr.send();  	
+	if (document.readyState=="complete") {
+		xhr.open("get",document.location.href,  true); 					//reget the image to attach it to downloadify button
+		xhr.send();  
+		}
+	else 
+		$(window).load(function(){
+			xhr.open("get",document.location.href,  true); 				//reget the image to attach it to downloadify button
+			xhr.send();  
+		});
 	if ((!debug)&&(!unsorted))
 		cleanup(false);													//until the save button is clicked only remove aux databases if they're not needed
  };	
@@ -614,7 +637,7 @@ function mkUniq(arr){													//sorts an array and ensures uniqueness of its
 	$.each(arr, function(i,v){
 		to[v]=true;}); //.toLowerCase()?
 	arr2=Object.keys(to);
-	return arr2;//.sort();													//I thought key names are already sorted in an object but for some reason they're not
+	return arr2.sort();													//I thought key names are already sorted in an object but for some reason they're not
 };
 
 function getFname(fullName, full){										//source URL processing for filename
@@ -634,20 +657,19 @@ function getFname(fullName, full){										//source URL processing for filename
 function dl(base64data){												//make downloadify button with base64 encoded image file as parameter
 																		//which will both cause save file dialog with custom filename and copy save path to clipboard
 	Downloadify.create( 'down'  ,{
-		filename: function(){return filename ;}, 						//is this called "stateless"?
+		filename: function(){ return filename;}, 						//is this called "stateless"?
 		data: base64data, 
 		dataType: 'base64',
 		downloadImage: 'http://puu.sh/bNGSc/9ce20e2d5b.png',
-		onError: function(){ alert('Downloadify error'); },
+		onError: function(){ alert('Downloadify error');},
 		onComplete: onCmplt,
 		swf:  'http://puu.sh/bNDfH/c89117bd68.swf',
 		width: 100,
 		height: 30,
 		transparent: true,
 		append: true,
-		textcopy: function(){if (DBrec) {return folder+filename ;} else return '';}	
+		textcopy: function(){ if (DBrec) {return folder+filename ;} else return '';}	
 	});																	//if no database record is found, don't change the clipboard
-
 };
 
 function onCmplt(){														//mark image as saved in the tag database
@@ -656,15 +678,16 @@ function onCmplt(){														//mark image as saved in the tag database
 		DBrec.shift();
 		DBrec.unshift('1');								
 		DBrec=DBrec.join(',');							
-		tagsDB.set( getFname(document.location.href) ,DBrec);
+		tagsDB.set(getFname(document.location.href), DBrec);
 		DBrec=tagsDB.get(getFname(document.location.href));
-		if (DBrec.split(',')[0]=='1') document.title+=' - saved now';}
+		if (DBrec.split(',')[0]=='1') 
+			document.title+=' (saved now)';}
 	if (!debug)
 		cleanup(true);													//remove all the flashes, including the button itself
 }
 
-function submit(){														//collect entered translations for missing tags
-	tgs=$('td.cell');													//save them to databases and relaunch tag analysis with new data
+function submit(){														//collects entered translations for missing tags
+	tgs=$('td.cell');													//saves them to databases and relaunch tag analysis with new data
 	missing=false;
 	$.each(tgs,function(i,v){
 		if ($(v).parent().attr('hidden')) {
@@ -678,16 +701,16 @@ function submit(){														//collect entered translations for missing tags
 			t=v.innerText.trim(); 										//found roman tag
 		cat=$(v).find('input.category');
 		if (t.length){
-			if (cat[1].checked) 										//meta category was selected for this tag
-				meta.set(v.innerText.trim().toLowerCase(),t)		
-			else if (cat[0].checked)									//name category was selected
-				names.set(v.innerText.trim().toLowerCase(),t)
-			else 														//no category was selected, indicate lack of input
+			if (cat[0].checked) 										//name category was selected for this tag
+				names.set(v.innerText.trim().toLowerCase(),t)		
+			else if (cat[1].checked)									//meta category was selected
+				meta.set(v.innerText.trim().toLowerCase(),t)
+			else 														//no category was selected, indicate missing input
 				$(cat[0].parentNode.parentNode ).css("background-color","rgb(255,128,128)");
 			}
 		else {
 			$(v).find('input.txt').css("background-color","rgb(255,128,128)");
-			missing=true;												//no translation was provided, indicate lack of input
+			missing=true;												//no translation was provided, indicate missing input
 			return true;
 			}
 		}																 
@@ -699,7 +722,6 @@ function submit(){														//collect entered translations for missing tags
 		analyzeTags();
 		updateHeight();
 	}, to);
-
 };
 
 function ex(){															//export auxiliary tag databases as text file
@@ -759,13 +781,11 @@ function handleFileSelect(evt) {										//fill databases with data from import
 };
 
 function updateHeight(){
-
 	wndht=$(window).height();
 	imght=$('img').height();
 	ht=$('table#translations').height()+$('table#port').height()+$('div#down').height();
 	if (ht<wndht) return;
-	maxht=(ht>imght)?ht:imght;
-	maxht=(maxht>wndht)?maxht:wndht;
+	maxht=Math.max(ht,imght,wndht);
 	$('body').css('height',maxht+'px');
 };
 
@@ -776,9 +796,9 @@ function cleanup(full){													//remove variables and flash objects from me
 	};																	//non-full removal leaves tag database and downloadify button in place
 	delete names;														//without removal there would be a noticeable lag upon tab closing in Opera
 	delete meta;
-	x=$('object');
-	$.each(x,function(i,v){
-		if ((full)||(v.id.search(/SwfStore_(names|meta)_\d/gi)!=-1))
-			v.parentNode.removeChild(v);
-	});					
+	x=document.getElementsByTagName('object');
+	for (i = 0; i < x.length; i++) {									//this part might execute before jQuery load
+		if ((full)||(x[i].id.search(/SwfStore_(names|meta)_\d/gi)!=-1))
+			x[i].parentNode.removeChild(x[i]);
+	};			
 };
