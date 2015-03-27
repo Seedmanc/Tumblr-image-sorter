@@ -116,12 +116,11 @@ var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElem
  tagsDB=null;
  names=null ;
  meta=null ; 															//these three must be deletable on cleanup
-var retry=false;														//flag indicating a second attempt of getting tags
 var filename;															
 var folder = ''; 
 var DBrec;																//raw DB record
 var J=N=M=T=false;														//flags indicating readyness of plugins loaded simultaneously
-var runonce=true; 														//flag ensuring that main() is only executed once
+var runonce=true; 														//flag ensuring that onready() is only executed once
 
 var style=" 							\
 	div#output {						\
@@ -157,10 +156,11 @@ var style=" 							\
 		border-collapse: collapse;		\
 	}									\
 	table#translations 	{				\
+		border-spacing: 5px;			\
 		z-index:0;						\
 		position:absolute;				\
 		left:0;							\
-		top:30px;						\
+		top:52px;						\
 		overflow:scroll;				\
 		font-size:90%;					\
 		margin-left:-4px;				\
@@ -258,6 +258,28 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 		alert('Error getting image: '+this.status);
 };
 
+function trimObj(obj){ 													//remove trailing whitespace in object keys and values,
+	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;
+	exclrgxp=/\/|:|\||>|<|\?|"/g;										// also make sure that folder names have no illegal characters
+	roota=root.split('\\')
+	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) {
+		alert('Illegal characters in root folder path "'+root+'"');
+		throw new Error('Illegal characters in root');
+	};
+	for (var key in obj) {												// also convert keys to lower case for better matching
+		if (obj.hasOwnProperty(key)) { 									
+			t=obj[key].trim();
+			k=key.trim().toLowerCase();
+			delete obj[key];
+			obj[k]=t;
+			if (exclrgxp.test(obj[k])) {
+				alert('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"');
+				throw new Error('Illegal character in database error');	//can't continue until the problem is fixed
+			};
+		};
+	};
+}; 
+
 function toggleSettings(){
 	$('table#port td').not('.settings').toggle();
 	$('table#translations').css('top',($('table#port').height()+30)+'px');
@@ -274,7 +296,6 @@ function debugSwitch(checkbox){
 	tagsDB.set(':debug:',debug );
 	location.reload();
 };
-var ro=true;
 document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
 
 function onDOMcontentLoaded(){ 											//load plugins and databases
@@ -310,27 +331,26 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		swf_url: storeUrl,  
 		debug: debug,
 		onready: function(){ 											//Opera seems to have a bug where loading multiple flash DBs causes double
-		 	if (ro) {													// calling of onready functions
-				document.querySelectorAll("div[id^='SwfStore_animage_']")[0]['style']="top: -2000px; left: -2000px; position: absolute;";
-				fixTimeout();											//this might load before jQuery so have to use vanilla js
-			}															
-			ro=false;
+		 	if (runonce) 												// calling of onready functions
+				onDBready();											
+			runonce=false;	
 		},
 		onerror: function() {
 			alert('tagsDB failed to load');}
 	});
 };
 var intrvl; 
-function fixTimeout(){													//poll readiness of flashDB plugin until it's actually ready, because onready() and .ready lie
-	try {
-		clearTimeout(intrvl);
+function onDBready(){													//poll readiness of flashDB plugin until it's actually ready, because onready() and .ready lie
+	document.querySelectorAll("div[id^='SwfStore_animage_']")[0]['style']="top: -2000px; left: -2000px; position: absolute;";
+	clearTimeout(intrvl);												// ^ this might load before jQuery so have to use vanilla js
+	try {		
 		debug =(tagsDB.get(':debug:')=='true');
 		tagsDB.config.debug=debug;
-		getTags();		
+		getTags(false);		
 	}
 	catch(err)	{
 		if ((err instanceof TypeError)||(err instanceof ReferenceError))//retry accessing flashDB after 200ms, usually either a this.swf.get or a tagDB error happens
-			intrvl=setTimeout(function(){ fixTimeout();}, 200)			//I wonder if this can potentially lead to looping
+			intrvl=setTimeout(function(){ onDBready();}, 200)			//I wonder if this can potentially lead to looping
 		else {
 			document.title+=err.name+':'+err.message;					
 			throw err;
@@ -338,7 +358,7 @@ function fixTimeout(){													//poll readiness of flashDB plugin until it's
 	} 
 }
 
-function getTags(){														//manages tags acquisition for current image file name from db
+function getTags(retry){												//manages tags acquisition for current image file name from db
 	DBrec=tagsDB.get(getFname(document.location.href));					//first attempt at getting taglist for current filename is done upon the beginning of image load
 	if ((DBrec!=null) || (debug)) {										//if tags are found, all is fine, report readiness
 		T=true;															//or if we're in debug mode, proceed anyway
@@ -348,8 +368,41 @@ function getTags(){														//manages tags acquisition for current image fi
 			cleanup(false)												//remove extra stuff as if nothing happened
 		else {
 			retry=true;													//but if not schedule a second attempt at retrieving tags to image load end
-			window.addEventListener('load',function(){getTags(); },false);
+			window.addEventListener('load',function(){getTags(true); },false);
 		};
+};
+
+function mutex(){														//checks readiness of plugin and databases when they're loading simultaneously 
+	if (J && N && M && T) {												//when everything is loaded, proceed further
+		main();
+		J=N=M=T=false;													//no multiple calling anymore for you
+	};
+};
+
+function main(){ 														//launch tag processing and handle afterwork
+	$( "<style>"+style+"</style>" ).appendTo( "head" );
+	$('div#output').append(port);	
+	toggleSettings();	
+	$('input#debug').prop('checked',debug);	
+	if (debug) 
+		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute');
+	
+	$('div#output').append(tb);
+	unsorted=analyzeTags();
+	updateHeight();														//changing DOM in Opera messes up vertical scrolling	
+	
+	if (document.readyState=="complete") {
+		xhr.open("get",document.location.href,  true); 					//reget the image to attach it to downloadify button
+		xhr.send();  
+		}
+ 	else 
+		$(window).load(function(){
+			xhr.open("get",document.location.href,  true); 				//reget the image to attach it to downloadify button
+			xhr.send();  
+		});
+		
+	if ((!debug)&&(!unsorted))
+		cleanup(false);													//until the save button is clicked only remove aux databases if they're not needed
 };
 
 function isANSI(s) {													//some tags might be already in roman and do not require translation
@@ -359,69 +412,17 @@ function isANSI(s) {													//some tags might be already in roman and do no
     return is;
 }
 
-function trimObj(obj){ 													//remove trailing whitespace in object keys and values,
-	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;
-	exclrgxp=/\/|:|\||>|<|\?|"/g;										// also make sure that folder names have no illegal characters
-	roota=root.split('\\')
-	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) {
-		alert('Illegal characters in root folder path "'+root+'"');
-		throw new Error('Illegal characters in root');
-	};
-
-	for (var key in obj) {												// also convert keys to lower case for better matching
-		if (obj.hasOwnProperty(key)) { 									
-			t=obj[key].trim();
-			k=key.trim().toLowerCase();
-			delete obj[key];
-			obj[k]=t;
-			if (exclrgxp.test(obj[k])) {
-				alert('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"');
-				throw new Error('Illegal character in database error');	//can't continue until the problem is fixed
-			};
-		};
-	};
-}; 
-
-function mutex(){														//checks readiness of plugin and databases when they're loading simultaneously 
-	if (J && N && M && T)												//when everything is loaded, proceed further
-		main();
-};
-
-function main(){ 														//launch tag processing and handle afterwork
- if (runonce){				 											//some parts of the script just keep executing several times instead of only one
-	$( "<style>"+style+"</style>" ).appendTo( "head" );
-	$(tb).attr('cellspacing','5');
-	$('div#output').append(port);	
-	toggleSettings();	
-	$('div#output').append(tb);	
-	if (debug) 
-		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute');
-	$('input#debug').prop('checked',debug);
-	unsorted=analyzeTags();
-	updateHeight();														//otherwise changing DOM in Opera messes up vertical scrolling	
-	if (document.readyState=="complete") {
-		xhr.open("get",document.location.href,  true); 					//reget the image to attach it to downloadify button
-		xhr.send();  
-		}
-	else 
-		$(window).load(function(){
-			xhr.open("get",document.location.href,  true); 				//reget the image to attach it to downloadify button
-			xhr.send();  
-		});
-	if ((!debug)&&(!unsorted))
-		cleanup(false);													//until the save button is clicked only remove aux databases if they're not needed
- };	
- runonce=false;
-};
-
 function analyzeTags() {   												//this is where the tag matching magic occurs
  	if (!DBrec) return;													//if there are any tags, that is
 	folder='';
 	filename=getFname(document.location.href, true);
-    document.title=DBrec;												//show raw DB record while the page is loading because why not
+    if (debug)
+		document.title+=' '+DBrec										//show raw DB record 
+	else
+		document.title='';												
 	
 	tags=DBrec.split(','); 	
-	tags.shift();														//first value in the list is "saved" flag, not tag
+	tags.shift();														//first value in the record is "saved" flag, not tag
  
 	fldrs=[];
 	nms=[];
@@ -511,7 +512,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 																		// and lastly the original filename;		
 																		// any existing commas will be replaced with spaces as well	
 																		//this way the images are ready to be uploaded to boorus using the mass booru uploader script
-	document.title='';
+																		
 	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);				//unsorted flag is set if there are tags outside of 3 main categories 
 	tb.setAttribute("hidden","hidden");		
 																		//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
@@ -547,14 +548,14 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 																		// to avoid typing them in manually				
 		folder=folders["!!unsorted"]+'\\';   							//mark image as going to "unsorted" folder if it still has untranslated tags
 		filename=fn+ ' '+filename;
-		document.title='? ';											//no match ;_;
+		document.title+='? ';											//no match ;_;
 	} else															
 	 if ((fldrs.length==1)&&(nms.length==0)){							//otherwise if there's only one tag and it's a folder tag, assign the image right there
 		folder=fldrs[0]+'\\';
 		filename=filename.split(' ');
 		filename.shift();												//remove the folder name from file name since the image goes into that folder anyway
 		filename=filename.join(' ').trim();
-		document.title='✓ '; 											//100% match, yay
+		document.title+='✓ '; 											//100% match, yay
 	} else
 	 if ((fldrs.length==0)&&(nms.length==1)){							//if there's only one name tag without a folder for it, goes into default "solo" folder
 		folder=folders['!!solo']+'\\'; 									// unless we had a !metafolder tag earlier, then the solo folder would have been 
@@ -662,7 +663,7 @@ function dl(base64data){												//make downloadify button with base64 encode
 		dataType: 'base64',
 		downloadImage: 'http://puu.sh/bNGSc/9ce20e2d5b.png',
 		onError: function(){ alert('Downloadify error');},
-		onComplete: onCmplt,
+		onComplete: function(){ onCmplt(DBrec);},
 		swf:  'http://puu.sh/bNDfH/c89117bd68.swf',
 		width: 100,
 		height: 30,
@@ -672,15 +673,15 @@ function dl(base64data){												//make downloadify button with base64 encode
 	});																	//if no database record is found, don't change the clipboard
 };
 
-function onCmplt(){														//mark image as saved in the tag database
-	if (DBrec)	{														//it is used to mark saved images on tumblr pages
-		DBrec=DBrec.split(','); 									
-		DBrec.shift();
-		DBrec.unshift('1');								
-		DBrec=DBrec.join(',');							
-		tagsDB.set(getFname(document.location.href), DBrec);
-		DBrec=tagsDB.get(getFname(document.location.href));
-		if (DBrec.split(',')[0]=='1') 
+function onCmplt(rec){														//mark image as saved in the tag database
+	if (rec)	{														//it is used to mark saved images on tumblr pages
+		rec=rec.split(','); 									
+		rec.shift();
+		rec.unshift('1');								
+		rec=rec.join(',');							
+		tagsDB.set(getFname(document.location.href), rec);
+		rec=tagsDB.get(getFname(document.location.href));
+		if (rec.split(',')[0]=='1') 
 			document.title+=' (saved now)';}
 	if (!debug)
 		cleanup(true);													//remove all the flashes, including the button itself
