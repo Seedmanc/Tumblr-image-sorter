@@ -369,7 +369,7 @@ function getTags(retry){												//manages tags acquisition for current image
 		else {
 			retry=true;													//but if not schedule a second attempt at retrieving tags to image load end
 			window.addEventListener('load',function(){getTags(true); },false);
-		};
+		};										//TODO: make getTags actually return  the value to main() to get rid of global var
 };
 
 function mutex(){														//checks readiness of plugin and databases when they're loading simultaneously 
@@ -386,20 +386,13 @@ function main(){ 														//launch tag processing and handle afterwork
 	$('input#debug').prop('checked',debug);	
 	if (debug) 
 		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute');
-	
+												//TODO: make the code above run regardless of found DB record
 	$('div#output').append(tb);
 	unsorted=analyzeTags();
 	updateHeight();														//changing DOM in Opera messes up vertical scrolling	
 	
-	if (document.readyState=="complete") {
-		xhr.open("get",document.location.href,  true); 					//reget the image to attach it to downloadify button
-		xhr.send();  
-		}
- 	else 
-		$(window).load(function(){
-			xhr.open("get",document.location.href,  true); 				//reget the image to attach it to downloadify button
-			xhr.send();  
-		});
+	xhr.open("get",document.location.href,  true); 						//reget the image to attach it to downloadify button
+	xhr.send();  
 		
 	if ((!debug)&&(!unsorted))
 		cleanup(false);													//until the save button is clicked only remove aux databases if they're not needed
@@ -466,7 +459,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 						return true;
 				ansi[v]=true;
 			};
-		}
+		}										//TODO: add checks for common mistakes in kanji names like 実/美 & 奈/菜
 		else
 			rest.push(v);												//	finally the "untranslated" category
 	});
@@ -505,7 +498,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		return getFname(vl);											//extract names from folder paths
 	});		
 	
-	mt=mt.concat(Object.keys(ansi));									//ansi tags have to go somewhere until assigned a category manually	
+	mt=mt.concat(Object.keys(ansi));									//roman tags have to go somewhere until assigned a category manually	
 	filename=(mkUniq(fldrs2.concat(nms)).concat(['']).concat(mkUniq(mt)).join(',').replace(/\s/g,'_').replace(/\,/g,' ')+' '+filename).trim();																	
 																		//format the filename in a booru-compatible way, replacing spaces with underscores,
 																		// first come the names alphabetically sorted, then the meta sorted separately 
