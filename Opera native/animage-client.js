@@ -102,6 +102,7 @@
 
 	ignore={'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true};		
 																		//these tags will not count towards any category and won't be included into filename
+																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 
 	var storeUrl='http://puu.sh/dyFtc/196a6da5b6.swf';					//flash databases are bound to the URL.  									
 	debug=	true;														//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
@@ -144,7 +145,7 @@ var style=" 							\
 	table, tr {							\
 		text-align:center;				\
 	}									\
-	td.cell	{							\
+	td.cell, td.radio{					\
 		border:1px solid black;			\
 	}									\
 	td.settings {						\
@@ -202,8 +203,8 @@ uu = document.createElement('div');										//layers that will hold the downloa
 tb=document.createElement('table');										//table for entering manual translation of unknown tags
 	tb.id='translations';
 	tagcell='<table class="cell"><tr>														\
-		<td class="cell"><input type="radio" class="category"  value="name"  /></td>		\
-		<td class="cell"><input type="radio" class="category"  value="meta"/></td>			\
+		<td class="radio"><input type="radio" class="category"  value="name"  /></td>		\
+		<td class="radio"><input type="radio" class="category"  value="meta"/></td>			\
 		</tr><tr><td colspan="2"><a href="#" title="Click to ignore this tag for now" onclick=ignor3(this)>';
 																		//each cell has the following in it:
 																		//	two radiobuttons to choose a category for the tag - name or meta
@@ -454,10 +455,16 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 				nms.push(v)												//if it's the only tag it is most likely the name
 			else {														//	otherwise put it into the "ansi" category that does not require translation
 				splt=v.split(' ');
-				if (splt.length==2)										//some bloggers put tags for both name reading orders (name<->surname),
-					if (ansi[splt.reverse().join(' ')])					// thus creating duplicating tags, let's remove those
+				if (splt.length==2)	{									//some bloggers put tags for both name reading orders (name<->surname),
+					rvrs=splt.reverse().join(' ');
+					if (names.get(rvrs)) {								// thus creating potentially duplicating tags
+						nms.push(names.get(rvrs))						//try to find database entry for reversed order first,
+						return true;									//note that folders{}  database is not expected to have roman tags
+					}
+					else if (ansi[rvrs])								// then check for duplicates		
 						return true;
-				ansi[v]=true;
+				}
+				ansi[v]=true;											
 			};
 		}										//TODO: add checks for common mistakes in kanji names like 実/美 & 奈/菜
 		else
@@ -471,7 +478,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		y=x.split(' ').reverse().join(' ');								//check if we already have a name translated to avoid duplicates
 		delete ansi[x];													//I have to again check for both orders even though I deleted one of them before
 		delete ansi[y];													// but at the time of deletion there is no way to know yet which one would match the kanji tag
-	});
+	});																	//this also gets rid of reverse duplicates between recognized tags and ansi
 		
 	fldrs2=[];						
 	fldrs=$.grep(fldrs,function(v,i){									//a trick to process folders for meta tags, having subfolders for names inside
@@ -561,9 +568,8 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	folder=root+folder;													//if no name or folder tags were found, folder will be set to root directory
 														
 	folder=folder.replace(/\/|\||>|<|\?|"/g,'-');						//perhaps this is redundant
-
+	
 	if (DBrec.split(',')[0]=='1') document.title+=' (already saved)';	//indicate if the image has been marked as saved before
-		
 	return unsorted;
 };
 
@@ -597,7 +603,9 @@ function swap(txt){														//swap roman tags consisting of 2 words
 	if (text.length==2){
 		text=text.reverse();
 		$(txt).prev().prev()[0].innerText=text.join(' ');
-		$(txt).parent().parent().parent().parent().parent()[0].id=text.join(' ');
+		tdc=$(txt).parent().parent().parent().parent().parent();
+		tdc[0].id=text.join(' ');
+		tdc.prop('swap',!tdc.prop('swap'));								//mark as swapped
 		$.each(set,function(i,v){
 			v.value=text.join(' ');
 			}
@@ -691,26 +699,31 @@ function submit(){														//collects entered translations for missing tags
 		t=$(v).find('input.txt');
 		if (t.length)
 			t=t[0].value.trim();										//found translation tag
-		else
+		else {
 			t=v.innerText.trim(); 										//found roman tag
+			if ($(v).prop('swap'))
+				DBrec=DBrec.replace(t.split(' ').reverse().join(' '),t);//apply swap changes to current taglist
+		}
 		cat=$(v).find('input.category');
 		if (t.length){
 			if (cat[0].checked) 										//name category was selected for this tag
 				names.set(v.innerText.trim().toLowerCase(),t)		
 			else if (cat[1].checked)									//meta category was selected
-				meta.set(v.innerText.trim().toLowerCase(),t)
-			else 														//no category was selected, indicate missing input
+				meta.set(v.innerText.trim().toLowerCase(), t)
+			else { 														//no category was selected, indicate missing input
 				$(cat[0].parentNode.parentNode ).css("background-color","rgb(255,128,128)");
+				missing=true;
 			}
+		}
 		else {
 			$(v).find('input.txt').css("background-color","rgb(255,128,128)");
 			missing=true;												//no translation was provided, indicate missing input
 			return true;
 			}
-		}																 
+		}
 	);						
 	tbd=$('#translations > tbody')[0];
-	to=missing?1000:0;													//if there was missing input, delay before applying changes to show that
+	to=missing?1000:10;													//if there was missing input, delay before applying changes to show that
 	setTimeout(function(){
 		tbd.parentNode.removeChild(tbd);
 		analyzeTags();

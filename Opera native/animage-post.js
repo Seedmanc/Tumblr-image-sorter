@@ -208,7 +208,7 @@ function process (res, v){														//process information obtained from API 
 			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
 			tst=tagsDB.get( getFname(url) );									//check if there's already a record in database for this image				
 			if ((!tst)||(debug))  												//if there isn't, make one, putting the flag and tags there
-				tagsDB.set(getFname(url), tags.toString());			
+				tagsDB.set(getFname(url), tags.toString().toLowerCase());			
 														//to-do: make tags cumulative, adding up upon visiting different posts of same image?
 			if ((tst)&&(tst.split(',')[0]=='1')&&(document.location.href.indexOf('/image/')==-1)) {
 																				//otherwise if there is a record and it says the image has been saved
