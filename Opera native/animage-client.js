@@ -104,7 +104,8 @@
 																		//these tags will not count towards any category and won't be included into filename
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 
-	var storeUrl='http://puu.sh/dyFtc/196a6da5b6.swf';					//flash databases are bound to the URL.  									
+	var storeUrl='http://puu.sh/dyFtc/196a6da5b6.swf';					//flash databases are bound to the URL.  
+	var	downloadifySwf='http://puu.sh/bNDfH/c89117bd68.swf';			//button flash URL
 	debug=	true;														//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
 																		//also enables export and import of names and meta tag databases to/from a text file
 																		//also will cause "downloadify" button to appear even if no DB record was found 
@@ -232,11 +233,11 @@ port=document.createElement('table');									//subtable for exporting and impor
 	row0=port.insertRow(1);
 	row0.insertCell(0).innerHTML=' <input type="checkbox" id="debug"  onchange="debugSwitch(this)" /> debug';	
 	row1=port.insertRow(2);
-	row1.insertCell(0).innerHTML='<a href="###" onclick=ex() >export tags</a>';
+	row1.insertCell(0).innerHTML='<a href="###" onclick=ex() class="exim">export tags</a>';
 	row2=port.insertRow(3);	
 	row2.insertCell(0).id='ex';
 	row3=port.insertRow(4);
-	row3.insertCell(0).innerHTML=' <a href="####" onclick=im()>import tags</a> ';	
+	row3.insertCell(0).innerHTML=' <a href="####" onclick=im() class="exim">import tags</a> ';	
 	row4=port.insertRow(5);
 	row4.insertCell(0).id='im';
 	port.id='port';
@@ -395,7 +396,7 @@ function main(){ 														//launch tag processing and handle afterwork
 	xhr.open("get",document.location.href,  true); 						//reget the image to attach it to downloadify button
 	xhr.send();  
 		
-	if ((!debug)&&(!unsorted))
+	if (!unsorted)
 		cleanup(false);													//until the save button is clicked only remove aux databases if they're not needed
 };
 
@@ -429,8 +430,6 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		v=v.replace(/"/g,"''");										
 		v=v.replace(/(ou$)|(ou )/gim,'o ').trim();						//eliminate variations in writing 'ō' as o/ou at the end of the name in favor of 'o'
 																		//I dunno if it should be done in the middle of the name as well
-		v=v.toLowerCase();
-		
 		$.each(tags, function(ii,vv){
 			if (ii==i) return true;
 			sp=vv.split(' ');
@@ -576,10 +575,10 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 function ignor3(anc){													//remove clicked tag from results for current session (until page reload)
 	ignore[anc.innerText]=true;											//this way you don't have to fill in the "ignore" list, 
 																		// while still being able to control which tags will be counted
-	$(anc).parent().parent().parent().parent().parent().parent().attr('hidden','hidden');
-	$(anc).parent().parent().parent().parent().parent().parent().attr('ignore','ignore');
-																		//a long way up from tag link to tag cell table
-															
+	tdc=$(anc).parent().parent().parent().parent().parent().parent();	//a long way up from tag link to tag cell table					
+	tdc.attr('hidden','hidden');
+	tdc.attr('ignore','ignore');	
+
 	$.each($('datalist').find('option'), function(i,v){					//hide these tags from the drop-down lists of translations too
 		if (v.value==anc.innerText)										 
 			v.parentNode.removeChild(v);								 
@@ -637,7 +636,7 @@ function selected(inp){													//hide the corresponding roman tag from resu
 function mkUniq(arr){													//sorts an array and ensures uniqueness of its elements
 	to={};
 	$.each(arr, function(i,v){
-		to[v]=true;}); //.toLowerCase()?
+		to[v.toLowerCase()]=true;});
 	arr2=Object.keys(to);
 	return arr2.sort();													//I thought key names are already sorted in an object but for some reason they're not
 };
@@ -651,9 +650,9 @@ function getFname(fullName, full){										//source URL processing for filename
 	}
 	else if ((fullName.indexOf('amazonaws')!=-1)&&(!full))  			//older tumblr images are weirdly linked via some encrypted redirect to amazon services, where
 		fullName=fullName.substring(0,fullName.lastIndexOf('_')-2);		// links only have a part of the filename without a few last symbols and extension,
-																		// have to match it here as well
-	fullName=fullName.replace(/\\/g,'/');								//however we need full filename to provide it for downloadify, thus the parameter
-	return fullName.substring(fullName.lastIndexOf('/')+1 ); 			//function is used both for URLs and folder paths which have opposite slashes
+																		// have to match it here as well, but we need full filename for downloadify, thus the param
+	fullName=fullName.replace(/\\/g,'/');								//function is used both for URLs and folder paths which have opposite slashes
+	return fullName.substring(fullName.lastIndexOf('/')+1 );
 };
 
 function dl(base64data){												//make downloadify button with base64 encoded image file as parameter
@@ -662,30 +661,28 @@ function dl(base64data){												//make downloadify button with base64 encode
 		filename: function(){ return filename;}, 						//is this called "stateless"?
 		data: base64data, 
 		dataType: 'base64',
-		downloadImage: 'http://puu.sh/bNGSc/9ce20e2d5b.png',
+		downloadImage: '//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.png',
 		onError: function(){ alert('Downloadify error');},
-		onComplete: function(){ onCmplt(DBrec);},
-		swf:  'http://puu.sh/bNDfH/c89117bd68.swf',
+		onComplete: onCmplt,
+		swf:  downloadifySwf,
 		width: 100,
 		height: 30,
 		transparent: true,
 		append: true,
-		textcopy: function(){ if (DBrec) {return folder+filename ;} else return '';}	
+		textcopy: function(){ if (DBrec) {return folder+filename;} else return '';}	
 	});																	//if no database record is found, don't change the clipboard
 };
 
-function onCmplt(rec){														//mark image as saved in the tag database
-	if (rec)	{														//it is used to mark saved images on tumblr pages
-		rec=rec.split(','); 									
-		rec.shift();
-		rec.unshift('1');								
-		rec=rec.join(',');							
-		tagsDB.set(getFname(document.location.href), rec);
-		rec=tagsDB.get(getFname(document.location.href));
-		if (rec.split(',')[0]=='1') 
-			document.title+=' (saved now)';}
-	if (!debug)
-		cleanup(true);													//remove all the flashes, including the button itself
+function onCmplt(){														//mark image as saved in the tag database
+	if (DBrec)	{														//it is used to mark saved images on tumblr pages
+		DBrec=DBrec.split(','); 									
+		DBrec.shift();
+		DBrec.unshift('1');								
+		DBrec=DBrec.join(',');							
+		tagsDB.set(getFname(document.location.href), DBrec);
+		document.title+=' (saved now)';
+	}
+	cleanup(true);														//remove all the flashes, including the button itself
 }
 
 function submit(){														//collects entered translations for missing tags
@@ -711,12 +708,12 @@ function submit(){														//collects entered translations for missing tags
 			else if (cat[1].checked)									//meta category was selected
 				meta.set(v.innerText.trim().toLowerCase(), t)
 			else { 														//no category was selected, indicate missing input
-				$(cat[0].parentNode.parentNode ).css("background-color","rgb(255,128,128)");
+				$(cat[0].parentNode.parentNode ).css("background-color","#ff8080");
 				missing=true;
 			}
 		}
 		else {
-			$(v).find('input.txt').css("background-color","rgb(255,128,128)");
+			$(v).find('input.txt').css("background-color","#ff8080");
 			missing=true;												//no translation was provided, indicate missing input
 			return true;
 			}
@@ -739,9 +736,9 @@ function ex(){															//export auxiliary tag databases as text file
 			return JSON.stringify(xport,null,'\t');
 		},
 		dataType:'string',
-		downloadImage: 'http://puu.sh/dAkPH/0917853f95.png',
-		onError: function(){ alert('Downloadify2 error'); },
-		swf:  'http://puu.sh/bNDfH/c89117bd68.swf',
+		downloadImage: '//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify2.png',
+		onError: function(){ alert('Downloadify2 error');},
+		swf:  downloadifySwf,
 		width: 100,
 		height: 30,
 		transparent: true,
@@ -758,8 +755,8 @@ function handleFileSelect(evt) {										//fill databases with data from import
     var file = evt.files[0]; 
 	var reader = new FileReader();
 	reader.onloadend = function(e) {
-	  try{	
 		clear=confirm('Would you like to clear existing databases before importing?');
+	  try {	
 		o=JSON.parse(e.target.result);
 	  } catch(err){
 		alert('Error: '+err.message);
@@ -797,15 +794,21 @@ function updateHeight(){
 };
 
 function cleanup(full){													//remove variables and flash objects from memory
-	if (full) {
-		delete tagsDB;													
-		$('table#translations').remove();
-	};																	//non-full removal leaves tag database and downloadify button in place
-	delete names;														//without removal there would be a noticeable lag upon tab closing in Opera
-	delete meta;
-	x=document.getElementsByTagName('object');
-	for (i = 0; i < x.length; i++) {									//this part might execute before jQuery load
-		if ((full)||(x[i].id.search(/SwfStore_(names|meta)_\d/gi)!=-1))
-			x[i].parentNode.removeChild(x[i]);
+	if (debug) return;
+	if (full) {															//non-full removal leaves tag database and downloadify button in place
+		delete tagsDB;													//without removal there would be a noticeable lag upon tab closing in Opera
+		$('div#output').remove();
+		$("object[id^='SwfStore_animage_']").remove();
 	};			
-};
+	delete names;														
+	delete meta;
+	exim=document.getElementsByClassName('exim');						//this part might execute before jQuery load
+	if (exim.length) {
+		exim[0].parentNode.removeChild(exim[0]);							
+		exim[0].parentNode.removeChild(exim[0]);						//meh
+	}
+	x=document.querySelectorAll("object[id^='SwfStore_meta_']")[0];		
+	x.parentNode.removeChild(x); 										//eww
+	x=document.querySelectorAll("object[id^='SwfStore_names_']")[0];
+	x.parentNode.removeChild(x); 
+}
