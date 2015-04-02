@@ -5,19 +5,17 @@
 // @author		Seedmanc
 // @include	http://scenario.myweb.hinet.net/*
 // @include	http*://*.media.tumblr.com/*
-// @include	https://mywareroom.files.wordpress.com/*
-// @include	http://mywareroom.files.wordpress.com/*
+// @include	http*://mywareroom.files.wordpress.com/*
 // @include	http://e.blog.xuite.net/* 
 // @include	http://voice.x.fc2.com/*
-// @include	http://*.amazonaws.com/data.tumblr.com/* 
-// @include	https://*.amazonaws.com/data.tumblr.com/* 
+// @include	http*://*.amazonaws.com/data.tumblr.com/* 
 // ==/UserScript==
 													
-// ==Settings=====================================================
+// ==Settings======================================================
 
-	var root='E:\\#-A\\!Seiyuu\\';										//main collection folder
+	var root=			'E:\\#-A\\!Seiyuu\\';							//main collection folder
 
-	var folders={														//folder and names matching database
+	var folders=		{												//folder and names matching database
 		"	!!group	"	:	"	!!group	",								//used both for tag translation and providing the list of existing folders
 		"	!!solo	"	:	"	!!solo	",								//trailing whitespaces are voluntary in both keys and values,
 		"	!!unsorted"	:	"	!!unsorted	", 							// character case is only voluntary in key names
@@ -100,19 +98,20 @@
 		"	上坂すみれ	"	:	"	Uesaka Sumire	",
 		"	ゆかな		"	:	"	Yukana	"};
 
-	ignore={'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true};		
+	var ignore=			{'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true};		
 																		//these tags will not count towards any category and won't be included into filename
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 
-	var storeUrl='http://puu.sh/dyFtc/196a6da5b6.swf';					//flash databases are bound to the URL.  
-	var	downloadifySwf='http://puu.sh/bNDfH/c89117bd68.swf';			//button flash URL
-	debug=	true;														//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
+	var storeUrl=		'http://puu.sh/dyFtc/196a6da5b6.swf';			//flash databases are bound to the URL.  
+	var	downloadifySwf=	'http://puu.sh/bNDfH/c89117bd68.swf';			//button flash URL
+	debug=				true;											//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
 																		//also enables export and import of names and meta tag databases to/from a text file
 																		//also will cause "downloadify" button to appear even if no DB record was found 
-// ==/Settings=========================================================
+// ==/Settings=====================================================
 
 
-var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};//external script loader function
+var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};
+																		//external script loader function
 
 																		//communication between functions here is mostly done via global variables
  tagsDB=null;
@@ -126,74 +125,67 @@ var runonce=true; 														//flag ensuring that onready() is only executed 
 
 var style=" 							\
 	div#output {						\
-		position:absolute;				\
-		left:0; top:0;					\
-		width:100px; height:30px;		\
-		z-index:99;						\
+		position: absolute;				\
+		left: 0;		top: 0;			\
+		width: 100px;	height: 30px;	\
 	}									\
 	div#down {							\
-		left:0; top:0;					\
-		position:fixed;					\
-		padding-left:1px;				\
-		padding-top:0;					\
-		width:100px;					\
-		height:30px;					\
-		z-index:98;						\
+		position: fixed;				\
+		z-index: 98;					\
 	}									\
-	input.txt {							\
-		width:95%;						\
-	}									\
-	table, tr {							\
-		text-align:center;				\
-	}									\
-	td.cell, td.radio{					\
-		border:1px solid black;			\
-	}									\
-	td.settings {						\
-		border-left: 1px solid black;	\
-		border-right:1px solid black;	\
-	}									\
-	table.cell	{						\
-		width:100%; 					\
+	table#port {						\
+		top: 30px;						\
+		position: fixed;				\
+		border-bottom: 1px solid black;	\
+		background: lightgray;			\
+		z-index: 97;					\
+		width: 101px;					\
 		border-collapse: collapse;		\
 	}									\
-	table#translations 	{				\
+	table#translations {				\
 		border-spacing: 5px;			\
-		z-index:0;						\
-		position:absolute;				\
-		left:0;							\
-		top:52px;						\
-		overflow:scroll;				\
-		font-size:90%;					\
-		margin-left:-4px;				\
-		width:110px;					\
-		table-layout:fixed;				\
-		background:white;				\
+		position: absolute;				\
+		top: 52px;						\
+		overflow: scroll;				\
+		font-size: 90%;					\
+		margin-left: -5px;				\
+		width: 110px;					\
+		table-layout: fixed;			\
 	}									\
-	a {									\
-		font-family:Arial;				\
-		font-size:small;				\
-		text-align:center;				\
-		content-align:center;			\
+	td.settings {						\
+		border-left:  1px solid black;	\
+		border-right: 1px solid black;	\
 	}									\
 	a.settings {						\
-		text-decoration:none;			\
+		text-decoration: none;			\
+	}									\
+	table, tr {							\
+		text-align: center;				\
+	}									\
+	td#ex {								\
+		padding: 0;						\
+	}									\
+	input.txt {							\
+		width: 95%;						\
+	}									\
+	td.cell, td.radio{					\
+		border: 1px solid black;		\
+	}									\
+	table.cell {						\
+		background: white;				\
+		width: 100%; 					\
+		border-collapse: collapse;		\
+	}									\
+	a {									\
+		font-family: Arial;				\
+		font-size:   small;				\
 	}									\
 	th {								\
-		border:0;						\
+		border: 0;						\
 	}									\
-	input#submit{						\
-		width:98%;						\
-		height:29px;					\
-	}									\
-	table#port{							\
-		left:1px; top:30px;				\
-		position:fixed;					\
-		border-bottom:1px solid black;	\
-		background:lightgray;			\
-		z-index:97;						\
-		width:101px;					\
-		border-collapse:collapse;		\
+	input#submit {						\
+		width:  98%;					\
+		height: 29px;					\
 	}									\
 ";
 		
@@ -233,11 +225,11 @@ port=document.createElement('table');									//subtable for exporting and impor
 	row0=port.insertRow(1);
 	row0.insertCell(0).innerHTML=' <input type="checkbox" id="debug"  onchange="debugSwitch(this)" /> debug';	
 	row1=port.insertRow(2);
-	row1.insertCell(0).innerHTML='<a href="###" onclick=ex() class="exim">export tags</a>';
+	row1.insertCell(0).innerHTML='<a href="###" onclick=ex() class="exim">export db</a>';
 	row2=port.insertRow(3);	
 	row2.insertCell(0).id='ex';
 	row3=port.insertRow(4);
-	row3.insertCell(0).innerHTML=' <a href="####" onclick=im() class="exim">import tags</a> ';	
+	row3.insertCell(0).innerHTML=' <a href="####" onclick=im() class="exim">import db</a> ';	
 	row4=port.insertRow(5);
 	row4.insertCell(0).id='im';
 	port.id='port';
@@ -745,10 +737,12 @@ function ex(){															//export auxiliary tag databases as text file
 		append: false,
 		textcopy: ''	
 	});	
+	$('a.exim')[0].removeAttribute('onclick');
 };	
 
 function im(){															//import auxiliary tag databases as text file
 	$('#im').append('<input type="file" id="files" style="width:97px;" onchange="handleFileSelect(this)"/>'); 
+	$('a.exim')[1].removeAttribute('onclick');
 };
 
 function handleFileSelect(evt) {										//fill databases with data from imported file
@@ -802,6 +796,7 @@ function cleanup(full){													//remove variables and flash objects from me
 	};			
 	delete names;														
 	delete meta;
+
 	exim=document.getElementsByClassName('exim');						//this part might execute before jQuery load
 	if (exim.length) {
 		exim[0].parentNode.removeChild(exim[0]);							
