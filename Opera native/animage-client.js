@@ -18,9 +18,9 @@
 	var folders=		{												//folder and names matching database
 		"	!!group	"	:	"	!!group	",								//used both for tag translation and providing the list of existing folders
 		"	!!solo	"	:	"	!!solo	",								//trailing whitespaces are voluntary in both keys and values,
-		"	!!unsorted"	:	"	!!unsorted	", 							// character case is only voluntary in key names
-		"	原由実	"	:	"	!iM@S\\Hara Yumi	",					//first three key names are not to be changed, but folder names can be anything
-		"	今井麻美	"	:	"	!iM@S\\Imai Asami	",					//subfolders for categories instead of names must have '!' as first symbol
+		"	!!unsorted"	:	"	!!unsorted	", 							//first three key names are not to be changed, but folder names can be anything
+		"	原由実	"	:	"	!iM@S\\Hara Yumi	",					//subfolders for categories instead of names must have '!' as first symbol
+		"	今井麻美	"	:	"	!iM@S\\Imai Asami	",
 		"	沼倉愛美	"	:	"	!iM@S\\Numakura Manami	",
 		"	けいおん!	"	:	"	!K-On	",
 		"	日笠陽子	"	:	"	!K-On\\Hikasa Yoko	",
@@ -109,7 +109,6 @@
 																		//also will cause "downloadify" button to appear even if no DB record was found 
 // ==/Settings=====================================================
 
-
 var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};
 																		//external script loader function
 
@@ -189,9 +188,9 @@ var style=" 							\
 	}									\
 ";
 		
-uu = document.createElement('div');										//layers that will hold the download button and table for unknown tags
+uu = document.createElement('div');										//main layer that holds the GUI
 	uu.id = "output" ; 
-	uu.innerHTML="<div id='down' > </div>";
+	uu.innerHTML="<div id='down' > </div>";								//sublayer for downloadify button
  
 tb=document.createElement('table');										//table for entering manual translation of unknown tags
 	tb.id='translations';
@@ -216,7 +215,7 @@ tb=document.createElement('table');										//table for entering manual transla
 		<tr class="cell" ><th class="cell">name</th><th class="cell">meta</th></tr></table>';	
 	tb.hidden="hidden";
 	
-port=document.createElement('table');									//subtable for exporting and importing auxiliary tags database
+port=document.createElement('table');									//subtable for settings and im/export of tag databases
 	st2=port.style;
 	row= port.insertRow(0);
 	cell=row.insertCell(0);
@@ -246,7 +245,7 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 			reader.onloadend = function() {
 				base64data = reader.result;                
 				base64data=base64data.replace("data:;base64,","");
-				dl(base64data);											//call button creation function
+				dl(base64data);											//call the button creation function
 		}
 	} else if ((this.status!=200)&&(this.status!=0))
 		alert('Error getting image: '+this.status);
@@ -254,7 +253,7 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 
 function trimObj(obj){ 													//remove trailing whitespace in object keys and values,
 	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;
-	exclrgxp=/\/|:|\||>|<|\?|"/g;										// also make sure that folder names have no illegal characters
+	exclrgxp=/\/|:|\||>|<|\?|"/g;										// also make sure that folder names have no illegal characters,
 	roota=root.split('\\')
 	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) {
 		alert('Illegal characters in root folder path "'+root+'"');
@@ -274,7 +273,7 @@ function trimObj(obj){ 													//remove trailing whitespace in object keys 
 	};
 }; 
 
-function toggleSettings(){
+function toggleSettings(){												//show drop-down menu with settings
 	$('table#port td').not('.settings').toggle();
 	$('table#translations').css('top',($('table#port').height()+30)+'px');
 	sign=$('a.settings')[0];
@@ -285,18 +284,20 @@ function toggleSettings(){
 	updateHeight();
 };
 
-function debugSwitch(checkbox){
+function debugSwitch(checkbox){											//toggling debug mode requires page reload
 	debug = checkbox.checked;
 	tagsDB.set(':debug:',debug );
 	location.reload();
 };
+
 document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
 
 function onDOMcontentLoaded(){ 											//load plugins and databases
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){
 		$('body')[0].appendChild(uu);
 		J=true; 
-		mutex();}
+		mutex();
+		}
 	);
 	names = new SwfStore({												//auxiliary database for names that don't have folders
 		namespace: "names",
@@ -320,11 +321,11 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 			document.title+=' ✗ meta failed to load';}
 	});
 	
-	tagsDB = new SwfStore({												//loading tag database, holds pairs "filename	is_saved,tag1,tag2,...,tagN"
+	tagsDB = new SwfStore({												//loading main tag database, holds pairs "filename	is_saved,tag1,tag2,...,tagN"
 		namespace: "animage",
 		swf_url: storeUrl,  
 		debug: debug,
-		onready: function(){ 											//Opera seems to have a bug where loading multiple flash DBs causes double
+		onready: function(){ 											//Opera seems to have a bug where loading of multiple flash DBs causes double
 		 	if (runonce) 												// calling of onready functions
 				onDBready();											
 			runonce=false;	
@@ -333,12 +334,13 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 			alert('tagsDB failed to load');}
 	});
 };
+
 var intrvl; 
 function onDBready(){													//poll readiness of flashDB plugin until it's actually ready, because onready() and .ready lie
 	document.querySelectorAll("div[id^='SwfStore_animage_']")[0]['style']="top: -2000px; left: -2000px; position: absolute;";
 	clearTimeout(intrvl);												// ^ this might load before jQuery so have to use vanilla js
 	try {		
-		debug =(tagsDB.get(':debug:')=='true');
+		debug=(tagsDB.get(':debug:')=='true');
 		tagsDB.config.debug=debug;
 		getTags(false);		
 	}
@@ -362,9 +364,9 @@ function getTags(retry){												//manages tags acquisition for current image
 			cleanup(false)												//remove extra stuff as if nothing happened
 		else {
 			retry=true;													//but if not schedule a second attempt at retrieving tags to image load end
-			window.addEventListener('load',function(){getTags(true); },false);
-		};										//TODO: make getTags actually return  the value to main() to get rid of global var
-};
+			window.addEventListener('load',function(){ getTags(true);},false);
+		};										
+};											//TODO: make getTags actually return  the value to main() to get rid of global var
 
 function mutex(){														//checks readiness of plugin and databases when they're loading simultaneously 
 	if (J && N && M && T) {												//when everything is loaded, proceed further
@@ -385,7 +387,7 @@ function main(){ 														//launch tag processing and handle afterwork
 	unsorted=analyzeTags();
 	updateHeight();														//changing DOM in Opera messes up vertical scrolling	
 	
-	xhr.open("get",document.location.href,  true); 						//reget the image to attach it to downloadify button
+	xhr.open("get", document.location.href, true); 						//reget the image to attach it to downloadify button
 	xhr.send();  
 		
 	if (!unsorted)
@@ -434,7 +436,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		else return v;
 	});
 																		//1st sorting stage, no prior knowledge about found categories
-	$.each(tags, function(i,v){ 										//split the tags for the image into 5 categories
+	$.each(tags, function(i,v){ 										//divide tags for the image into 5 categories
 		if (folders[v]) 												//	the "has folder" category
 			fldrs.push(folders[v])
 		else if (names.get(v)) 											//	the "no folder name tag" category
@@ -448,7 +450,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 				splt=v.split(' ');
 				if (splt.length==2)	{									//some bloggers put tags for both name reading orders (name<->surname),
 					rvrs=splt.reverse().join(' ');
-					if (names.get(rvrs)) {								// thus creating potentially duplicating tags
+					if (names.get(rvrs)) {								// thus creating duplicating tags
 						nms.push(names.get(rvrs))						//try to find database entry for reversed order first,
 						return true;									//note that folders{}  database is not expected to have roman tags
 					}
@@ -464,11 +466,10 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 																		//2nd sorting stage, now we know how many tags of each category there are
 																		//it's time to filter the "ansi" category further
 	$.each(fldrs.concat(nms.concat(mt)), function(i,v){					//some bloggers put both kanji and translated names into tags
-		x=getFname(v).toLowerCase();									
-		if (x.indexOf('!')==0) x=x.replace('!','');
+		x=getFname(v).toLowerCase().replace(/^!/,'');
 		y=x.split(' ').reverse().join(' ');								//check if we already have a name translated to avoid duplicates
 		delete ansi[x];													//I have to again check for both orders even though I deleted one of them before
-		delete ansi[y];													// but at the time of deletion there is no way to know yet which one would match the kanji tag
+		delete ansi[y];													// but at the time of deletion there was no way to know yet which one would match the kanji tag
 	});																	//this also gets rid of reverse duplicates between recognized tags and ansi
 		
 	fldrs2=[];						
@@ -486,12 +487,10 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 			return true;												//return all the non-meta folder tags
 		}
 	);
-	if (fldrs2.length==1) {												//make sure only one folder meta tags exists
-		folders['!!solo']=fldrs2[0];									// replace solo folder with metatag folder, explained in 3rd sorting stage
-		folders['!!group']=fldrs2[0];									// same for group folder
-	};	
-	
-	fn="";			
+	if (fldrs2.length==1) {												//make sure only one folder meta tag exists
+		folders['!!solo']=fldrs2[0];									//replace solo folder with metatag folder, so the image can go there if needed,
+		folders['!!group']=fldrs2[0];									// same for group folder (see 3rd sorting stage)
+	};		
 	fldrs2=$.map(fldrs,function(vl,ix){
 		return getFname(vl);											//extract names from folder paths
 	});		
@@ -505,40 +504,12 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 																		//this way the images are ready to be uploaded to boorus using the mass booru uploader script
 																		
 	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);				//unsorted flag is set if there are tags outside of 3 main categories 
-	tb.setAttribute("hidden","hidden");		
-																		//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
+	tb.setAttribute("hidden","hidden");				
+	fn='';																//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
 	if (unsorted)  {													//if there are any untranslated tags, make a table with text fields to provide manual translation
-		tb.removeAttribute("hidden");									//build the table with manual translation inputs 
-		options='';
-		tbd=tb.appendChild(document.createElement('tbody'));
-		$.each(ansi, function(i,v){										//first process the unassigned roman tags
-			row1=tbd.insertRow(0);
-			cell1=row1.insertCell(0);  
-			cell1.id=i;
-			swp='<input type="button" value="swap" onclick="swap(this)" id="swap" />'
-			cell1.innerHTML=tagcell+i+'</a><br>'+swp+'</td></tr></table>'; 
-			if (i.split(' ').length!=2)									//for roman tags consisting of 2 words enable button for swapping their order
-				$(cell1).find('input#swap').attr('disabled','disabled');//script can't know which name/surname order is correct so the choice is left to user
-			
-			$(cell1).attr('class','cell ansi');
-			$(cell1).find('input[type="radio"]').attr('name',i);			
-			options='<option value="'+i+'"></option>'+options;			//populate the drop-down selection lists with these tags
-																		//so they can be used for translating kanji tags if possible
-		}); 
-		$.each(rest, function(i,v){										//now come the untranslated kanji tags
-			fn+='['+v.replace(/\s/g,'_')+']'+' '; 						//such tags are enclosed in [ ]  in filename for better searchability on disk
-			row1=tbd.insertRow(0);
-			cell1=row1.insertCell(0); 
-			cell1.id=v;
-			cell1.innerHTML=tagcell+v+'</a><br><input list="translation" size=10 class="txt" onchange="selected(this)"/>\
-				<datalist id="translation">'+options+'</datalist></td></tr></table>'; 
-			$(cell1).attr('class','cell kanji');
-			$(cell1).find('input[type="radio"]').attr('name',v);
-		}); 															//in case the blogger provided both roman tag and kanji tag for names,
-																		// the user can simply select one of roman tags for every kanji tag as translation
-																		// to avoid typing them in manually				
+		buildTable(ansi, rest);
 		folder=folders["!!unsorted"]+'\\';   							//mark image as going to "unsorted" folder if it still has untranslated tags
-		filename=fn+ ' '+filename;
+		filename=fn+' '+filename;
 		document.title+='? ';											//no match ;_;
 	} else															
 	 if ((fldrs.length==1)&&(nms.length==0)){							//otherwise if there's only one tag and it's a folder tag, assign the image right there
@@ -549,7 +520,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		document.title+='✓ '; 											//100% match, yay
 	} else
 	 if ((fldrs.length==0)&&(nms.length==1)){							//if there's only one name tag without a folder for it, goes into default "solo" folder
-		folder=folders['!!solo']+'\\'; 									// unless we had a !metafolder tag earlier, then the solo folder would have been 
+		folder=folders['!!solo']+'\\'; 									// unless we had a !meta folder tag earlier, then the solo folder would have been 
 																		// replaced with the appropriate !meta folder
 	} else 
 	 if (nms.length+fldrs.length>1)										//otherwise if there are several name tags, folder or not, move to the default "group" folder
@@ -558,10 +529,40 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	document.title+=' \\'+folder+filename;
 	folder=root+folder;													//if no name or folder tags were found, folder will be set to root directory
 														
-	folder=folder.replace(/\/|\||>|<|\?|"/g,'-');						//perhaps this is redundant
+	//folder=folder.replace(/\/|\||>|<|\?|"/g,'-');						//perhaps this is redundant
 	
 	if (DBrec.split(',')[0]=='1') document.title+=' (already saved)';	//indicate if the image has been marked as saved before
 	return unsorted;
+};
+
+
+	tb.removeAttribute("hidden");										//build the table with manual translation inputs 
+	options='';
+	tbd=tb.appendChild(document.createElement('tbody'));
+	$.each(ansi, function(i,v){											//first process the unassigned roman tags
+		row1=tbd.insertRow(0);
+		cell1=row1.insertCell(0);  
+		cell1.id=i;
+		swp='<input type="button" value="swap" onclick="swap(this)" id="swap" />'
+		cell1.innerHTML=tagcell+i+'</a><br>'+swp+'</td></tr></table>'; 
+		if (i.split(' ').length!=2)										//for roman tags consisting of 2 words enable button for swapping their order
+			$(cell1).find('input#swap').attr('disabled','disabled');	//script can't know which name/surname order is correct so the choice is left to user
+		$(cell1).attr('class','cell ansi');
+		$(cell1).find('input[type="radio"]').attr('name',i);			
+		options='<option value="'+i+'"></option>'+options;				//populate the drop-down selection lists with these tags
+	});																	//so they can be used for translating kanji tags if possible
+ 
+	$.each(rest, function(i,v){											//now come the untranslated kanji tags
+		fn+='['+v.replace(/\s/g,'_')+']'+' '; 							//such tags are enclosed in [ ]  in filename for better searchability on disk
+		row1=tbd.insertRow(0);
+		cell1=row1.insertCell(0); 
+		cell1.id=v;
+		cell1.innerHTML=tagcell+v+'</a><br><input list="translation" size=10 class="txt" onchange="selected(this)"/>\
+			<datalist id="translation">'+options+'</datalist></td></tr></table>'; 
+		$(cell1).attr('class','cell kanji');
+		$(cell1).find('input[type="radio"]').attr('name',v);			//in case the blogger provided both roman tag and kanji tag for names,
+	}); 																// the user can simply select one of roman tags for every kanji tag as translation
+																		// to avoid typing them in manually	
 };
 
 function ignor3(anc){													//remove clicked tag from results for current session (until page reload)
@@ -584,24 +585,22 @@ function swap(txt){														//swap roman tags consisting of 2 words
 																		
 	data=$('datalist');													//these are most likely the names so they can have different writing orders
 	set=[];
+	theTag=$(txt).prev().prev()[0];
 	$.each(data.find('option'), function(i,v){
-		if (v.value==$(txt).prev().prev()[0].innerText)
-			set.push(v);
+		if (v.value==theTag.innerText)
+			set.push(v);												//collect all options from drop-down lists containing the tag to be swapped
 		}
 	);
-	text=$(txt).prev().prev()[0].innerText.split(' ');
+	swapped=theTag.innerText.split(' ').reverse().join(' ');
 
-	if (text.length==2){
-		text=text.reverse();
-		$(txt).prev().prev()[0].innerText=text.join(' ');
-		tdc=$(txt).parent().parent().parent().parent().parent();
-		tdc[0].id=text.join(' ');
-		tdc.prop('swap',!tdc.prop('swap'));								//mark as swapped
-		$.each(set,function(i,v){
-			v.value=text.join(' ');
-			}
-		);
-	};	
+	theTag.innerText=swapped;
+	tdc=$(txt).parent().parent().parent().parent().parent();			//change ids of tag cells as well
+	//tdc[0].id=swapped;
+	tdc.prop('swap',!tdc.prop('swap'));									//mark node as swapped
+	$.each(set,function(i,v){
+		v.value=swapped;												//apply changes to quick selection lists too
+		}
+	);
 };
 
 function selected(inp){													//hide the corresponding roman tag from results when it has been selected 
@@ -610,16 +609,16 @@ function selected(inp){													//hide the corresponding roman tag from resu
 	knj={};
 	$.each(kanji,function(i,v){
 		knj[v.value]=true;
-		$.each(ansi,function(ix,vl){ 
+		$.each(ansi,function(ix,vl){ 									//have to show a previously hidden tag if another was selected
 			if (vl.innerText.trim()==v.value.trim())
 				$(vl).parent().attr('hidden','hidden');
 			}
 		);
 		}
 	);
-	$.each(ansi,function(ix,vl){
+	$.each(ansi,function(ix,vl){										//i don't even remember how and why it works
 			if ((!knj[vl.innerText.trim()])&&(!$(vl).parent().attr('ignore')))
-				$(vl).parent().removeAttr('hidden');
+				$(vl).parent().removeAttr('hidden');					//but it does
 			}
 		);
 	updateHeight();
@@ -668,8 +667,7 @@ function dl(base64data){												//make downloadify button with base64 encode
 function onCmplt(){														//mark image as saved in the tag database
 	if (DBrec)	{														//it is used to mark saved images on tumblr pages
 		DBrec=DBrec.split(','); 									
-		DBrec.shift();
-		DBrec.unshift('1');								
+		DBrec[0]='1';								
 		DBrec=DBrec.join(',');							
 		tagsDB.set(getFname(document.location.href), DBrec);
 		document.title+=' (saved now)';
@@ -678,7 +676,7 @@ function onCmplt(){														//mark image as saved in the tag database
 }
 
 function submit(){														//collects entered translations for missing tags
-	tgs=$('td.cell');													//saves them to databases and relaunch tag analysis with new data
+	tgs=$('td.cell');													//saves them to databases and relaunches tag analysis with new data
 	missing=false;
 	$.each(tgs,function(i,v){
 		if ($(v).parent().attr('hidden')) {
@@ -691,7 +689,7 @@ function submit(){														//collects entered translations for missing tags
 		else {
 			t=v.innerText.trim(); 										//found roman tag
 			if ($(v).prop('swap'))
-				DBrec=DBrec.replace(t.split(' ').reverse().join(' '),t);//apply swap changes to current taglist
+				DBrec=DBrec.replace(t.split(' ').reverse().join(' '),t);//apply swap changes to the current taglist
 		}
 		cat=$(v).find('input.category');
 		if (t.length){
@@ -721,11 +719,11 @@ function submit(){														//collects entered translations for missing tags
 };
 
 function ex(){															//export auxiliary tag databases as text file
-	Downloadify.create( 'ex'  ,{
+	Downloadify.create('ex' ,{
 		filename: 'names&meta tags DB.txt', 
 		data: function(){
 			xport={names:names.getAll(), meta:meta.getAll()};
-			return JSON.stringify(xport,null,'\t');
+			return JSON.stringify(xport, null, '\t');
 		},
 		dataType:'string',
 		downloadImage: '//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify2.png',
@@ -745,7 +743,7 @@ function im(){															//import auxiliary tag databases as text file
 	$('a.exim')[1].removeAttribute('onclick');
 };
 
-function handleFileSelect(evt) {										//fill databases with data from imported file
+function handleFileSelect(evt) {										//fill in databases with data from imported file
     var file = evt.files[0]; 
 	var reader = new FileReader();
 	reader.onloadend = function(e) {
@@ -778,13 +776,13 @@ function handleFileSelect(evt) {										//fill databases with data from import
     reader.readAsText(file);
 };
 
-function updateHeight(){
-	wndht=$(window).height();
+function updateHeight(){												//fix bug in Opera, where changing DOM can sometimes mess vertical scrolling
+	wndht=$(window).height();											// so it gets shorter than actual content height
 	imght=$('img').height();
 	ht=$('table#translations').height()+$('table#port').height()+$('div#down').height();
 	if (ht<wndht) return;
-	maxht=Math.max(ht,imght,wndht);
-	$('body').css('height',maxht+'px');
+	maxht=Math.max(ht, imght, wndht);
+	$('body').css('height', maxht+'px');
 };
 
 function cleanup(full){													//remove variables and flash objects from memory
