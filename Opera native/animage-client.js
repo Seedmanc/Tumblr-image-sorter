@@ -535,6 +535,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	return unsorted;
 };
 
+function buildTable(ansi, rest) {										//create table for untranslated tags for manual input
 
 	tb.removeAttribute("hidden");										//build the table with manual translation inputs 
 	options='';
