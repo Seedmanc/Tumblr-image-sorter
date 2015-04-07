@@ -98,7 +98,7 @@
 		"	上坂すみれ	"	:	"	Uesaka Sumire	",
 		"	ゆかな		"	:	"	Yukana	"};
 
-	var ignore=			{'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true};		
+	var ignore=			{'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true, 'Siruth Queue':true};		
 																		//these tags will not count towards any category and won't be included into filename
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 
@@ -121,6 +121,7 @@ var folder = '';
 var DBrec;																//raw DB record
 var J=N=M=T=false;														//flags indicating readyness of plugins loaded simultaneously
 var runonce=true; 														//flag ensuring that onready() is only executed once
+var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;									//pattern of characters not to be used in filepaths
 
 var style=" 							\
 	div#output {						\
@@ -233,7 +234,8 @@ port=document.createElement('table');									//subtable for settings and im/exp
 	row4.insertCell(0).id='im';
 	port.id='port';
 
-trimObj(folders);																														
+trimObj(folders);		
+trimObj(ignore);																												
 																		
 var xhr = new XMLHttpRequest();											//redownloads opened image as blob 
 	xhr.responseType="blob";											//so that it would be possible to get it via downloadify button
@@ -251,17 +253,19 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 		alert('Error getting image: '+this.status);
 };
 
-function trimObj(obj){ 													//remove trailing whitespace in object keys and values,
-	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;
-	exclrgxp=/\/|:|\||>|<|\?|"/g;										// also make sure that folder names have no illegal characters,
+function trimObj(obj){ 													//remove trailing whitespace in object keys and values & check correctness of user input
+	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;										//make sure that folder names have no illegal characters
+  try {
 	roota=root.split('\\')
 	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) {
 		alert('Illegal characters in root folder path "'+root+'"');
 		throw new Error('Illegal characters in root');
 	};
-	for (var key in obj) {												// also convert keys to lower case for better matching
-		if (obj.hasOwnProperty(key)) { 									
-			t=obj[key].trim();
+	for (var key in obj) {												//convert keys to lower case for better matching
+		if (obj.hasOwnProperty(key)) { 
+			t=obj[key];
+			if (typeof t == 'string')
+				t=t.trim();
 			k=key.trim().toLowerCase();
 			delete obj[key];
 			obj[k]=t;
@@ -271,6 +275,10 @@ function trimObj(obj){ 													//remove trailing whitespace in object keys 
 			};
 		};
 	};
+  } catch (err) {
+		alert(err.name+': '+err.message);								//gotta notify the user somehow
+		throw err;
+  };
 }; 
 
 function toggleSettings(){												//show drop-down menu with settings
@@ -419,9 +427,9 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	ansi={}
 	rest=[];
 	
-	tags=$.map(tags,function(v,i){										//some formatting is applied to taglist before processing
-		v=v.replace(/’/g,"\'");				
-		v=v.replace(/"/g,"''");										
+	tags=$.map(tags,function(v,i){										//some formatting is applied to the taglist before processing
+		v=v.replace(/’/g,"\'").replace(/"/g,"''");					
+		v=v.replace(/\\/g, '-');									
 		v=v.replace(/(ou$)|(ou )/gim,'o ').trim();						//eliminate variations in writing 'ō' as o/ou at the end of the name in favor of 'o'
 																		//I dunno if it should be done in the middle of the name as well
 		$.each(tags, function(ii,vv){
@@ -432,7 +440,8 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 					tags[ii]='';										//some bloggers put kanji tags both with and without spaces, remove duplicates with spaces
 			}
 		);																
-		if ((ignore[v])||(!v)) return null								//remove ignored tags so that they don't affect tag amount
+		if ((ignore[v])||(!v)||(ignore[v.split(' ').reverse().join(' ')]))
+			return null													//remove ignored tags so that they don't affect tag amount
 		else return v;
 	});
 																		//1st sorting stage, no prior knowledge about found categories
@@ -506,6 +515,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);				//unsorted flag is set if there are tags outside of 3 main categories 
 	tb.setAttribute("hidden","hidden");				
 	fn='';																//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
+	nms=mkUniq(nms);
 	if (unsorted)  {													//if there are any untranslated tags, make a table with text fields to provide manual translation
 		buildTable(ansi, rest);
 		folder=folders["!!unsorted"]+'\\';   							//mark image as going to "unsorted" folder if it still has untranslated tags
@@ -525,11 +535,9 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	} else 
 	 if (nms.length+fldrs.length>1)										//otherwise if there are several name tags, folder or not, move to the default "group" folder
 		folder=folders['!!group']+'\\';									// same as the above applies for meta
-	filename=filename.replace(/\/|\\|:|\||>|<|\?|"/g,'-').trim();		//make sure there are no forbidden characters in the resulting name
+	filename=filename.replace(exclrgxp, '-').replace(/\\/g, '-').trim();//make sure there are no forbidden characters in the resulting name 
 	document.title+=' \\'+folder+filename;
 	folder=root+folder;													//if no name or folder tags were found, folder will be set to root directory
-														
-	//folder=folder.replace(/\/|\||>|<|\?|"/g,'-');						//perhaps this is redundant
 	
 	if (DBrec.split(',')[0]=='1') document.title+=' (already saved)';	//indicate if the image has been marked as saved before
 	return unsorted;
@@ -680,7 +688,7 @@ function submit(){														//collects entered translations for missing tags
 	tgs=$('td.cell');													//saves them to databases and relaunches tag analysis with new data
 	missing=false;
 	$.each(tgs,function(i,v){
-		if ($(v).parent().attr('hidden')) {
+		if ($(v).parent().attr('ignore')) {
 			ignore[v.id]=true;											//mark hidden tags as ignored
 			return true;
 		};
@@ -694,7 +702,11 @@ function submit(){														//collects entered translations for missing tags
 		}
 		cat=$(v).find('input.category');
 		if (t.length){
-			if (cat[0].checked) 										//name category was selected for this tag
+			if (!isANSI(t)) {
+				$(v).find('input.txt').css("background-color","#ffC080");
+				missing=true;											//indicate unicode characters in user input
+			} 
+			else if (cat[0].checked) 									//name category was selected for this tag
 				names.set(v.innerText.trim().toLowerCase(),t)		
 			else if (cat[1].checked)									//meta category was selected
 				meta.set(v.innerText.trim().toLowerCase(), t)
