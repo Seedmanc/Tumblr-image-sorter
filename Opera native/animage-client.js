@@ -14,12 +14,13 @@
 // ==Settings======================================================
 
 	var root=			'E:\\#-A\\!Seiyuu\\';							//main collection folder
-
+	var ms=				'!';											//metasymbol, denotes folders for categories instead of names, must be the first character
+	
 	var folders=		{												//folder and names matching database
 		"	!!group	"	:	"	!!group	",								//used both for tag translation and providing the list of existing folders
 		"	!!solo	"	:	"	!!solo	",								//trailing whitespaces are voluntary in both keys and values,
 		"	!!unsorted"	:	"	!!unsorted	", 							//first three key names are not to be changed, but folder names can be anything
-		"	原由実	"	:	"	!iM@S\\Hara Yumi	",					//subfolders for categories instead of names must have '!' as first symbol
+		"	原由実	"	:	"	!iM@S\\Hara Yumi	",					//subfolders for categories instead of names must have the metasymbol as first symbol
 		"	今井麻美	"	:	"	!iM@S\\Imai Asami	",
 		"	沼倉愛美	"	:	"	!iM@S\\Numakura Manami	",
 		"	けいおん!	"	:	"	!K-On	",
@@ -102,11 +103,10 @@
 																		//these tags will not count towards any category and won't be included into filename
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 
-	var storeUrl=		'http://puu.sh/dyFtc/196a6da5b6.swf';			//flash databases are bound to the URL.  
-	var	downloadifySwf=	'http://puu.sh/bNDfH/c89117bd68.swf';			//button flash URL
-	debug=				true;											//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
-																		//also enables export and import of names and meta tag databases to/from a text file
-																		//also will cause "downloadify" button to appear even if no DB record was found 
+	var storeUrl=		'http://puu.sh/dyFtc/196a6da5b6.swf';			//flash databases are bound to the URL, must be same as in the second script
+	var	downloadifySwf=	'http://puu.sh/bNDfH/c89117bd68.swf';			//flash button URL
+	debug=				false;											//initial debug value, affects creation of flashDBs, can be changed via GUI
+
 // ==/Settings=====================================================
 
 var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};
@@ -123,7 +123,8 @@ var J=N=M=T=false;														//flags indicating readyness of plugins loaded s
 var runonce=true; 														//flag ensuring that onready() is only executed once
 var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;									//pattern of characters not to be used in filepaths
 
-var style=" 							\
+var style={																//in an object so you can fold it in editor		
+	s:"		 							\
 	div#output {						\
 		position: absolute;				\
 		left: 0;		top: 0;			\
@@ -187,8 +188,8 @@ var style=" 							\
 		width:  98%;					\
 		height: 29px;					\
 	}									\
-";
-		
+"};
+																		
 uu = document.createElement('div');										//main layer that holds the GUI
 	uu.id = "output" ; 
 	uu.innerHTML="<div id='down' > </div>";								//sublayer for downloadify button
@@ -256,11 +257,12 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 function trimObj(obj){ 													//remove trailing whitespace in object keys and values & check correctness of user input
 	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;										//make sure that folder names have no illegal characters
   try {
-	roota=root.split('\\')
-	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) {
-		alert('Illegal characters in root folder path "'+root+'"');
-		throw new Error('Illegal characters in root');
-	};
+	roota=root.split('\\');
+	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) 
+		throw new Error('Illegal characters in root folder path: "'+root+'"');
+	ms=ms[0];															//it's a symbol, not a string, after all
+	if ((exclrgxp.test(ms))||(/\\/.test(ms)))  
+		throw new Error ('Illegal character as metasymbol: "'+ms+'"');
 	for (var key in obj) {												//convert keys to lower case for better matching
 		if (obj.hasOwnProperty(key)) { 
 			t=obj[key];
@@ -269,17 +271,15 @@ function trimObj(obj){ 													//remove trailing whitespace in object keys 
 			k=key.trim().toLowerCase();
 			delete obj[key];
 			obj[k]=t;
-			if (exclrgxp.test(obj[k])) {
-				alert('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"');
-				throw new Error('Illegal character in database error');	//can't continue until the problem is fixed
-			};
+			if (exclrgxp.test(obj[k]))  								//can't continue until the problem is fixed
+				throw new Error('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"'); 
 		};
 	};
   } catch (err) {
 		alert(err.name+': '+err.message);								//gotta notify the user somehow
 		throw err;
   };
-}; 
+}; 															//TODO: even more checks here
 
 function toggleSettings(){												//show drop-down menu with settings
 	$('table#port td').not('.settings').toggle();
@@ -384,7 +384,7 @@ function mutex(){														//checks readiness of plugin and databases when t
 };
 
 function main(){ 														//launch tag processing and handle afterwork
-	$( "<style>"+style+"</style>" ).appendTo( "head" );
+	$( "<style>"+style.s+"</style>" ).appendTo( "head" );
 	$('div#output').append(port);	
 	toggleSettings();	
 	$('input#debug').prop('checked',debug);	
@@ -475,7 +475,8 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 																		//2nd sorting stage, now we know how many tags of each category there are
 																		//it's time to filter the "ansi" category further
 	$.each(fldrs.concat(nms.concat(mt)), function(i,v){					//some bloggers put both kanji and translated names into tags
-		x=getFname(v).toLowerCase().replace(/^!/,'');
+		rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			//potential problem?
+		x=getFname(v).toLowerCase().replace(rx,'');
 		y=x.split(' ').reverse().join(' ');								//check if we already have a name translated to avoid duplicates
 		delete ansi[x];													//I have to again check for both orders even though I deleted one of them before
 		delete ansi[y];													// but at the time of deletion there was no way to know yet which one would match the kanji tag
@@ -484,12 +485,12 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	fldrs2=[];						
 	fldrs=$.grep(fldrs,function(v,i){									//a trick to process folders for meta tags, having subfolders for names inside
 		fmeta=getFname(v);
-		if ((fmeta.indexOf('!')==0)&&(fmeta.indexOf('!!')==-1)) {		//such folders must have "!" as the first symbol, not counting the special folders having "!!" there
+		if ((fmeta.indexOf(ms)==0)) {									//such folders must have the metasymbol as the first character
 			fldrs2.push(fmeta);
 			if (fldrs.concat(nms).length==1)							//in the rare case when there are no name tags at all we put the image to meta folder
 				folder+=v+'\\'											// no need to put meta tag into filename this way, since the image will be in the same folder
 			else
-				mt.push(fmeta.replace('!',''));	 						//usually it needs to be done though
+				mt.push(fmeta.replace(ms,''));	 						//usually it needs to be done though
 			return false;												//exclude processed meta tags from folder category
 			}
 		else

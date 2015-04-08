@@ -10,20 +10,18 @@
 // @include	http://*.tumblr.com/image/*
 // @include	http://*.tumblr.com/search/*
 // @exclude	http://*.media.tumblr.com/*
-
-// @run-at document-start
 // ==/UserScript==
 
 // ==Settings=====================================================
 
-	var debug=	true;															//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
+	var debug=		true;														//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
 																				// also overwrite database records for images every time 
-	var highlight='darkgrey';													//color to mark the already saved images with
-	var storeUrl='http://puu.sh/dyFtc/196a6da5b6.swf';							//flash databases are bound to the URL.							
+	var highlight=	'darkgrey';													//color to mark the already saved images with
+	var storeUrl=	'http://puu.sh/dyFtc/196a6da5b6.swf';						//flash databases are bound to the URL, must be same as in the 2nd script
 
 // ==/Settings====================================================
 
-var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};		//external script loader function
+var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};	//external script loader function
 
  tagsDB=null;
 var ranonce=false;
@@ -33,12 +31,9 @@ namae=document.location.host;
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
 function cleanUp(){																//remove variables and flash objects from memory 
-	if (!debug){																//without removal there would be a noticeable lag upon tab closing
-		delete tagsDB;
-		a=jQuery('object');
-		jQuery.each(a,function(i,v){
-			v.parentNode.removeChild(v)});
-	};
+	if (debug) return;															//without removal there would be a noticeable lag upon tab closing in Opera
+	delete tagsDB;
+	jQuery("object[id^='SwfStore_animage_']").remove();
 };
 
 function getFname(fullName){													//extract filename from image URL and format it
