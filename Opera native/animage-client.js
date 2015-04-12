@@ -3,12 +3,14 @@
 // @description	Determines the path for saving current image to based on its tags.
 // @version	1.0
 // @author		Seedmanc
-// @include	http://scenario.myweb.hinet.net/*
+// @include	http*://*.amazonaws.com/data.tumblr.com/* 
 // @include	http*://*.media.tumblr.com/*
+
+// @include	http://scenario.myweb.hinet.net/*										//these sites are used by animage.tumblr.com to host original versions of images
 // @include	http*://mywareroom.files.wordpress.com/*
 // @include	http://e.blog.xuite.net/* 
 // @include	http://voice.x.fc2.com/*
-// @include	http*://*.amazonaws.com/data.tumblr.com/* 
+
 // ==/UserScript==
 													
 // ==Settings======================================================
@@ -250,8 +252,14 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 				base64data=base64data.replace("data:;base64,","");
 				dl(base64data);											//call the button creation function
 		}
-	} else if ((this.status!=200)&&(this.status!=0))
+	} else if ((this.status!=200)&&(this.status!=0)) {
+		if (this.status==404) {
+			cleanup(true);
+			document.title='Error '+this.status;
+			throw new Error('404');
+		};											//TODO add fallback to tumblr hosted image if link url fails
 		alert('Error getting image: '+this.status);
+	};
 };
 
 function trimObj(obj){ 													//remove trailing whitespace in object keys and values & check correctness of user input
@@ -301,6 +309,10 @@ function debugSwitch(checkbox){											//toggling debug mode requires page re
 document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
 
 function onDOMcontentLoaded(){ 											//load plugins and databases
+	href=document.location.href;
+	if (href.indexOf('tumblr')!=-1) 									//if not on tumblr
+		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))		//check if this is actually an image link
+			return;
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){
 		$('body')[0].appendChild(uu);
 		J=true; 
