@@ -5,8 +5,8 @@
 // @author		Seedmanc
 // @include	http*://*.amazonaws.com/data.tumblr.com/* 
 // @include	http*://*.media.tumblr.com/*
-
-// @include	http://scenario.myweb.hinet.net/*										//these sites are used by animage.tumblr.com to host original versions of images
+//these sites are used by animage.tumblr.com to host original versions of images
+// @include	http://scenario.myweb.hinet.net/*										
 // @include	http*://mywareroom.files.wordpress.com/*
 // @include	http://e.blog.xuite.net/* 
 // @include	http://voice.x.fc2.com/*
@@ -257,7 +257,7 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 			cleanup(true);
 			document.title='Error '+this.status;
 			throw new Error('404');
-		};											//TODO add fallback to tumblr hosted image if link url fails
+		};											//TODO: add fallback to tumblr hosted image if link url fails
 		alert('Error getting image: '+this.status);
 	};
 };
@@ -617,7 +617,6 @@ function swap(txt){														//swap roman tags consisting of 2 words
 
 	theTag.innerText=swapped;
 	tdc=$(txt).parent().parent().parent().parent().parent();			//change ids of tag cells as well
-	//tdc[0].id=swapped;
 	tdc.prop('swap',!tdc.prop('swap'));									//mark node as swapped
 	$.each(set,function(i,v){
 		v.value=swapped;												//apply changes to quick selection lists too
@@ -665,7 +664,7 @@ function getFname(fullName, full){										//source URL processing for filename
 		fullName=fullName.substring(0,fullName.lastIndexOf('_')-2);		// links only have a part of the filename without a few last symbols and extension,
 																		// have to match it here as well, but we need full filename for downloadify, thus the param
 	fullName=fullName.replace(/\\/g,'/');								//function is used both for URLs and folder paths which have opposite slashes
-	return fullName.substring(fullName.lastIndexOf('/')+1 );
+	return fullName.split('/').pop();
 };
 
 function dl(base64data){												//make downloadify button with base64 encoded image file as parameter
