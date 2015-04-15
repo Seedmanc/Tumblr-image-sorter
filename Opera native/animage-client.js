@@ -53,6 +53,7 @@
 		"	平野綾	"	:	"	!SOS-dan\\Hirano Aya	", 
 		"	スフィア	"	:	"	!Sphere	", 
 		"	戸松遥	"	:	"	!Sphere\\Tomatsu Haruka	",
+		"	tomatsu haruka":"	!Sphere\\Tomatsu Haruka	",
 		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",
 		"	堀江由衣	"	:	"	!Yamato Nadeshiko\\Horie Yui",
 		"	田村ゆかり	"	:	"	!Yamato Nadeshiko\\Tamura Yukari	",
@@ -426,7 +427,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	folder='';
 	filename=getFname(document.location.href, true);
     if (debug)
-		document.title+=' '+DBrec										//show raw DB record 
+		document.title=DBrec+' '										//show raw DB record 
 	else
 		document.title='';												
 	
@@ -440,22 +441,28 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	rest=[];
 	
 	tags=$.map(tags,function(v,i){										//some formatting is applied to the taglist before processing
+		
+		sp=v.split(' ');	
+		if (sp.length>1) 
+			$.each(tags, function(ii,vv){
+				if (ii==i) return true;
+				if (sp.join('')==vv) 
+					return v=false;										//some bloggers put kanji tags both with and without spaces, remove duplicates with spaces
+				}
+			); 
+		
+		if (!v) 
+			return null;
+
 		v=v.replace(/’/g,"\'").replace(/"/g,"''");					
 		v=v.replace(/\\/g, '-');									
 		v=v.replace(/(ou$)|(ou )/gim,'o ').trim();						//eliminate variations in writing 'ō' as o/ou at the end of the name in favor of 'o'
 																		//I dunno if it should be done in the middle of the name as well
-		$.each(tags, function(ii,vv){
-			if (ii==i) return true;
-			sp=vv.split(' ');
-			if (vv.length>1) 
-				if (sp.join('')==v)
-					tags[ii]='';										//some bloggers put kanji tags both with and without spaces, remove duplicates with spaces
-			}
-		);																
-		if ((ignore[v])||(!v)||(ignore[v.split(' ').reverse().join(' ')]))
+																
+		if ((ignore[v])||(ignore[v.split(' ').reverse().join(' ')]))
 			return null													//remove ignored tags so that they don't affect tag amount
 		else return v;
-	});
+	});		
 																		//1st sorting stage, no prior knowledge about found categories
 	$.each(tags, function(i,v){ 										//divide tags for the image into 5 categories
 		if (folders[v]) 												//	the "has folder" category
@@ -473,7 +480,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 					rvrs=splt.reverse().join(' ');
 					if (names.get(rvrs)) {								// thus creating duplicating tags
 						nms.push(names.get(rvrs))						//try to find database entry for reversed order first,
-						return true;									//note that folders{}  database is not expected to have roman tags
+						return true;									
 					}
 					else if (ansi[rvrs])								// then check for duplicates		
 						return true;
@@ -711,7 +718,7 @@ function submit(){														//collects entered translations for missing tags
 			t=v.innerText.trim(); 										//found roman tag
 			if ($(v).prop('swap'))
 				DBrec=DBrec.replace(t.split(' ').reverse().join(' '),t);//apply swap changes to the current taglist
-		}
+		}											//TODO: add checks for existing entries in another DB
 		cat=$(v).find('input.category');
 		if (t.length){
 			if (!isANSI(t)) {
@@ -719,9 +726,9 @@ function submit(){														//collects entered translations for missing tags
 				missing=true;											//indicate unicode characters in user input
 			} 
 			else if (cat[0].checked) 									//name category was selected for this tag
-				names.set(v.innerText.trim().toLowerCase(),t)		
+				names.set(v.innerText.trim().toLowerCase(),t.replace(exclrgxp,'-'))		
 			else if (cat[1].checked)									//meta category was selected
-				meta.set(v.innerText.trim().toLowerCase(), t)
+				meta.set(v.innerText.trim().toLowerCase(), t.replace(exclrgxp,'-'))
 			else { 														//no category was selected, indicate missing input
 				$(cat[0].parentNode.parentNode ).css("background-color","#ff8080");
 				missing=true;

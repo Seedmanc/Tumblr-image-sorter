@@ -132,7 +132,7 @@ function mutex(){																//check readiness of libraries being loaded sim
 	}
 };
 
-function onDOMContentLoaded(){													//load plugins
+function onDOMContentLoaded(){													//load plugins 
 	if (window.top != window.self)  											//don't run on frames or iframes
 		return;
 	if ((typeof jQuery == 'undefined')||((jQuery)&&(jQuery.fn.jquery.split('.')[1]<5)))
@@ -169,13 +169,14 @@ function process(res, v) {														//process information obtained from API 
 		return;
 	};
 	if (res.response.posts[0].type!='photo') {									//we're only interested in photo posts
-		document.title+=' ';//String.fromCharCode(160) ;
+		document.title+=' ';
 		return;																	
 	};
 	v=jQuery(v);
 	photos=res.response.posts[0].photos.length;									//find whether this is a single photo post or a photoset
 	if (photos>1) {
 		ifr=v.find('iframe.photoset').contents();
+		ifr=ifr.length?ifr:v.prev().prev().find('iframe.photoset').contents();
 		ifr=ifr.length?ifr:v.find('figure.photoset');
 		if (ifr.length==0)														//some photosets are in iframes, some aren't
 			ifr=v.find("div[id^='photoset'] img")
@@ -185,10 +186,19 @@ function process(res, v) {														//process information obtained from API 
 		link_url+=res.response.posts[0].link_url;								//for a single photo post, link url might have the highest-quality image version,
 		ext=link_url.split('.').pop();											// unaffected by tumblr compression
 		r=/(jpe*g|bmp|png|gif)/gi;												//check if this is actually an image link
-		link_url=(r.test(ext))?link_url:'';
+		link_url=(r.test(ext))?link_url:''; 
+		lnk=v.find('img');
+		lnk=(lnk.length)?lnk:v.prev().prev().find('img');						//"Catching Elephant" again
+		if (lnk.length)
+			if ((lnk[0].parentNode.href) && ((lnk[0].parentNode.href.indexOf('/image/')!=-1)||(lnk[0].parentNode.href==res.response.posts[0].link_url)))															
+				lnk[0].parentNode.href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
+			else 
+				lnk.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
+																				//make the photos link directly to the best quality image instead of a page
 	};
 	bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
 																				// empty space for non-photo or tagless posts, ✗ for errors
+	
 	tags=res.response.posts[0].tags;											//get tags associated with the post
 	if (tags.length!=0) {														//nothing to do here without them
 														//TODO: add tags retrieval from reblog source if no tags were found here
@@ -200,12 +210,22 @@ function process(res, v) {														//process information obtained from API 
 			if ((!tst)||(debug))  												//if there isn't, make one, putting the flag and tags there
 				tagsDB.set(getFname(url), tags.toString().toLowerCase());			
 														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
+			if ((tst)&&(tst.split(',')[0]=='1')&&(!isImage)) {					//otherwise if there is a record and it says the image has been saved
 				if (photos==1){													//add a border of highlight color around the image to indicate that
+					if (v.find('.media').length)
+						v.find('.media')[0].style.background=highlight
+					else if (v.find('.post-content').length)
+						v.find('img')[0].style.background=highlight				//wish I had a single straightforward way to do that for all tumblr themes
 					else
-						v.style.background=highlight;
-				}
+						v.css('background',highlight);
+				}										//TODO: add more compatibility for themes
 				else 															//and inside photosets  too
+					ifr[j].style.border='4px solid '+highlight;	
 			};
 		};
 	}
 	else 
+		document.title+=' ';													//empty space indicates no found tags for a post
+};
+
+//TODO: store post IDs for image names?
