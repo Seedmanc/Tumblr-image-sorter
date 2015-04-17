@@ -17,7 +17,7 @@
 
 	var debug=		false;														//disable cleanup, leaving variables and flash objects in place (lags on tab close)
 																				// also overwrite database records for images every time 
-	var highlight=	'darkgrey';													//color to mark the already saved images with
+	var highlight=	'darkgrey';													//color to mark the already saved images with, leave blank to disable
 	var storeUrl=	'http://puu.sh/dyFtc/196a6da5b6.swf';						//flash databases are bound to the URL, must be same as in the 2nd script
 
 // ==/Settings====================================================
@@ -25,8 +25,7 @@
 var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};		//external script loader function
 
  tagsDB=null;
-var ranonce=false;
-var a=b=false;
+var J=T=false;
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isImage=(document.location.href.indexOf('/image/')!=-1);
 
@@ -72,6 +71,7 @@ function main(){																//search for post IDs on page and call API to ge
 		else
 			posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
 																				//make it work also on image pages, since we can get post id from url
+													
 	posts=posts.length?posts:jQuery(jQuery('.column')[2]).find('.bottompanel');	//for "Catching elephant" theme
 	posts=posts.length?posts:jQuery("#post");									//for "Cinereoism" that uses IDs instead of Classes /0
 	posts=posts.length?posts:jQuery("div.posts");								//some redux theme, beats me
@@ -82,6 +82,11 @@ function main(){																//search for post IDs on page and call API to ge
 
 	document.title+=" Ready: [";												//a "progressbar" will be displayed in page title,
 																				// indicating that the page is ready for interaction
+	hc=posts.find('.hc.nest');
+	if (hc.length) {
+		hc.css('position','relative');											//fix broken themes with image links being under a large div		
+		posts=hc.parent();
+	};
 	jQuery.each(posts, function(i,v){											//for every post we need to find its ID and request info from API with it
 		id='';
 		h=jQuery(v).find("a[href*='"+namae+"/post/']");							//several attempts to find selflink
@@ -126,9 +131,9 @@ function main(){																//search for post IDs on page and call API to ge
 };
 
 function mutex(){																//check readiness of libraries being loaded simultaneously
-	if (a&&b){																													
+	if (J&&T){																													
 		main();																	//when everything is loaded, proceed further
-		a=b=false;
+		J=T=false;
 	}
 };
 
@@ -138,11 +143,11 @@ function onDOMContentLoaded(){													//load plugins
 	if ((typeof jQuery == 'undefined')||((jQuery)&&(jQuery.fn.jquery.split('.')[1]<5)))
 		loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js", function(){
 			$.noConflict(); 													//only load jQuery if it is either absent or the existing version is below 1.5
-			a=true; 
+			J=true; 
 			mutex();
 		})
 	else 
-		a=true; 
+		J=true; 
 	
 	tagsDB = new SwfStore({														//loading tag database, holds pairs "filename	is_saved,tag1,tag2,...,tagN"
 		namespace: "animage",
@@ -152,7 +157,7 @@ function onDOMContentLoaded(){													//load plugins
 			debug=(tagsDB.get(':debug:')=='true');
 			tagsDB.config.debug=debug;
 			
-			b=true;
+			T=true;
 			mutex();
 		},
 		onerror: function() {
@@ -188,44 +193,39 @@ function process(res, v) {														//process information obtained from API 
 		r=/(jpe*g|bmp|png|gif)/gi;												//check if this is actually an image link
 		link_url=(r.test(ext))?link_url:''; 
 		lnk=v.find('img');
-		lnk=(lnk.length)?lnk:v.prev().prev().find('img');						//"Catching Elephant" again
-		if (lnk.length)
-			if ((lnk[0].parentNode.href) && ((lnk[0].parentNode.href.indexOf('/image/')!=-1)||(lnk[0].parentNode.href==res.response.posts[0].link_url)))															
+		lnk=(lnk.length)?lnk:v.prev().prev().find('img');						//"Catching Elephant" again 
+ 		if (lnk.length)
+			if ((lnk[0].parentNode.href) && ((lnk[0].parentNode.href.indexOf('/image/')!=-1)||(lnk[0].parentNode.href.replace(/\/$/,'')==res.response.posts[0].link_url)))															
 				lnk[0].parentNode.href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
-			else 
+			else 																//TODO: fix fail with PU's Fluid theme!
 				lnk.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
-																				//make the photos link directly to the best quality image instead of a page
 	};
 	bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
 																				// empty space for non-photo or tagless posts, ✗ for errors
 	
 	tags=res.response.posts[0].tags;											//get tags associated with the post
-	if (tags.length!=0) {														//nothing to do here without them
-														//TODO: add tags retrieval from reblog source if no tags were found here
-		tags.unshift('0');														//assume image is not saved yet	
-		document.title+=bar;
-		for (j=0; j<photos; j++) {
-			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
-			tst=tagsDB.get(getFname(url));										//check if there's already a record in database for this image				
-			if ((!tst)||(debug))  												//if there isn't, make one, putting the flag and tags there
-				tagsDB.set(getFname(url), tags.toString().toLowerCase());			
+	document.title+=(tags.length)?bar:' ';										//empty space indicates no found tags for a post
+	tags.unshift('0');
+	for (j=0; j<photos; j++) {
+		url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
+		tst=tagsDB.get(getFname(url));											//check if there's already a record in database for this image				
+		if (((!tst)||(debug))&&(tags.length>1))  								//if there isn't, make one, putting the flag and tags there
+			tagsDB.set(getFname(url), tags.toString().toLowerCase());	
 														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
-			if ((tst)&&(tst.split(',')[0]=='1')&&(!isImage)) {					//otherwise if there is a record and it says the image has been saved
-				if (photos==1){													//add a border of highlight color around the image to indicate that
-					if (v.find('.media').length)
-						v.find('.media')[0].style.background=highlight
-					else if (v.find('.post-content').length)
-						v.find('img')[0].style.background=highlight				//wish I had a single straightforward way to do that for all tumblr themes
-					else
-						v.css('background',highlight);
-				}										//TODO: add more compatibility for themes
-				else 															//and inside photosets  too
-					ifr[j].style.border='4px solid '+highlight;	
-			};
+														//TODO: add tags retrieval from reblog source if no tags were found here*
+		if ((tst)&&(tst.split(',')[0]=='1')&&(!isImage)&&highlight) {			//otherwise if there is a record and it says the image has been saved
+			if (photos==1){														//add a border of highlight color around the image to indicate that
+				if (v.find('.media').length)
+					v.find('.media')[0].style.background=highlight
+				else if (v.find('.post-content').length)
+					v.find('img')[0].style.background=highlight					//wish I had a single straightforward way to do that for all tumblr themes
+				else
+					v.css('background',highlight);
+			}											//TODO: add more compatibility for themes
+			else 																//and inside photosets  too
+				ifr[j].style.border='4px solid '+highlight;	
 		};
-	}
-	else 
-		document.title+=' ';													//empty space indicates no found tags for a post
+	};	
 };
 
-//TODO: store post IDs for image names?
+//*TODO: store post IDs for image names?

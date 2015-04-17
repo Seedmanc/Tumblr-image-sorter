@@ -102,7 +102,7 @@
 		"	上坂すみれ	"	:	"	Uesaka Sumire	",
 		"	ゆかな		"	:	"	Yukana	"};
 
-	var ignore=			{'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true, 'Siruth Queue':true};		
+	var ignore=			{'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true, 'Siruth Queue':true, 'siruth':true};		
 																		//these tags will not count towards any category and won't be included into filename
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 
