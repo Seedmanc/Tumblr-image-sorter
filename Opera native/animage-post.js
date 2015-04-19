@@ -17,7 +17,6 @@
 
 	var debug=		false;														//disable cleanup, leaving variables and flash objects in place (lags on tab close)
 																				// also overwrite database records for images every time 
-	var highlight=	'darkgrey';													//color to mark the already saved images with, leave blank to disable
 	var storeUrl=	'http://puu.sh/dyFtc/196a6da5b6.swf';						//flash databases are bound to the URL, must be same as in the 2nd script
 
 // ==/Settings====================================================
@@ -50,6 +49,8 @@ function getFname(fullName){													//extract filename from image URL and f
 };  
 
 function getID(lnk){															//extract numerical post ID from self-link
+	if (lnk.search(/[^0-9]/g)==-1)
+		return lnk;
 	Result=lnk.substring(lnk.indexOf('/post/')+7+lnk.indexOf('image/'));		//one of those will be -1, another the actual offset	
 	Result=Result.replace(/(#).*$/gim,'');										//remove url postfix 
 	i=Result.lastIndexOf('/');
@@ -64,16 +65,18 @@ function getID(lnk){															//extract numerical post ID from self-link
 };
 
 function main(){																//search for post IDs on page and call API to get info about them
-	posts=jQuery('.post').not('.n');
+	posts=jQuery('article.entry > div.post').not('.n').parent();				//some really stupid plain theme
+	posts=(posts.length)?posts:jQuery('.post');
 	if (isImage) 
 		if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
 			document.location.href=jQuery('img#content-image')[0].src			//proceed directly to the image if it already has a DB record with tags	
 		else
 			posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
 																				//make it work also on image pages, since we can get post id from url
-													
-	posts=posts.length?posts:jQuery(jQuery('.column')[2]).find('.bottompanel');	//for "Catching elephant" theme
-	posts=posts.length?posts:jQuery("#post");									//for "Cinereoism" that uses IDs instead of Classes /0
+	posts=posts.length?posts:jQuery(jQuery('.column')[2]).find('.bottompanel').parent();
+																				//for "Catching elephant" theme
+	posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0
+	posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
 	posts=posts.length?posts:jQuery("div.posts");								//some redux theme, beats me
 	if (posts.length==0){
 		document.title+=' [No posts found]';									//give up
@@ -82,15 +85,16 @@ function main(){																//search for post IDs on page and call API to ge
 
 	document.title+=" Ready: [";												//a "progressbar" will be displayed in page title,
 																				// indicating that the page is ready for interaction
-	hc=posts.find('.hc.nest');
-	if (hc.length) {
-		hc.css('position','relative');											//fix broken themes with image links being under a large div		
-		posts=hc.parent();
+	if (!isImage)	{
+		hc=posts.find('.hc.nest');
+		if (hc.length) {
+			hc.css('position','relative');										//fix broken themes with image links being under a large div		
+			posts=hc.parent();
+		};
 	};
 	jQuery.each(posts, function(i,v){											//for every post we need to find its ID and request info from API with it
 		id='';
 		h=jQuery(v).find("a[href*='"+namae+"/post/']");							//several attempts to find selflink
-		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");		//workaround for Optica theme that doesn't have selflinks within .post elements
 		h=(h.length)?h:jQuery(v).find("a[href*='/image/']");
 		if (h.length) 
 			id=getID(h[0].href);												//for every post on page find the self-link inside of post, containing post ID
@@ -131,9 +135,9 @@ function main(){																//search for post IDs on page and call API to ge
 };
 
 function mutex(){																//check readiness of libraries being loaded simultaneously
-	if (J&&T){																													
+	if (J&&T){		
+		J=T=false;																											
 		main();																	//when everything is loaded, proceed further
-		J=T=false;
 	}
 };
 
@@ -168,6 +172,7 @@ function onDOMContentLoaded(){													//load plugins
 
 function process(res, v) {														//process information obtained from API by post ID
 	var link_url='';
+	var img;
 	if (res.meta.status!='200') {
 		if (debug) alert('API error: '+res.meta.msg);
 		throw new Error('API error: '+res.meta.msg);
@@ -181,7 +186,6 @@ function process(res, v) {														//process information obtained from API 
 	photos=res.response.posts[0].photos.length;									//find whether this is a single photo post or a photoset
 	if (photos>1) {
 		ifr=v.find('iframe.photoset').contents();
-		ifr=ifr.length?ifr:v.prev().prev().find('iframe.photoset').contents();
 		ifr=ifr.length?ifr:v.find('figure.photoset');
 		if (ifr.length==0)														//some photosets are in iframes, some aren't
 			ifr=v.find("div[id^='photoset'] img")
@@ -192,13 +196,19 @@ function process(res, v) {														//process information obtained from API 
 		ext=link_url.split('.').pop();											// unaffected by tumblr compression
 		r=/(jpe*g|bmp|png|gif)/gi;												//check if this is actually an image link
 		link_url=(r.test(ext))?link_url:''; 
-		lnk=v.find('img');
-		lnk=(lnk.length)?lnk:v.prev().prev().find('img');						//"Catching Elephant" again 
- 		if (lnk.length)
-			if ((lnk[0].parentNode.href) && ((lnk[0].parentNode.href.indexOf('/image/')!=-1)||(lnk[0].parentNode.href.replace(/\/$/,'')==res.response.posts[0].link_url)))															
-				lnk[0].parentNode.href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
-			else 																//TODO: fix fail with PU's Fluid theme!
-				lnk.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
+		
+		img=v.find('img[src*="tumblr_"]');										//find image in the post to linkify it
+		if (img.length) {
+			p=img.parent().wrap('<p/>');										//what would you do?
+			lnk=p.parent().find('a[href*="/image/"]');
+			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
+			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
+			if ((lnk.length) && (lnk[0].href))					
+				lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
+			else 																
+				img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
+			p.unwrap();
+		};
 	};
 	bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
 																				// empty space for non-photo or tagless posts, ✗ for errors
@@ -213,17 +223,9 @@ function process(res, v) {														//process information obtained from API 
 			tagsDB.set(getFname(url), tags.toString().toLowerCase());	
 														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
 														//TODO: add tags retrieval from reblog source if no tags were found here*
-		if ((tst)&&(tst.split(',')[0]=='1')&&(!isImage)&&highlight) {			//otherwise if there is a record and it says the image has been saved
-			if (photos==1){														//add a border of highlight color around the image to indicate that
-				if (v.find('.media').length)
-					v.find('.media')[0].style.background=highlight
-				else if (v.find('.post-content').length)
-					v.find('img')[0].style.background=highlight					//wish I had a single straightforward way to do that for all tumblr themes
-				else
-					v.css('background',highlight);
-			}											//TODO: add more compatibility for themes
-			else 																//and inside photosets  too
-				ifr[j].style.border='4px solid '+highlight;	
+		if ((tst)&&(tst.split(',')[0]=='1')&&(!isImage)) {						//otherwise if there is a record and it says the image has been saved
+			img=(photos==1)?img:jQuery(ifr[j]);
+			img.css('outline','3px solid invert').css('outline-offset','-3px');	//add a border of highlight color around the image to indicate that
 		};
 	};	
 };

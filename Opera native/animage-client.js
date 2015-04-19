@@ -423,9 +423,10 @@ function isANSI(s) {													//some tags might be already in roman and do no
 }
 
 function analyzeTags() {   												//this is where the tag matching magic occurs
+	filename=getFname(document.location.href, true);
  	if (!DBrec) return;													//if there are any tags, that is
 	folder='';
-	filename=getFname(document.location.href, true);
+
     if (debug)
 		document.title=DBrec+' '										//show raw DB record 
 	else
