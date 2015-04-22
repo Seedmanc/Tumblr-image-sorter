@@ -25,8 +25,7 @@ var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElem
 
  tagsDB=null;
 var J=T=false;
-var isPost=(document.location.href.indexOf('/post/')!=-1);
-var isImage=(document.location.href.indexOf('/image/')!=-1);
+var isImage=(document.location.href.indexOf('/image/')!=-1);					//processing for image pages is different from regular posts
 
 namae=document.location.host; 													 
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
@@ -40,8 +39,9 @@ function cleanUp(){																//remove variables and flash objects from mem
 function getFname(fullName){													//extract filename from image URL and format it
 	fullName=fullName||'';													
 	fullName=fullName.replace(/(\?).*$/gim,'');									//first remove url parameters 
-
-	if (fullName.indexOf('xuite')!=-1) {										//this hosting names their images as "(digit).jpg" causing filename collisions
+	if (fullName.indexOf('tumblr_')!=-1) 
+		fullName=fullName.replace(/(tumblr_)|(_\d{2}\d{0,2})(?=\.)/gim,'')		//prefix and postfix of tumblr image names can be omitted without info loss
+	else if (fullName.indexOf('xuite')!=-1) {									//this hosting names their images as "(digit).jpg" causing filename collisions
 		i=fullName.lastIndexOf('/');
 		fullName=fullName.substr(0,i)+'-'+fullName.substr(i+1);					//add parent catalog name to the filename to ensure uniqueness
 	};
@@ -73,9 +73,10 @@ function main(){																//search for post IDs on page and call API to ge
 		else
 			posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
 																				//make it work also on image pages, since we can get post id from url
-	posts=posts.length?posts:jQuery(jQuery('.column')[2]).find('.bottompanel').parent();
+	posts=posts.length?posts:jQuery('.column').eq(2).find('.bottompanel').parent();
 																				//for "Catching elephant" theme
-	posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0
+	posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0	
+	posts=posts.length?posts:jQuery('[id="designline"]');						//The Minimalist, not tested though and saved indication probably won't work
 	posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
 	posts=posts.length?posts:jQuery("div.posts");								//some redux theme, beats me
 	if (posts.length==0){
@@ -95,6 +96,7 @@ function main(){																//search for post IDs on page and call API to ge
 	jQuery.each(posts, function(i,v){											//for every post we need to find its ID and request info from API with it
 		id='';
 		h=jQuery(v).find("a[href*='"+namae+"/post/']");							//several attempts to find selflink
+		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");		//workaround for Optica theme that doesn't have selflinks within .post elements
 		h=(h.length)?h:jQuery(v).find("a[href*='/image/']");
 		if (h.length) 
 			id=getID(h[0].href);												//for every post on page find the self-link inside of post, containing post ID
@@ -158,7 +160,7 @@ function onDOMContentLoaded(){													//load plugins
 		swf_url: storeUrl, 
 		debug: debug,
 		onready: function(){
-			debug=(tagsDB.get(':debug:')=='true');
+			debug=(tagsDB.get(':debug:')=='true');								//update initial debug value with the one saved in DB
 			tagsDB.config.debug=debug;
 			
 			T=true;
@@ -199,7 +201,7 @@ function process(res, v) {														//process information obtained from API 
 		
 		img=v.find('img[src*="tumblr_"]');										//find image in the post to linkify it
 		if (img.length) {
-			p=img.parent().wrap('<p/>');										//what would you do?
+			p=img.parent().wrap('<p/>');										//what would you do? Parent might be either the link itself or contain it as a child
 			lnk=p.parent().find('a[href*="/image/"]');
 			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
 			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
@@ -207,27 +209,27 @@ function process(res, v) {														//process information obtained from API 
 				lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
 			else 																
 				img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
-			p.unwrap();
+			p.unwrap();															//^ this might potentially break themes like Fluid by PU
 		};
 	};
 	bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
 																				// empty space for non-photo or tagless posts, ✗ for errors
-	
+
 	tags=res.response.posts[0].tags;											//get tags associated with the post
-	document.title+=(tags.length)?bar:' ';										//empty space indicates no found tags for a post
-	tags.unshift('0');
+	DBrec={s:0, t:tags.toString().toLowerCase()};								//create an object for database record
 	for (j=0; j<photos; j++) {
 		url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
-		tst=tagsDB.get(getFname(url));											//check if there's already a record in database for this image				
-		if (((!tst)||(debug))&&(tags.length>1))  								//if there isn't, make one, putting the flag and tags there
-			tagsDB.set(getFname(url), tags.toString().toLowerCase());	
+		tst=tagsDB.get(getFname(url));											//check if there's already a record in database for this image	
+		if (((!tst)||(debug))&&(tags.length))  									//if there isn't, make one, putting the flag and tags there
+			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
 														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
-														//TODO: add tags retrieval from reblog source if no tags were found here*
-		if ((tst)&&(tst.split(',')[0]=='1')&&(!isImage)) {						//otherwise if there is a record and it says the image has been saved
+														//TODO: add tags retrieval from reblog source if no tags were found here
+		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) {						//otherwise if there is a record and it says the image has been saved
 			img=(photos==1)?img:jQuery(ifr[j]);
 			img.css('outline','3px solid invert').css('outline-offset','-3px');	//add a border of highlight color around the image to indicate that
 		};
 	};	
+	document.title+=(tags.length)?bar:' ';										//empty space indicates no found tags for a post
 };
 
-//*TODO: store post IDs for image names?
+//TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage)

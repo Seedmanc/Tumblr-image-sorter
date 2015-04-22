@@ -17,7 +17,7 @@
 
 	var root=			'E:\\#-A\\!Seiyuu\\';							//main collection folder
 	var ms=				'!';											//metasymbol, denotes folders for categories instead of names, must be the first character
-	
+	var allowUnicode=	false;											//Whether to allow unicode characters for manual translation input, not tested
 	var folders=		{												//folder and names matching database
 		"	!!group	"	:	"	!!group	",								//used both for tag translation and providing the list of existing folders
 		"	!!solo	"	:	"	!!solo	",								//trailing whitespaces are voluntary in both keys and values,
@@ -121,7 +121,7 @@ var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElem
  meta=null ; 															//these three must be deletable on cleanup
 var filename;															
 var folder = ''; 
-var DBrec;																//raw DB record
+var DBrec='';															//raw DB record, stringified object with fields for saved flag and tag list
 var J=N=M=T=false;														//flags indicating readyness of plugins loaded simultaneously
 var runonce=true; 														//flag ensuring that onready() is only executed once
 var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;									//pattern of characters not to be used in filepaths
@@ -258,7 +258,7 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 			cleanup(true);
 			document.title='Error '+this.status;
 			throw new Error('404');
-		};											//TODO: add fallback to tumblr hosted image if link url fails
+		};											//TODO: add fallback to tumblr hosted image if link url fails (requires storing post id and blog name)
 		alert('Error getting image: '+this.status);
 	};
 };
@@ -342,7 +342,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 			document.title+=' ✗ meta failed to load';}
 	});
 	
-	tagsDB = new SwfStore({												//loading main tag database, holds pairs "filename	is_saved,tag1,tag2,...,tagN"
+	tagsDB = new SwfStore({												//loading main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
 		namespace: "animage",
 		swf_url: storeUrl,  
 		debug: debug,
@@ -376,7 +376,7 @@ function onDBready(){													//poll readiness of flashDB plugin until it's 
 }
 
 function getTags(retry){												//manages tags acquisition for current image file name from db
-	DBrec=tagsDB.get(getFname(document.location.href));					//first attempt at getting taglist for current filename is done upon the beginning of image load
+	DBrec=JSON.parse(tagsDB.get(getFname(document.location.href)));		//first attempt at getting taglist for current filename is done upon the beginning of image load
 	if ((DBrec!=null) || (debug)) {										//if tags are found, all is fine, report readiness
 		T=true;															//or if we're in debug mode, proceed anyway
 		mutex();		
@@ -428,12 +428,11 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	folder='';
 
     if (debug)
-		document.title=DBrec+' '										//show raw DB record 
+		document.title=JSON.stringify(DBrec,null,' ')+' '				//show raw DB record 
 	else
 		document.title='';												
 	
-	tags=DBrec.split(','); 	
-	tags.shift();														//first value in the record is "saved" flag, not tag
+	tags=DBrec.t.split(',');
  
 	fldrs=[];
 	nms=[];
@@ -560,7 +559,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	document.title+=' \\'+folder+filename;
 	folder=root+folder;													//if no name or folder tags were found, folder will be set to root directory
 	
-	if (DBrec.split(',')[0]=='1') document.title+=' (already saved)';	//indicate if the image has been marked as saved before
+	if (DBrec.s=='1') document.title+=' (already saved)';				//indicate if the image has been marked as saved before
 	return unsorted;
 };
 
@@ -671,6 +670,8 @@ function getFname(fullName, full){										//source URL processing for filename
 	else if ((fullName.indexOf('amazonaws')!=-1)&&(!full))  			//older tumblr images are weirdly linked via some encrypted redirect to amazon services, where
 		fullName=fullName.substring(0,fullName.lastIndexOf('_')-2);		// links only have a part of the filename without a few last symbols and extension,
 																		// have to match it here as well, but we need full filename for downloadify, thus the param
+	if ((fullName.indexOf('tumblr_')!=-1)&&!full) 
+		fullName=fullName.replace(/(tumblr_)|(_\d{2}\d{0,2})(?=\.)/gim,'');
 	fullName=fullName.replace(/\\/g,'/');								//function is used both for URLs and folder paths which have opposite slashes
 	return fullName.split('/').pop();
 };
@@ -695,10 +696,8 @@ function dl(base64data){												//make downloadify button with base64 encode
 
 function onCmplt(){														//mark image as saved in the tag database
 	if (DBrec)	{														//it is used to mark saved images on tumblr pages
-		DBrec=DBrec.split(','); 									
-		DBrec[0]='1';								
-		DBrec=DBrec.join(',');							
-		tagsDB.set(getFname(document.location.href), DBrec);
+		DBrec.s='1';							
+		tagsDB.set(getFname(document.location.href), JSON.stringify(DBrec));
 		document.title+=' (saved now)';
 	}
 	cleanup(true);														//remove all the flashes, including the button itself
@@ -712,24 +711,26 @@ function submit(){														//collects entered translations for missing tags
 			ignore[v.id]=true;											//mark hidden tags as ignored
 			return true;
 		};
-		t=$(v).find('input.txt');
-		if (t.length)
-			t=t[0].value.trim();										//found translation tag
+		tg=$(v).find('input.txt');
+		if (tg.length)
+			tg=tg[0].value.trim();										//found translation tag
 		else {
-			t=v.innerText.trim(); 										//found roman tag
-			if ($(v).prop('swap'))
-				DBrec=DBrec.replace(t.split(' ').reverse().join(' '),t);//apply swap changes to the current taglist
+			tg=v.innerText.trim(); 										//found roman tag
+			if ($(v).prop('swap')) {
+				t=DBrec.t.replace(tg.split(' ').reverse().join(' '),tg);
+				DBrec.t=t;												//apply swap changes to the current taglist
+			};
 		}											//TODO: add checks for existing entries in another DB
 		cat=$(v).find('input.category');
-		if (t.length){
-			if (!isANSI(t)) {
+		if (tg.length){
+			if (!isANSI(tg)&&!allowUnicode) {
 				$(v).find('input.txt').css("background-color","#ffC080");
 				missing=true;											//indicate unicode characters in user input
 			} 
 			else if (cat[0].checked) 									//name category was selected for this tag
-				names.set(v.innerText.trim().toLowerCase(),t.replace(exclrgxp,'-'))		
+				names.set(v.innerText.trim().toLowerCase(),tg.replace(exclrgxp,'-'))		
 			else if (cat[1].checked)									//meta category was selected
-				meta.set(v.innerText.trim().toLowerCase(), t.replace(exclrgxp,'-'))
+				meta.set(v.innerText.trim().toLowerCase(), tg.replace(exclrgxp,'-'))
 			else { 														//no category was selected, indicate missing input
 				$(cat[0].parentNode.parentNode ).css("background-color","#ff8080");
 				missing=true;
