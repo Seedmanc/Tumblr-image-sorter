@@ -3,15 +3,15 @@
 // @description	Puts tags for links into database
 // @version	1.0
 // @author		Seedmanc
-// @include	http*://*.tumblr.com/post/*
-// @include	http*://*.tumblr.com/page/*
-// @include	http*://*.tumblr.com/tagged/*
-// @include	http*://*.tumblr.com/
-// @include	http*://*.tumblr.com/image/*
-// @include	http*://*.tumblr.com/search/*
+// @include	http://*.tumblr.com/post/*
+// @include	http://*.tumblr.com/page/*
+// @include	http://*.tumblr.com/tagged/*
+// @include	http://*.tumblr.com/
+// @include	http://*.tumblr.com/image/*
+// @include	http://*.tumblr.com/search/*
+// @include	http*://www.tumblr.com/dashboard*
 
 // @exclude	http*://*.media.tumblr.com/*
-// @exclude	http*://www.tumblr.com/*
 // ==/UserScript==
 
 // ==Settings=====================================================
@@ -21,7 +21,8 @@
 																				//also it enables error notifications and disables cleanup ( causes lag on tab close)
 	var storeUrl=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
 																				//flash databases are bound to the URL, must be same as in the other script
-
+	var enableOnDashboard= true;												//will try to collect post info from dashboard posts too
+																				//might be slow and/or glitchy so made optional
 // ==/Settings====================================================
 
 var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};		//external script loader function
@@ -30,7 +31,8 @@ var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElem
 var J=T=false;
 var isImage=(document.location.href.indexOf('/image/')!=-1);					//processing for image pages is different from regular posts
 
-namae=document.location.host; 													 
+var namae=document.location.host; 			
+var isDash=(namae.indexOf('www.')==0);											//processing for non-blog pages of tumblr like dashboard is different too
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
 function cleanUp(){																//remove variables and flash objects from memory 
@@ -60,7 +62,7 @@ function getID(lnk){															//extract numerical post ID from self-link
 	if (i!=-1)
 		Result=Result.substring(0,i);
 	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) {
-		if (debug) alert('IDentification error'+Result);
+		if (debug) alert('IDentification error: '+Result);
 		throw new Error('IDentification error');
 	}
 	else
@@ -68,23 +70,27 @@ function getID(lnk){															//extract numerical post ID from self-link
 };
 
 function main(){																//search for post IDs on page and call API to get info about them
-	posts=jQuery('article.entry > div.post').not('.n').parent();				//some really stupid plain theme
-	posts=(posts.length)?posts:jQuery('.post');
-	if (isImage) 
-		if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
-			document.location.href=jQuery('img#content-image')[0].src			//proceed directly to the image if it already has a DB record with tags	
-		else
-			posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
-																				//make it work also on image pages, since we can get post id from url
-	posts=posts.length?posts:jQuery('.column').eq(2).find('.bottompanel').parent();
-																				//for "Catching elephant" theme
-	posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0	
-	posts=posts.length?posts:jQuery('[id="designline"]');						//The Minimalist, not tested though and saved indication probably won't work
-	posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
-	posts=posts.length?posts:jQuery("div.posts");								//some redux theme, beats me
-	if (posts.length==0){
-		document.title+=' [No posts found]';									//give up
-		return;
+	if (isDash)
+		posts=jQuery('ol.posts').find('div.post').not('.new_post')
+	else {
+		posts=jQuery('article.entry > div.post').not('.n').parent();				//some really stupid plain theme
+		posts=(posts.length)?posts:jQuery('.post');
+		if (isImage) 
+			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
+				document.location.href=jQuery('img#content-image')[0].src			//proceed directly to the image if it already has a DB record with tags	
+			else
+				posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
+																					//make it work also on image pages, since we can get post id from url
+		posts=posts.length?posts:jQuery('.column').eq(2).find('.bottompanel').parent();
+																					//for "Catching elephant" theme
+		posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0	
+		posts=posts.length?posts:jQuery('[id="designline"]');						//The Minimalist, not tested though and saved indication probably won't work
+		posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
+		posts=posts.length?posts:jQuery("div.posts");								//some redux theme, beats me
+		if (posts.length==0){
+			document.title+=' [No posts found]';									//give up
+			return;
+		};
 	};
 
 	document.title+=" Ready: [";												//a "progressbar" will be displayed in page title,
@@ -100,7 +106,7 @@ function main(){																//search for post IDs on page and call API to ge
 		id='';
 		h=jQuery(v).find("a[href*='"+namae+"/post/']");							//several attempts to find selflink
 		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");		//workaround for Optica theme that doesn't have selflinks within .post elements
-		h=(h.length)?h:jQuery(v).find("a[href*='/image/']");
+		h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");
 		if (h.length) 
 			id=getID(h[0].href);												//for every post on page find the self-link inside of post, containing post ID
 		if (id == '') {															//if no link was found, try to find ID in attributes of nodes
@@ -116,7 +122,9 @@ function main(){																//search for post IDs on page and call API to ge
 				throw new Error('IDs not found');
 				return false;
 			};
-		};
+		};												//TODO: only call API if no DB record is found for images in current post
+		if (isDash)
+			namae=jQuery(v).find('a.post_info_link')[0].hostname;
 		jQuery.ajax({															//get info about current post via tumblr API based on the ID
 			type:'GET',
 			url: "http://api.tumblr.com/v2/blog/"+namae+"/posts/photo",
@@ -148,6 +156,8 @@ function mutex(){																//check readiness of libraries being loaded sim
 
 function onDOMContentLoaded(){													//load plugins 
 	if (window.top != window.self)  											//don't run on frames or iframes
+		return;
+	if (isDash && !enableOnDashboard)
 		return;
 	if ((typeof jQuery == 'undefined')||((jQuery)&&(jQuery.fn.jquery.split('.')[1]<5)))
 		loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js", function(){
