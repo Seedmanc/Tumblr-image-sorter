@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name		Animage-client
+// @name		Animage-get
 // @description	Determines the path for saving current image to based on its tags.
 // @version	1.0
 // @author		Seedmanc
@@ -106,10 +106,13 @@
 																		//these tags will not count towards any category and won't be included into filename
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 
-	var storeUrl=		'http://puu.sh/dyFtc/196a6da5b6.swf';			//flash databases are bound to the URL, must be same as in the second script
-	var	downloadifySwf=	'http://puu.sh/bNDfH/c89117bd68.swf';			//flash button URL
+	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
+																		//flash databases are bound to the URL, must be same as in the other script
+	var	downloadifySwf=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.swf';			
+																		//flash button URL
 	debug=				false;											//initial debug value, affects creation of flashDBs, can be changed via GUI
-
+																		//debug enables error notification, shows im/export controls for aux dbs and save button
+																		//even if no tags were found, also disables cleanup (lag on tab close)
 // ==/Settings=====================================================
 
 var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};

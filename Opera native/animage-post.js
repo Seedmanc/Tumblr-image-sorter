@@ -1,23 +1,26 @@
 // ==UserScript==
-// @name		Animage-server
+// @name		Animage-post
 // @description	Puts tags for links into database
 // @version	1.0
 // @author		Seedmanc
-// @include	http://*.tumblr.com/post/*
-// @include	http://*.tumblr.com/page/*
-// @include	http://*.tumblr.com/tag*/*
-// @include	http://*.tumblr.com/
-// @include	http://*.tumblr.com/image/*
-// @include	http://*.tumblr.com/search/*
+// @include	http*://*.tumblr.com/post/*
+// @include	http*://*.tumblr.com/page/*
+// @include	http*://*.tumblr.com/tagged/*
+// @include	http*://*.tumblr.com/
+// @include	http*://*.tumblr.com/image/*
+// @include	http*://*.tumblr.com/search/*
 
-// @exclude	http://*.media.tumblr.com/*
+// @exclude	http*://*.media.tumblr.com/*
+// @exclude	http*://www.tumblr.com/*
 // ==/UserScript==
 
 // ==Settings=====================================================
 
-	var debug=		false;														//disable cleanup, leaving variables and flash objects in place (lags on tab close)
-																				// also overwrite database records for images every time 
-	var storeUrl=	'http://puu.sh/dyFtc/196a6da5b6.swf';						//flash databases are bound to the URL, must be same as in the 2nd script
+	var debug=		false;														//initial debug value, get changed to settings value after DB creation
+																				//enabling debug makes DB entries for images updated every time post is visited
+																				//also it enables error notifications and disables cleanup ( causes lag on tab close)
+	var storeUrl=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
+																				//flash databases are bound to the URL, must be same as in the other script
 
 // ==/Settings====================================================
 
