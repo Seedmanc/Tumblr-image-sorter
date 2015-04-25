@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name		Animage-get
-// @description	Determines the path for saving current image to based on its tags.
+// @description	Prepare the path and file name for saving current image based on its tags.
 // @version	1.0
 // @author		Seedmanc
 // @include	http*://*.amazonaws.com/data.tumblr.com/* 
 // @include	http*://*.media.tumblr.com/*
+
 //these sites are used by animage.tumblr.com to host original versions of images
 // @include	http://scenario.myweb.hinet.net/*										
 // @include	http*://mywareroom.files.wordpress.com/*
@@ -15,23 +16,26 @@
 													
 // ==Settings======================================================
 
-	var root=			'E:\\#-A\\!Seiyuu\\';							//main collection folder
-	var ms=				'!';											//metasymbol, denotes folders for categories instead of names, must be the first character
+	var root=			'E:\\#-A\\!Seiyuu\\';							//Main collection folder
+	
+	var ms=				'!';											//Metasymbol, denotes folders for categories instead of names, must be their first character
+	
 	var allowUnicode=	false;											//Whether to allow unicode characters for manual translation input, not tested
-	var folders=		{												//folder and names matching database
+	
+	var folders=		{												//Folder and names matching database
 		"	!!group	"	:	"	!!group	",								//used both for tag translation and providing the list of existing folders
 		"	!!solo	"	:	"	!!solo	",								//trailing whitespaces are voluntary in both keys and values,
 		"	!!unsorted"	:	"	!!unsorted	", 							//first three key names are not to be changed, but folder names can be anything
 		"	原由実	"	:	"	!iM@S\\Hara Yumi	",					//subfolders for categories instead of names must have the metasymbol as first symbol
 		"	今井麻美	"	:	"	!iM@S\\Imai Asami	",
 		"	沼倉愛美	"	:	"	!iM@S\\Numakura Manami	",
-		"	けいおん!	"	:	"	!K-On	",
-		"	日笠陽子	"	:	"	!K-On\\Hikasa Yoko	",
+		"	けいおん!	"	:	"	!K-On	",								//category folders can have their own tag, which, if present, will affect the folder choice
+		"	日笠陽子	"	:	"	!K-On\\Hikasa Yoko	",					//for solo and group images
 		"	寿美菜子	"	:	"	!K-On\\Kotobuki Minako	",
 		"	竹達彩奈	"	:	"	!K-On\\Taketatsu Ayana	",
 		"	豊崎愛生	"	:	"	!K-On\\Toyosaki Aki	",
 		"	クリスマス	"	:	"	!Kurisumasu	",
-		"	Lisp	"	:	"	!Lisp	",	
+		"	Lisp	"	:	"	!Lisp	",								//roman tags can be used as well
 		"	阿澄佳奈	"	:	"	!Lisp\\Asumi Kana	",
 		"	らき☆すた	"	:	"	!Lucky Star	",
 		"	遠藤綾	"	:	"	!Lucky Star\\Endo Aya	",
@@ -44,7 +48,6 @@
 		"	Petit Milady":	"	!Petit Milady	", 
 		"	悠木碧	"	:	"	!Petit Milady\\Yuuki Aoi	",
 		"	ロウきゅーぶ! "	:	"	!Ro-Kyu-Bu	",
-		"	歌手		"	:	"	!Singer	",
 		"	Kalafina "	:	"	!Singer\\Kalafina	",
 		"	LiSA	"	:	"	!Singer\\LiSA	",
 		"	May'n	"	:	"	!Singer\\May'n	", 
@@ -53,8 +56,8 @@
 		"	平野綾	"	:	"	!SOS-dan\\Hirano Aya	", 
 		"	スフィア	"	:	"	!Sphere	", 
 		"	戸松遥	"	:	"	!Sphere\\Tomatsu Haruka	",
-		"	tomatsu haruka":"	!Sphere\\Tomatsu Haruka	",
-		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",
+		"	tomatsu haruka":"	!Sphere\\Tomatsu Haruka	",				//multiple tags can point to one folder
+		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",					//not the other way, however, having keys repeating will only count the last occurrence
 		"	堀江由衣	"	:	"	!Yamato Nadeshiko\\Horie Yui",
 		"	田村ゆかり	"	:	"	!Yamato Nadeshiko\\Tamura Yukari	",
 		"	千葉紗子	"	:	"	Chiba Saeko	",
@@ -100,17 +103,18 @@
 		"	東山奈央	"	:	"	Toyama Nao	",
 		"	植田佳奈	"	:	"	Ueda Kana	",
 		"	上坂すみれ	"	:	"	Uesaka Sumire	",
-		"	ゆかな		"	:	"	Yukana	"};
+		"	ゆかな		"	:	"	Yukana	"
+	};
 
-	var ignore=			{'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true, 'Siruth Queue':true, 'siruth':true};		
-																		//these tags will not count towards any category and won't be included into filename
+	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};		//these tags will not count towards any category and won't be included into filename
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
+																		//to disable an entry without removing it use "false" as the value
 
 	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
 																		//flash databases are bound to the URL, must be same as in the other script
 	var	downloadifySwf=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.swf';			
 																		//flash button URL
-	debug=				false;											//initial debug value, affects creation of flashDBs, can be changed via GUI
+	var debug=				false;											//initial debug value, affects creation of flashDBs, can be changed via GUI
 																		//debug enables error notification, shows im/export controls for aux dbs and save button
 																		//even if no tags were found, also disables cleanup (lag on tab close)
 // ==/Settings=====================================================
@@ -196,9 +200,9 @@ var style={																//in an object so you can fold it in editor
 	}									\
 "};
 																		
-uu = document.createElement('div');										//main layer that holds the GUI
-	uu.id = "output" ; 
-	uu.innerHTML="<div id='down' > </div>";								//sublayer for downloadify button
+out = document.createElement('div');										//main layer that holds the GUI
+	out.id = "output" ; 
+	out.innerHTML="<div id='down' > </div>";								//sublayer for downloadify button
  
 tb=document.createElement('table');										//table for entering manual translation of unknown tags
 	tb.id='translations';
@@ -241,7 +245,7 @@ port=document.createElement('table');									//subtable for settings and im/exp
 	row4.insertCell(0).id='im';
 	port.id='port';
 
-trimObj(folders);		
+trimObj(folders);														//run checks on user-input content and format it
 trimObj(ignore);																												
 																		
 var xhr = new XMLHttpRequest();											//redownloads opened image as blob 
@@ -318,7 +322,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))		//check if this is actually an image link
 			return;
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){
-		$('body')[0].appendChild(uu);
+		$('body')[0].appendChild(out);
 		J=true; 
 		mutex();
 		}
@@ -463,7 +467,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 																		//I dunno if it should be done in the middle of the name as well
 																
 		if ((ignore[v])||(ignore[v.split(' ').reverse().join(' ')]))
-			return null													//remove ignored tags so that they don't affect tag amount
+			return null													//remove ignored tags so that they don't affect the tag amount
 		else return v;
 	});		
 																		//1st sorting stage, no prior knowledge about found categories
@@ -544,7 +548,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		folder=folders["!!unsorted"]+'\\';   							//mark image as going to "unsorted" folder if it still has untranslated tags
 		filename=fn+' '+filename;
 		document.title+='? ';											//no match ;_;
-	} else															
+	} else											//TODO: option to disable unsorted category if translation is not required by user
 	 if ((fldrs.length==1)&&(nms.length==0)){							//otherwise if there's only one tag and it's a folder tag, assign the image right there
 		folder=fldrs[0]+'\\';
 		filename=filename.split(' ');
@@ -647,7 +651,7 @@ function selected(inp){													//hide the corresponding roman tag from resu
 		);
 		}
 	);
-	$.each(ansi,function(ix,vl){										//i don't even remember how and why it works
+	$.each(ansi,function(ix,vl){										//I don't even remember how and why this works
 			if ((!knj[vl.innerText.trim()])&&(!$(vl).parent().attr('ignore')))
 				$(vl).parent().removeAttr('hidden');					//but it does
 			}
@@ -755,7 +759,7 @@ function submit(){														//collects entered translations for missing tags
 	}, to);
 };
 
-function ex(){															//export auxiliary tag databases as text file
+function ex(){															//export auxiliary tag databases as a text file
 	Downloadify.create('ex' ,{
 		filename: 'names&meta tags DB.txt', 
 		data: function(){

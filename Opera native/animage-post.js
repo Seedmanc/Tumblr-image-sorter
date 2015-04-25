@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name		Animage-post
-// @description	Puts tags for links into database
+// @description	Store tags for images and indicate saved state
 // @version	1.0
 // @author		Seedmanc
 // @include	http://*.tumblr.com/post/*
@@ -21,6 +21,7 @@
 																				//also it enables error notifications and disables cleanup ( causes lag on tab close)
 	var storeUrl=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
 																				//flash databases are bound to the URL, must be same as in the other script
+																				
 	var enableOnDashboard= true;												//will try to collect post info from dashboard posts too
 																				//might be slow and/or glitchy so made optional
 // ==/Settings====================================================
@@ -71,24 +72,24 @@ function getID(lnk){															//extract numerical post ID from self-link
 
 function main(){																//search for post IDs on page and call API to get info about them
 	if (isDash)
-		posts=jQuery('ol.posts').find('div.post').not('.new_post')
-	else {
-		posts=jQuery('article.entry > div.post').not('.n').parent();				//some really stupid plain theme
+		posts=jQuery('ol.posts').find('div.post').not('.new_post')				//getting posts on dashboard is straightforward with its constant design
+	else {																		//but outside of it are all kinds of faulty designs, so we have to experiment
+		posts=jQuery('article.entry > div.post').not('.n').parent();			//some really stupid plain theme
 		posts=(posts.length)?posts:jQuery('.post');
 		if (isImage) 
 			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
-				document.location.href=jQuery('img#content-image')[0].src			//proceed directly to the image if it already has a DB record with tags	
+				document.location.href=jQuery('img#content-image')[0].src		//proceed directly to the image if it already has a DB record with tags	
 			else
 				posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
-																					//make it work also on image pages, since we can get post id from url
+																				//make it work also on image pages, since we can get post id from url
 		posts=posts.length?posts:jQuery('.column').eq(2).find('.bottompanel').parent();
-																					//for "Catching elephant" theme
-		posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0	
-		posts=posts.length?posts:jQuery('[id="designline"]');						//The Minimalist, not tested though and saved indication probably won't work
-		posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
-		posts=posts.length?posts:jQuery("div.posts");								//some redux theme, beats me
+																				//for "Catching elephant" theme
+		posts=posts.length?posts:jQuery('[id="post"]');							//for "Cinereoism" that uses IDs instead of Classes /0	
+		posts=posts.length?posts:jQuery('[id="designline"]');					//The Minimalist, not tested though and saved indication probably won't work
+		posts=posts.length?posts:jQuery('[id="posts"]');						//Tincture pls why are you doing this
+		posts=posts.length?posts:jQuery("div.posts");							//some redux theme, beats me
 		if (posts.length==0){
-			document.title+=' [No posts found]';									//give up
+			document.title+=' [No posts found]';								//give up
 			return;
 		};
 	};
