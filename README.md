@@ -8,18 +8,27 @@ Suppose you save images from tumblr regularly and want to have them organized ni
 ## How it works
 The script collects tags associated with image posts as you navigate tumblr and puts that information into a database. When you open an image in a new tab it searches for its tags, looks at the folder structure you provided it with and makes decision which folder should the current image be saved to. Additionally, if multiple matching folders are found, the image can be put to a predefined "group" folder.  If there are any unrecognized tags (the ones you don't have assigned folders to or the tags requiring translation) the image can be saved to another predefined folder for later manual sorting.
 
-##Folder decision logic
-Let's define some key terms. First, assume the majority of images you're dealing with are photos of people and as such tags mostly have people names in it, while your folder structure has separate folders for every person whose photos you're interested in. There can also be other tags aside from names. All the folders are located into one base folder which we'll refer to as 'root'.
+###Folder decision logic
+Let's define some key terms. First, assume the majority of images you're dealing with are photos of people and as such tags mostly have people names in it, while your folder structure has separate directories for every person whose photos you're interested in. There can also be other tags aside from names. All the folders are located into one base folder which we'll refer to as 'root'.
 Now, to the terms:
 * **folder name** tag - a person's name that you have a dedicated folder for
 * **name** tag - a person's name that you don't have a folder for but consider important enough to recognize and have in the filename
 * **meta** tag - any recognized tag that is not a name
 * **folder meta** tag - a non-name folder which can, for example, be used to group other name folders together by a certain attribute. Such folders should have a certain symbol as the first character in their name, by default '!'. Can also be referred to as "!meta" tag for short.
 * **unsorted** - any unrecognized tag, the tag that is not found in any database
-* **group, solo and unsorted** - these are pointers to special folders that you might have for images having several people in them, only a single person that doesn't have own folder and finally, a folder for images having some unrecognized tags, correspondingly. Of course you can have all these pointers direct to a single folder if you don't have such deliberate organization.
+* **group, solo and unsorted** - these are pointers to special folders that you might have for images having several people in them, only a single person that doesn't have own folder and finally, a folder for images having some unrecognized tags, correspondingly. Of course you can have all these pointers direct to a single folder if you don't have such deliberate organization (note that in the current version pointers can't direct to the root folder itself, only a subdir).
 
-Look at the table, it shows all the possible combinations of tags into every category and the folder that will be assigned to an image having these tags. Destination is relative to the root folder and assumes you have separate folders for every pointer to special folders as described above.
+Look at the table, it shows all the possible combinations of tags in every category and the folder that will be assigned to an image having such tags. Destination is relative to the root folder and assumes you have separate directories for every special folder pointer as described above.
+Before '\' is the folder name, after is the filename composed by the script, followed by any meta tags if present. The original image filename is appended to the end of all that, ensuring uniqueness.
 
-| folder !meta  | folder name  | name  | unsorted  |  destination |
-|---|---|---|---|---|
-|   |   |   |   |   |
+| folder !meta  | folder name  | name  | unsorted  |  destination | comments |
+|---|---|---|---|---|---|
+|            |                      |   |  >0  | unsorted \ [tags] names meta  | tags in other categories don't matter |
+| 0 or >1| 0 | 0 | 0 | \ meta | if present |
+| 0 | 0 | 1 | 0 | solo \ name | |
+| 0 or >1 | 1 | 0 | 0 | name \ | direct hit |
+| 0 | >1 +|+ >1| 0 | group \ names | sum of name and folder tags >1 |
+| 1 | 0 | 1 | 0 | !meta \ name | metafolder instead of solo|
+| 1 | >1 +|+ >1 | 0 | !meta \ names | metafolder instead of group |
+
+As you can see, the effect of having a single !meta tag is that it replaces solo or group folder if they were to be used in that particular case. Having more than one !meta tag, however, makes the script act like with usual meta tags, because we can't choose any particular !meta folder to be used that way.
