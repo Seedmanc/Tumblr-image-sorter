@@ -24,7 +24,7 @@ The table below shows all the possible combinations of tags in every category an
 Before '\' is the folder name, after is the filename composed by the script, followed by any meta tags if present. The original image filename is appended to the end of all that, ensuring uniqueness.
 
 | folder !meta  | folder name  | name  | unsorted  |  destination | comments |
-|---|---|---|---|---|---|
+|:-:|:-:|:-:|:-:|---|---|
 |            |                      |   |  >0  | unsorted \ [tags] names meta  | tags in other categories don't matter |
 | 0 or >1| 0 | 0 | 0 | \ meta | if present |
 | 0 or >1| 0 | 1 | 0 | solo \ name | |
@@ -55,8 +55,10 @@ Currently there is support for the majority of most popular themes that don't ha
 
 Below is the theme compatibility table. Note that the percentage value shows how much I am sure that there will possibly be no problems with using the script in a blog with such theme. For example, if the script seems to be working finely after testing, but to make it work properly it took me a lot of tinkering I can not be sure that I didn't miss anything compared to themes where the script worked normally right away.
 
-| Theme name  | Theme URL  | Assumed compatibility % |
-|---|---|---|
+Basically, every theme that has post containers with 'class=post' and contains both post images and post meta within said container should be working fine.
+
+| Theme name  | Theme URL  | Compatibility % |
+|---|---|--:|
 |Single A	|http://www.tumblr.com/theme/28638	|100|
 |Simple Things|	http://singleatheme.tumblr.com	|100|
 |Minimal by Artur Kim	|http://arturkim.com|	100|
@@ -76,4 +78,9 @@ Below is the theme compatibility table. Note that the percentage value shows how
 
 Themes with inbuilt flash content such as music players are not supported. It seem that flash presence makes flash cookies DB unable to load. There is a chance that it might not an issue of my script but rather of the flash cookies themselves. So far I have no idea how to fix this, but such themes are a minority anyway.
 
+##Additional features
+
+Aside from main functionality the script also makes slight changes to tumblr design. The most noticeable one is the outline around images that were already saved with the script (not just "save as"). This way you can keep track of pictures you have. Note that that this feature is cross-blog, meaning that if you saved a picture from one blog and then encountered it in a reblogged post in another tumblr it will still be marked as saved there.
+
+Other features include changing destination of links on single image posts directly to the picture skipping the /image/ subpage of tumblr, linkifying even small images that usually don't have links over them (because GET script requires every image to be opened in a separate tab) and also fixing the particular problem in some themes where links to hi-res versions of the images in posts are covered by a transparent div, making them inaccessible.
 So, the workflow is as follows: click the button, paste the path into save dialog text field, click "Save" and you're done. Much better than having to navigate between many folders before saving, isn't it?
