@@ -20,8 +20,6 @@
 	
 	var ms=				'!';											//Metasymbol, denotes folders for categories instead of names, must be their first character
 	
-	var allowUnicode=	false;											//Whether to allow unicode characters for manual translation input, not tested
-	
 	var folders=		{												//Folder and names matching database
 		"	!!group	"	:	"	!!group	",								//used both for tag translation and providing the list of existing folders
 		"	!!solo	"	:	"	!!solo	",								//trailing whitespaces are voluntary in both keys and values,
@@ -110,13 +108,15 @@
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 																		//to disable an entry without removing it use "false" as the value
 
+	var allowUnicode=	false;											//Whether to allow unicode characters for manual translation input, not tested
+	
 	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
 																		//flash databases are bound to the URL, must be same as in the other script
 	var	downloadifySwf=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.swf';			
 																		//flash button URL
-	var debug=				false;											//initial debug value, affects creation of flashDBs, can be changed via GUI
-																		//debug enables error notification, shows im/export controls for aux dbs and save button
-																		//even if no tags were found, also disables cleanup (lag on tab close)
+	var debug=			false;											//initial debug value, affects creation of flashDBs, can be changed via GUI
+																		//debug enables error notification, shows im/export controls for aux dbs 
+																		//and save button even if no tags were found, also disables cleanup (lag on tab close)
 // ==/Settings=====================================================
 												//TODO add support for no subfolders configuration
 var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};
@@ -846,3 +846,4 @@ function cleanup(full){													//remove variables and flash objects from me
 	x=document.querySelectorAll("object[id^='SwfStore_names_']")[0];
 	x.parentNode.removeChild(x); 
 }
+//TODO: add save button activation via keyboard
