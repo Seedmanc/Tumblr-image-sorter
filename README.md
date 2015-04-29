@@ -51,11 +51,11 @@ There is also an additional smaller database of ignored tags, that is used to fi
 
 ## Compatibility
 
-Currently there is support for the majority of most popular themes that don't have tile layout or infinite scroll. For themes with the latter enabled the script will only process the first X posts before the scroll kicks in; however, even for unprocessed posts it will be able to retrieve data for single-image posts that link to the /image/ page of tumblr (and those are usually the majority of posts).
+Currently there is support for the majority of most popular themes that don't have infinite scroll. For themes with the latter enabled the script will only process the first X posts before the scroll kicks in; however, even for unprocessed posts it will be able to retrieve data for single-image posts that link to the /image/ page of tumblr (and those are usually the majority of posts). Having tile layout might decrease expected compatibility, but I'm not very sure of that. 
 
 Below is the theme compatibility table. Note that the percentage value shows how much I am sure that there will possibly be no problems with using the script in a blog with such theme. For example, if the script seems to be working finely after testing, but to make it work properly it took me a lot of tinkering I can not be sure that I didn't miss anything compared to themes where the script worked normally right away.
 
-Basically, every theme that has post containers with 'class=post' and contains both post images and post meta within said container should be working fine.
+Basically, every theme that has post containers with 'class="post"' and contains both post images and post meta within said node should be working fine.
 
 | Theme name  | Theme URL  | Compatibility % |
 |---|---|--:|
@@ -76,11 +76,26 @@ Basically, every theme that has post containers with 'class=post' and contains b
 |Tincture	|http://tincturetheme.tumblr.com|	75|
 |PixelUnion Fluid|	http://www.tumblr.com/theme/979	|70  |
 
-Themes with inbuilt flash content such as music players are not supported. It seem that flash presence makes flash cookies DB unable to load. There is a chance that it might not an issue of my script but rather of the flash cookies themselves. So far I have no idea how to fix this, but such themes are a minority anyway.
+Themes with inbuilt flash content such as music players are not supported. It seems that flash presence makes flash cookies DB unable to load. There is a chance that it might not an issue of my script but rather of the flash cookies themselves. So far I have no idea how to fix this, but such themes are a minority anyway.
 
 ##Additional features
 
 Aside from main functionality the script also makes slight changes to tumblr design. The most noticeable one is the outline around images that were already saved with the script (not just "save as"). This way you can keep track of pictures you have. Note that that this feature is cross-blog, meaning that if you saved a picture from one blog and then encountered it in a reblogged post in another tumblr it will still be marked as saved there.
 
 Other features include changing destination of links on single image posts directly to the picture skipping the /image/ subpage of tumblr, linkifying even small images that usually don't have links over them (because GET script requires every image to be opened in a separate tab) and also fixing the particular problem in some themes where links to hi-res versions of the images in posts are covered by a transparent div, making them inaccessible.
-So, the workflow is as follows: click the button, paste the path into save dialog text field, click "Save" and you're done. Much better than having to navigate between many folders before saving, isn't it?
+
+##Usage
+* **First-time configuration**
+Once you've installed the scripts (for instructions see README in the version folder of your choice) you'll need to fill in at least the **Folders** database which is located in the GET script. By default it has the configuration that I'm using myself, around 80 japanese name tags in kanji translating to folder names in English. Additionally you might want to also fill in the auxiliary name and meta databases, use the import feature for that. From a tab with opened image  enable debug via GUI. Click `+settings+` button and select `import db` in the drop-down menu, then choose the `names&meta tags DB.txt` file that I provided in the repository. You can edit it to your liking beforehand, just make sure not to violate it's structure. The auxiliary DB has around 40 more names and 30 meta tags with translations. You might want to disable debug afterwards.
+
+Note that if there are duplicating tag entries among these 3 DBs, the following hierarchy takes place: **Folders > names > meta**.
+* **Everyday usage**
+The workflow is as follows: make sure the page with posts you're navigating has at least initiated the processing (`Ready: [` has appeared in the page title), then open the images in a new tab (usually with middle click). During or after image loading the script will indicate whether it has succeeded in recognizing all the tags for the image by changing image tab's title. In case there was a direct hit (only one person on the photo and there's a dedicated folder) it'll show `✓` followed by the path to needed folder. If there were some unrecognized tags detected, it'll show `?` and the tags. Finally, if that particular image had no tags at all, the GET script will not launch, unless the debug mode was enabled. 
+Assuming there are tags and all of them were recognized, just click the `Save to disk` button. Save dialog will appear, paste the path into the filename text field (I usually do that with `Shift-Insert`, click "Save" (or hit `Enter`) and you're done. Much better than having to navigate between many folders before saving, isn't it?
+* **Managing unrecognized tags**
+The script provides convenient GUI for dealing with tag missing from any DBs. On image page they will be listed at the left side under Save button. From there you'll have a choice to either choose a category (name or meta) for every tag, additionally entering translation for tags in Unicode (usually kanji), or to simply ignore those tags and remove them from analysis for now. To ignore a tag click on it and it will be hidden. After you made your choices, click the `Submit` button to apply them and look at the difference it made to the page title.
+
+A few things to consider:
+* The script tries to accomodate for the way many bloggers try to increase visibility of their posts by entering many permutations of a single tag, such as entering names in direct and reverse order, entering both kanji name and its translation, entering kanji names with and without spaces and so on. Where possible, the script will only leave one version among duplicates. If the tag is already present in any of databases in its kanji form with translation, white the blogger put both kanji and translation versions to tags, the latter will be ignored automatically, because we already know it. 
+* If, however, 
+* The script is also able to detect different writings of 'ō' as o/ou at the end of names in favor of 'o'.
