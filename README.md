@@ -1,7 +1,7 @@
 # Tumblr-image-sorter
 Userscript for image file name and save path formatting based on tags.
 
-This userscript saves you time spent on renaming images and choosing the right directory for saving them in accordance to post tags. You provide a list of matching tags and subfolder names, the script analyzes tags in the post containing the image and chooses the right directory for you, as well as putting required tags into image file name. In addition it can translate tags using the same matching list, indicate which images have been already saved this way and fix some common design problems of tumblr themes.
+This userscript saves you time spent on renaming images and choosing the right directory for saving them in accordance to post tags. You provide a list of matching tags and subfolder names, the script analyzes tags in the post containing the image and chooses the right directory for you, as well as putting required tags into image file name in danbooru fashion (replacing spaces with underscores). In addition it can translate tags using the same matching list, indicate which images have been already saved this way and fix some common design problems of tumblr themes.
 
 Suppose you save images from tumblr regularly and want to have them organized nicely on disk. You have a large enough folder tree, navigating which manually to select save destination for every image might be quite a time consuming and boring task. Meanwhile the information that you're making your folder selection choices on is right there in the tags associated with posts containing the images, provided that the post author uses the tagging system responsibly. Even if you don't have any particular folder structure and just save everything into one folder, having tags put into filenames can be quite an improvement for searching, especially if tags happen to be in a foreign language. This userscript can do all that and more.
 
@@ -25,7 +25,7 @@ Before '\' is the folder name, after is the filename composed by the script, fol
 
 | folder !meta  | folder name  | name  | unsorted  |  destination | comments |
 |:-:|:-:|:-:|:-:|---|---|
-|            |                      |   |  >0  | unsorted \ [tags] names meta  | tags in other categories don't matter |
+|            |                      |   |  >0  | unsorted \ [tags] names meta  | # of other tags doesn't matter |
 | 0 or >1| 0 | 0 | 0 | \ meta | if present |
 | 0 or >1| 0 | 1 | 0 | solo \ name | |
 | 0 or >1 | 1 | 0 | 0 | name \ | direct hit |
@@ -38,7 +38,7 @@ In case of unrecognized tags presence they're all added to filename; if there ar
 
 ##Script contents
 Currently the project consists of two userscripts, called "animage-post" and "animage-get". Note that despite having "animage" in the name they are configured to work with the majority of tumblr blogs, or, rather, themes, and also on the dashboard. "Animage" is there just for legacy reasons, because I started development of this project when I was only using http://animage.tumblr.com.
-* animage-**post** - the script that runs on tumblr pages that have posts - including /search/, /tagged/, /dashboard and pretty much every page within a personal tumblr blog except for /archive so far. This script collects tag data for every post and *posts* it to the tag DB (thus the name) for later use. The script does not have any GUI and does not require user interaction; however it shows a progressbar in page's title that gets filled with numbers representing amount of images in every found photo post on page or empty space if no tags or photos are found. 
+* animage-**post** runs on tumblr pages that have posts - including /search/, /tagged/, /dashboard and pretty much every page within a personal tumblr blog except for /archive so far. This script collects tag data for every post and *posts* it to the tag DB (thus the name) for later use. The script does not have any GUI and does not require user interaction; however it shows a progressbar in page's title that gets filled with numbers representing amount of images in every found photo post on page or empty space if no tags or photos are found. 
 * animage-**get** runs on the directly-linked images opened on separate tabs. It gets the tag data from DB for the currently opened image, prepares filename and path and allows you to *get* the image and this information required to save it. The file name is formed with Downloadify flash button, the path is copied to system clipboard upon clicking it. 
 The GET script provides a GUI, allowing the user to fill in those databases with tags and their translations if required. GUI also can be used to toggle debug mode and export or import auxiliary tag databases.
 
@@ -55,26 +55,26 @@ Currently there is support for many popular themes that don't have infinite scro
 
 Below is the theme compatibility table. Note that the percentage value shows how much I am sure that there will possibly be no problems with using the script in a blog with such theme. For example, if the script seems to be working finely after testing, but to make it work properly it took me a lot of tinkering I can not be sure that I didn't miss anything compared to themes where the script worked normally right away.
 
-Basically, every theme that has post containers with 'class="post"' and contains both post images and link to post within said node should be working fine.
+Basically, every theme that has post containers with `'class="post"'` and contains both post images and link to post within said node should be working fine.
 
 | Theme name  | Theme URL  | Compatibility % |
 |---|---|--:|
-|?|	http://marumichannel.tumblr.com/ 	|90|
-|Catching Elephant|	http://www.tumblr.com/theme/7285/ 	|90|
+|?|	http://marumichannel.tumblr.com 	|90|
+|Catching Elephant|	http://www.tumblr.com/theme/7285 	|90|
 |Effector|	http://www.tumblr.com/theme/17403 	|90|
-|ER2|	http://cubicle17.com/ 	100|
-|Masonite|	http://hellodirty.com/ 	|95|
-|Minimal by Artur Kim|	http://arturkim.com 	100|
+|ER2|	http://cubicle17.com 	|100|
+|Masonite|	http://hellodirty.com 	|95|
+|Minimal by Artur Kim|	http://arturkim.com 	|100|
 |o by inky|	http://www.tumblr.com/theme/1386 	|90|
-|Optica|	http://www.tumblr.com/theme/37310 	100|
+|Optica|	http://www.tumblr.com/theme/37310 	|100|
 |PixelUnion Fluid|	http://www.tumblr.com/theme/979	|70  |
 |plain by selkas|	http://selkas.tumblr.com 	|80|
-|redux|	http://thm--reducereuseandredux.tumblr.com/ 	|90|
+|redux|	http://thm--reducereuseandredux.tumblr.com 	|90|
 |Simple Things|	http://singleatheme.tumblr.com	|100|
 |Single A |	http://www.tumblr.com/theme/28638	|100|
 |Tincture|	http://tincturetheme.tumblr.com 	|75|
 |tuesday by selkas|	http://selkas.tumblr.com 	|85|
-|Viwan theme|	http://viwan-th.tumblr.com/	|95|
+|Viwan theme|	http://viwan-th.tumblr.com	|95|
 
 Themes with inbuilt flash content such as music players are not supported. It seems that flash presence makes flash cookies DB unable to load. There is a chance that it might not an issue of my script but rather of the flash cookies themselves. So far I have no idea how to fix this, but such themes are a minority anyway.
 
@@ -82,7 +82,7 @@ Themes with inbuilt flash content such as music players are not supported. It se
 
 Aside from main functionality the script also makes slight changes to tumblr design. The most noticeable one is the outline around images that were already saved with the script (not just "save as"). This way you can keep track of pictures you have. Note that that this feature is cross-blog, meaning that if you saved a picture from one blog and then encountered it in a reblogged post in another tumblr it will still be marked as saved there.
 
-Other features include changing destination of links on single image posts directly to the picture skipping the /image/ subpage of tumblr, linkifying even small images that usually don't have links over them (because GET script requires every image to be opened in a separate tab) and also fixing the particular problem in some themes where links to hi-res versions of the images in posts are covered by a transparent <div>, making them inaccessible.
+Other features include changing destination of links on single image posts directly to the picture skipping the /image/ subpage of tumblr, linkifying even small images that usually don't have links over them (because GET script requires every image to be opened in a separate tab) and also fixing the particular problem in some themes where links to hi-res versions of the images in posts are covered by a transparent \<div\>, making them inaccessible.
 
 ##Usage
 #### **First-time configuration**
@@ -94,7 +94,7 @@ Also take a look at the Settings part inside both scripts. Default values must b
 
 Just to make it clear: the data is not stored somewhere online by the storeUrl, it is stored on your machine locally. But the database is bound to the url, think of it as of a long name for the DB.
 
-Another thing to note, there are limits on the amount of data stored in flash cookies. I believe the default value is 100kb per database. While every record for an image takes relatively little space (about 80 bytes per image), the data is continuously added as you navigate tumblr and encounter new posts. Eventually you'll hit the limit without even knowing it because with debug disabled you will not be notified. Therefore I recommend setting the limit to at least 1 megabyte since very beginning. Head over to http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager07.html look for your `storeUrl` host in the list (dl.dropboxusercontent.com by default) and change the value as you see fit.
+Another thing to note, there are limits on the amount of data stored in flash cookies. I believe the default value is 100kb per database. While every record for an image takes relatively little space (about 80 bytes per image), the data is continuously added as you navigate tumblr and encounter new posts. Eventually you'll hit the limit without even knowing it because with debug disabled you will not be notified. Therefore I recommend setting the limit to at least 1 megabyte since very beginning. Head over to http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager07.html look for your `storeUrl` host in the list (`dl.dropboxusercontent.com` by default) and change the value as you see fit.
 
 #### **Everyday usage**
 The workflow is as follows: make sure the page with posts you're navigating has at least initiated the processing by the POST script (`Ready: [` has appeared in the page title), then open the images in a new tab (usually with middle click). During or after image loading the GET script will indicate whether it has succeeded in recognizing all the tags for the image by changing image tab's title. In case there was a direct hit (only one person on the photo and there's a dedicated folder) it'll show `✓` followed by the path to needed folder. If there were some unrecognized tags detected, it'll show `?` and the tags. Finally, if that particular image had no tags at all, the GET script will not be activated, unless the debug mode was enabled. 
@@ -108,4 +108,4 @@ A few things to consider:
 * The script tries to accommodate for the way many bloggers try to increase visibility of their posts by entering many permutations of a single tag, such as entering names in direct and reverse order, entering both kanji name and its translation, entering kanji names with and without spaces and so on. Where possible, the script will only leave one version, omitting duplicates. If the tag is already present in any of databases in its kanji form with translation, while the blogger put both kanji and translation versions to tags, the latter will be ignored automatically, because it is already known. 
 * If, however, neither of kanji or translated versions are known, but both kanji and roman tags are in the list, the script will show all of them, but will also allow you to quickly input translations to kanji tags by selecting them from drop-down lists populated by all unrecognized roman tags. This way even if you don't know the translation exactly, but at least know some kanji symbols you can reliably fill in translations for tags by choosing among most fitting options. I find this very useful.
 * The script is also able to detect different writings of 'ō' as o/ou at the end of names in favor of 'o'.
-
+* Any characters illegal for use in file paths and % sign will be replaced by '-'.f
