@@ -2,7 +2,7 @@
 A userscript for image file name and save path formatting based on tags.
 
 ## Table of contents
-1. Introduction
+1. [Introduction](#introduction)
 2. How it works
   * Folder decision logic
 3. Script contents
