@@ -3,16 +3,16 @@ A userscript for image file name and save path formatting based on tags.
 
 ## Table of contents
 1. [Introduction](#introduction)
-2. How it works
-  * Folder decision logic
-3. Script contents
-4. Required data
-5. Compatibility
-6. Additional features
-7. Usage
- * First-time configuration
- * Everyday usage
- * Managing unrecognized tags
+2. [How it works](#how-it-works)
+  * [Folder decision logic](#folder-decision-logic)
+3. [Script contents](#script-contents)
+4. [Required data](#data-required-for-the-script)
+5. [Compatibility](#compatibility)
+6. [Additional features](#additional-features)
+7. [Usage](#usage)
+ * [First-time configuration](#first-time-configuration)
+ * [Everyday usage](#everyday-usage)
+ * [Managing unrecognized tags](#managing-unrecognized-tags)
 
 ## Introduction
 This userscript saves you time spent on renaming images and choosing the right directory for saving them in accordance to post tags. You provide a list of matching tags and subfolder names, the script analyzes tags in the post containing the image and chooses the right directory for you, as well as putting required tags into image file name in danbooru fashion (replacing spaces with underscores). In addition it can translate tags using the same matching list, indicate which images have been already saved this way and fix some common design problems of tumblr themes.
