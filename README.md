@@ -13,9 +13,11 @@ A userscript for image file name and save path formatting based on tags.
  * [First-time configuration](#first-time-configuration)
  * [Everyday usage](#everyday-usage)
  * [Managing unrecognized tags](#managing-unrecognized-tags)
+8. [Project info](#project-info)
+ * [Dependencies](#dependencies)
 
 ## Introduction
-This userscript saves you time spent on renaming images and choosing the right directory for saving them in accordance to post tags. You provide a list of matching tags and subfolder names, the script analyzes tags in the post containing the image and chooses the right directory for you, as well as putting required tags into image file name in danbooru fashion (replacing spaces with underscores). In addition it can translate tags using the same matching list, indicate which images have been already saved this way and fix some common design problems of tumblr themes.
+This userscript saves you time spent on renaming images and choosing the right directory for saving them in accordance to post tags. You provide a list of matching tags and folder names, the script analyzes tags in the post containing the image and chooses the right directory for you, as well as putting required tags into image file name in danbooru fashion (replacing spaces with underscores). In addition it can translate tags using the same matching list, indicate which images have been already saved this way and fix some common design problems of tumblr themes.
 
 Suppose you save images from tumblr regularly and want to have them organized nicely on disk. You have a large enough folder tree, navigating which manually to select save destination for every image might be quite a time consuming and boring task. Meanwhile the information that you're making your folder selection choices on is right there in the tags associated with posts containing the images, provided that the post author uses the tagging system responsibly. Even if you don't have any particular folder structure and just save everything into one folder, having tags put into filenames can be quite an improvement for searching, especially if tags happen to be in a foreign language. This userscript can do all that and more.
 
@@ -113,13 +115,23 @@ Another thing to note, there are limits on the amount of data stored in flash co
 #### Everyday usage
 The workflow is as follows: make sure the page with posts you're navigating has at least initiated the processing by the POST script (`Ready: [` has appeared in the page title), then open the images in a new tab (usually with middle click). During or after image loading the GET script will indicate whether it has succeeded in recognizing all the tags for the image by changing image tab's title. In case there was a direct hit (only one person on the photo and there's a dedicated folder) it'll show `✓` followed by the path to needed folder. If there were some unrecognized tags detected, it'll show `?` and the tags. Finally, if that particular image had no tags at all, the GET script will not be activated, unless the debug mode was enabled. 
 
-Assuming there are tags and all of them were recognized, just click the `Save to disk` button. Save dialog will appear, paste the path into the filename text field (I usually do that with `Shift-Insert`), click `Save` (or hit `Enter`) and you're done. Much better than having to navigate between many folders before saving, isn't it?
+Assuming there are tags and all of them were recognized, just click the `Save to disk` button. Save dialog will appear, paste the path into the filename text field (I usually do that with `Shift-Insert`), click `Save` (or hit `Enter`) and you're done. Much better than having to navigate between many folders before saving, isn't it? Even better, if you find yourself often reuploading saved images somewhere else, you can paste same path into open dialog and have last saved image selected automatically without having to look for it.
 
 #### Managing unrecognized tags
-The script provides convenient GUI for dealing with tags missing from any DBs. On image page they will be listed at the left side under `Save to disk` button. From there you'll have a choice to either choose a category (name or meta) for every tag, additionally entering translation for tags in Unicode (usually kanji), or to simply ignore those tags and remove them from analysis for now. To ignore a tag click on it and it will be hidden until page reload. After you made your choices, click the `Submit` button to apply them and look at the difference it made to the page title.
+The script provides convenient GUI for dealing with tags missing from any DBs. On image page they will be listed at the left side under `Save to disk` button. From there you'll have a choice to either select a category (name or meta) for every tag, additionally entering translation for tags in Unicode (usually kanji), or to simply ignore those tags and remove them from analysis for now. To ignore a tag click on it and it will be hidden until page reload. After you made your choices, click the `Submit` button to apply them and look at the difference it made to the page title.
 
 A few things to consider:
 * The script tries to accommodate for the way many bloggers try to increase visibility of their posts by entering many permutations of a single tag, such as entering names in direct and reverse order, entering both kanji name and its translation, entering kanji names with and without spaces and so on. Where possible, the script will only leave one version, omitting duplicates. If the tag is already present in any of databases in its kanji form with translation, while the blogger put both kanji and translation versions to tags, the latter will be ignored automatically, because it is already known. 
 * If, however, neither of kanji or translated versions are known, but both kanji and roman tags are in the list, the script will show all of them, but will also allow you to quickly input translations to kanji tags by selecting them from drop-down lists populated by all unrecognized roman tags. This way even if you don't know the translation exactly, but at least know some kanji symbols you can reliably fill in translations for tags by choosing among most fitting options. I find this very useful.
 * The script is also able to detect different writings of 'ō' as o/ou at the end of names in favor of 'o'.
 * Any characters illegal for use in file paths and % sign will be replaced by '-'.
+
+## Project info
+###Dependencies
+
+This userscript uses the following libraries:
+* [jQuery](https://github.com/jquery/jquery) v1.5-1.11 (actual maximum compatible version number is to be figured out yet) for general DOM manipulation
+* [Javascript Flash Cookies](https://github.com/nfriedly/Javascript-Flash-Cookies) v2.1 by Nriedly for crossdomain data storage. Without this library my userscript wouldn't have been possible.
+* [Downloadify](https://github.com/Seedmanc/Downloadify) v0.22 by Dcneiner forked by me. This library is used to provide force download capability as well as formatting of filename and copying the save path to clipboard (the latter is the functionality added in my fork).
+
+By default the script is configured to use pre-hosted libraries and media linked to my Dropbox, so you don't have to worry about downloading and re-hosting them, unless specified otherwise in installation notes for the particular script version. Should you want to do that regardless, take a look at the [dependencies](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/dependencies) and [media](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/media) folders, they have necessary files or links to repositories containing them.
