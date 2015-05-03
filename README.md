@@ -130,8 +130,8 @@ A few things to consider:
 ###Dependencies
 
 This userscript uses the following libraries:
-* [jQuery](https://github.com/jquery/jquery) v1.5-1.11 (actual maximum compatible version number is to be figured out yet) for general DOM manipulation
-* [Javascript Flash Cookies](https://github.com/nfriedly/Javascript-Flash-Cookies) v2.1 by Nriedly for crossdomain data storage. Without this library my userscript wouldn't have been possible.
-* [Downloadify](https://github.com/Seedmanc/Downloadify) v0.22 by Dcneiner forked by me. This library is used to provide force download capability as well as formatting of filename and copying the save path to clipboard (the latter is the functionality added in my fork).
+* [jQuery](https://github.com/jquery/jquery) v1.5-1.11 for general DOM manipulation
+* [Javascript Flash Cookies](https://github.com/nfriedly/Javascript-Flash-Cookies) v2.1 by Nfriedly for crossdomain data storage. Without this library my userscript wouldn't have been possible.
+* [Downloadify](https://github.com/Seedmanc/Downloadify) v0.22 by Dcneiner, forked by me. This library is used to provide force download capability as well as formatting of filename and copying the save path to clipboard (the latter is the functionality added in my fork).
 
-By default the script is configured to use pre-hosted libraries and media linked to my Dropbox, so you don't have to worry about downloading and re-hosting them, unless specified otherwise in installation notes for the particular script version. Should you want to do that regardless, take a look at the [dependencies](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/dependencies) and [media](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/media) folders, they have necessary files or links to repositories containing them.
+By default the script is configured to use pre-hosted libraries and media linked to my Dropbox, so you don't have to worry about hosting them yourself, unless specified otherwise in the installation notes of a particular script version. Should you want to do that regardless, take a look at the [dependencies](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/dependencies) and [media](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/media) folders, they have the necessary files or links to repositories containing them.
