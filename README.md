@@ -15,6 +15,8 @@ A userscript for image file name and save path formatting based on tags.
  * [Managing unrecognized tags](#managing-unrecognized-tags)
 8. [Project info](#project-info)
  * [Dependencies](#dependencies)
+ * [Major TODOs](#major-todos)
+ * [Future possibilities](#future-possibilities)
 
 ## Introduction
 This userscript saves you time spent on renaming images and choosing the right directory for saving them in accordance to post tags. You provide a list of matching tags and folder names, the script analyzes tags in the post containing the image and chooses the right directory for you, as well as putting required tags into image file name in danbooru fashion (replacing spaces with underscores). In addition it can translate tags using the same matching list, indicate which images have been already saved this way and fix some common design problems of tumblr themes.
@@ -127,11 +129,43 @@ A few things to consider:
 * Any characters illegal for use in file paths and % sign will be replaced by '-'.
 
 ## Project info
-###Dependencies
+The code is thoroughly commented (I think), I tried to explain everything I'm doing there. However I'm a newbie programmer so formatting might be weird.
 
+### Dependencies
 This userscript uses the following libraries:
 * [jQuery](https://github.com/jquery/jquery) v1.5-1.11 for general DOM manipulation
 * [Javascript Flash Cookies](https://github.com/nfriedly/Javascript-Flash-Cookies) v2.1 by Nfriedly for crossdomain data storage. Without this library my userscript wouldn't have been possible.
 * [Downloadify](https://github.com/Seedmanc/Downloadify) v0.22 by Dcneiner, forked by me. This library is used to provide force download capability as well as formatting of filename and copying the save path to clipboard (the latter is the functionality added in my fork).
 
 By default the script is configured to use pre-hosted libraries and media linked to my Dropbox, so you don't have to worry about hosting them yourself, unless specified otherwise in the installation notes of a particular script version. Should you want to do that regardless, take a look at the [dependencies](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/dependencies) and [media](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/media) folders, they have the necessary files or links to repositories containing them.
+
+### Current status
+
+v1.0
+
+* [Opera Native](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Opera%20native) version - **released**
+* Chrome port - in development
+* Firefox - planned
+
+Note that since I'm using the Opera version myself it will be the only version thoroughly tested by everyday usage. Chrome will only be tested formally. Also, since non-native versions are pretty much scripts for Greasemonkey and its clones, perhaps Chrome version should be working for Firefox and other browsers too. 
+
+### Major TODOs
+* Make the Folder database into a separate file instead of it being inside the script. If impossible, perhaps have it stored in a flashDB with a decent GUI for editing.
+
+I still have yet to find a way for a userscript to load information from a file on HDD automatically.
+
+* Implement cumulative tag storage, adding up different tags for same post across encountered reblogs and/or try to add traversal of reblog tree back to origin in search for tags if no tags were found initially.
+
+Should help when finding reblogs without any tags, as well as solve the problem of overwriting tag entries.
+
+* Make simplified generalized version without translation capabilities for use cases with English-only tags.
+
+Will have to think of a way to store folder lists more efficiently than in an object.
+
+## Future possibilities
+* Add a third script which would create and show a statistics page about information collected over time. For example, it would track the amount of images collected to every folder as well as the most saved tags without a folder and make suggestions abot creating a directory for that particular tag. Perhaps such a page would also be able to have a more functional GUI than the one the GET script has to offer.
+* With tag database collected and stored it will be potentially possible to implement a sorting algorithm for images already saved to disk from tumblr. All that the current algo needs is an image file name and the matching DB as input, while it outputs the path for the particular file. It should be trivial to make it run in a loop over multiple files selected from HDD. While Javascript has no capability of moving around files on disk it can create a batch command file with necessary instructions to be performed by the OS. 
+* Add support for more sites with tags, not just Tumblr, thus increasing use case coverage and popularity. Potential candidates are soup.io, egloos.com and perhaps even Pixiv. Along with aforementioned local file sorting feature it will make it possible to bring entire online tagging system to help with image organization and categorization on disk.
+
+#### License
+Blah-blah, MIT, blah, you know the stuff. Just don't claim authorship and it'll be fine.
