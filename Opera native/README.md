@@ -10,4 +10,6 @@ This version is designed to make use of Opera's native userscript support and mu
 4. If you have flash plugins disabled by default or requiring activation on demand you will need to go to the `Content` tab and enable them for those sites as well. 
 5. Go to any tumblr blog or your dashboard and see if the page title is being marked with "Ready:[ " after loading, this indicates that the POST script works. Then trying accessing any image from a photo post with tags and see if the download button appears on the image page, this would indicate that the GET script works as well.
 
+For the rest of configuration, head over to the [main readme section](https://github.com/Seedmanc/Tumblr-image-sorter#usage).
+
 I also recommend installing the [No Click to Activate](https://addons.opera.com/en/extensions/details/no-click-to-activate/) addon, because having to click the flash button twice every time might be annoying.
