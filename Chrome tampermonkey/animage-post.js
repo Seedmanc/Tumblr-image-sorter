@@ -1,237 +1,267 @@
 ﻿// ==UserScript==
-// @name		Animage-server
-// @description	Puts tags for links into database
+// @name		Animage-post
+// @description	Store tags for images and indicate saved state
 // @version		1.0
 // @author		Seedmanc
 // @include		http://*.tumblr.com/post/*
 // @include		http://*.tumblr.com/page/*
-// @include		http://*.tumblr.com/tag*/*
-// @include		http://*.tumblr.com/	
+// @include		http://*.tumblr.com/tagged/*
+// @include		http://*.tumblr.com/
 // @include		http://*.tumblr.com/image/*
+// @include		http://*.tumblr.com/search/*
+// @include		http*://www.tumblr.com/dashboard*
 
-// @exclude		http://*.media.tumblr.com/*
+// @exclude		http*://*.media.tumblr.com/*
 
 // @grant 		none
 // @run-at 		document-start
-// @require  	http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js 
+// @require  	https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js 
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.min.js 
 // ==/UserScript==
 
 // ==Settings=====================================================
 
-	var fixMiddleClick=true;													//Looks like in Chrome even middle mouse click triggers onClick event, which loads image into photoset viewer
-																				// instead of opening it in a new tab, which is required for the userscript to process the image
-																				// this option will fix this by removing the view in photoset feature altogether (only if there are tags found)
+	var fixMiddleClick=	false;													//Chrome launches left onClick events for middle click too
+																				// images open in photoset viewer instead of a new tab which is required for the script
+																				// this option will fix this by removing the view in photoset feature altogether
 																				// might cause unexpected behaviour and mess with progressbar in title
-	var debug=	true;															//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
-																				// also enables rewriting of database records for images
-	var highlight='darkgrey';													//color to mark the already saved images with
-	var storeUrl='https://dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
-																				//flash databases are bound to the URL.							
-
+																				// alternatively you'll have to right-click open in a new tab instead
+																				
+	var debug=		false;														//initial debug value, gets changed to settings value after DB creation
+																				// enabling debug makes DB entries for images updated every time post is visited
+																				// also it enables error notifications and disables cleanup
+	var storeUrl=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
+																				//flash databases are bound to the URL, must be same as in the other script
+																				
+	var enableOnDashboard= true;												//will try to collect post info from dashboard posts too
+																				// might be slow and/or glitchy so made optional
 // ==/Settings====================================================
 
 //$.noConflict();
  tagsDB=null;
-var ranonce=false;
-
-namae=document.location.host; 													 
+var J=T=false;
+var isImage=(document.location.href.indexOf('/image/')!=-1);					//processing for image pages is different from regular posts
+var namae=document.location.host; 			
+var isDash=(namae.indexOf('www.')==0);											//processing for non-blog pages of tumblr like dashboard is different too
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
 function cleanUp(){																//remove variables and flash objects from memory 
-	if (!debug){																//without removal there would be a noticeable lag upon tab closing
-		delete tagsDB;
-		a=jQuery('object');
-		jQuery.each(a,function(i,v){
-			v.parentNode.removeChild(v)});
-	};
+	if (true) return;															//TODO: remove cleanup in Chrome
+	delete tagsDB;
+	jQuery("object[id^='SwfStore_animage_']").remove();
 };
 
 function getFname(fullName){													//extract filename from image URL and format it
-	fullName=fullName||'';														//source URL processing for filename
-	if (fullName.indexOf('?')!=-1)												//first remove url parameters 
-		fullName=fullName.substring(0,fullName.indexOf('?'));
-		
-	if (fullName.indexOf('xuite')!=-1) {										//this blog names their images as "(digit).jpg" causing filename collisions
+	fullName=fullName||'';													
+	fullName=fullName.replace(/(\?).*$/gim,'');									//first remove url parameters 
+	if (fullName.indexOf('tumblr_')!=-1) 
+		fullName=fullName.replace(/(tumblr_)|(_\d{2}\d{0,2})(?=\.)/gim,'')		//prefix and postfix of tumblr image names can be omitted without info loss
+	else if (fullName.indexOf('xuite')!=-1) {									//this hosting names their images as "(digit).jpg" causing filename collisions
 		i=fullName.lastIndexOf('/');
 		fullName=fullName.substr(0,i)+'-'+fullName.substr(i+1);					//add parent catalog name to the filename to ensure uniqueness
 	};
-	return fullName.substring(fullName.lastIndexOf('/')+1);						
+	return fullName.split('/').pop(); 					
 };  
 
 function getID(lnk){															//extract numerical post ID from self-link
-	Result=lnk.substring(lnk.indexOf('/post/')+7+lnk.indexOf('image/'));	
-	if (Result.indexOf('#')!=-1)												//remove url postfix 
-		Result=Result.substring(0,Result.indexOf('#'));	
+	if (lnk.search(/[^0-9]/g)==-1)
+		return lnk;
+	Result=lnk.substring(lnk.indexOf('/post/')+7+lnk.indexOf('image/'));		//one of those will be -1, another the actual offset	
+	Result=Result.replace(/(#).*$/gim,'');										//remove url postfix 
 	i=Result.lastIndexOf('/');
 	if (i!=-1)
 		Result=Result.substring(0,i);
 	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) {
-		alert('IDentification error');
-		throw new Error('IDentification error: '+Result);
+		if (debug) alert('IDentification error: '+Result);
+		throw new Error('IDentification error');
 	}
 	else
 		return Result;
 };
 
 function main(){																//search for post IDs on page and call API to get info about them
-  try {
-	if (!ranonce){
-		posts=jQuery('.post');//.not('.post .post');
-		if (document.location.href.indexOf('/image/')!=-1)						//make it work also on image pages, since we can get post id there as well
-			posts=[jQuery('<div><a href="http://'+namae+'/post/'+getID(document.location.href)+'" >a</a></div>') ];	
-																				//helps when you got directly to image page without visiting post page beforehand
-		if (posts.length==0) {			
-			posts=jQuery(jQuery('.column')[2]).find('.bottompanel');			//for "Catching elephant" theme
-			posts=(posts.length)?posts:jQuery("[id='post']");					//for "Cinereoism" that uses IDs instead of Classes /0
-			if (posts.length==0){
-				document.title+=' [No .posts found]';							//give up
-				return;
-			};
+	if (isDash)
+		posts=jQuery('ol.posts').find('div.post').not('.new_post')				//getting posts on dashboard is straightforward with its constant design,
+	else {																		// but outside of it are all kinds of faulty designs, so we have to experiment
+		posts=jQuery('article.entry > div.post').not('.n').parent();			//some really stupid plain theme
+		posts=(posts.length)?posts:jQuery('.post');								//general way to obtain posts that are inside containers with class='post'
+		if (isImage) 
+			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
+				document.location.href=jQuery('img#content-image')[0].src		//proceed directly to the image if it already has a DB record with tags	
+			else
+				posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
+																				//make it work also on image pages, since we can get post id from url
+		posts=posts.length?posts:jQuery('.column').eq(2).find('.bottompanel').parent();
+																				//for "Catching elephant" theme
+		posts=posts.length?posts:jQuery('[id="post"]');							//for "Cinereoism" that uses IDs instead of Classes /0	
+		posts=posts.length?posts:jQuery('[id="designline"]');					//The Minimalist, not tested though and saved indication probably won't work
+		posts=posts.length?posts:jQuery('[id="posts"]');						//Tincture pls why are you doing this
+		posts=posts.length?posts:jQuery("div.posts");							//some redux theme, beats me
+		if (posts.length==0){
+			document.title+=' [No posts found]';								//give up
+			return;
 		};
-		
-		document.title="Rdy:[";											//a "progressbar" will be displayed in page title,
-																				// indicating that the page is ready for interaction
-		jQuery.each(posts,function(i,v){
-			//linx=jQuery(v).find('a');
-			delete id;
-			h=jQuery(v).find("a[href*='"+namae+"/post/']");
-			if (h.length==0) h=jQuery(v).next().find("a[href*='"+namae+"/post/']");
-			if (h.length) id=getID(h[0].href);									//for every post on page find the self-link inside of post, containing post ID
-			/*jQuery.each(linx,function(idx,val){									
-				//delete id;
-				if (val.href.indexOf(namae+/post/)!=-1) {
-					id=getID(val.href);
-					return false;}
-			}); */
-			
-			if (typeof id == 'undefined') {										//workaround for Optica theme that doesn't have selflinks within .post elements
-			/*	phtst=jQuery(v).find("div[id^='photoset']");					//photosets have IDs inside, well, id attributes starting with photoset_
-				pht=jQuery(v).find("a[href*='/image/']");						//single photos link to the photo page with the ID being inside URL
-				if (phtst.length) 
-					id=phtst.attr('id').split('_')[1]
-				else if (pht.length)
-					id=getID(pht[0].href)
-				else {*/
-					console.log('IDs not found');
-					if (debug) document.title+='✗';
-					return true;
-				//};
-			};
-	 		jQuery.ajax({														//get info about current post via tumblr API based on the ID
-				type:'GET',
-				url: "http://api.tumblr.com/v2/blog/"+namae+"/posts/photo",
-				dataType:'jsonp',
-				data: {
-					api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
-					id: id
-				}
-			})	.done(function(result) { process ( result,v);})
-				.fail(function(jqXHR, textStatus, errorThrown) { alert('Error: '+textStatus);} )
-				.always(function(){
-					ifr=undefined;
-					if (i==posts.length-1) {									//at the end of processing indicate it's finished and cleanup flash
-						document.title+='] 100%'; 
-						cleanUp();
-					};
-					if (document.location.href.indexOf('/image/')!=-1){			//redirect to actual image from image page after we got the ID
-						document.location.href=jQuery('img#content-image')[0].src;
-						};
-				}); 
-		});	
 	};
-  }
-  finally {
-	ranonce=true;};
+
+	document.title="Rdy:[";														//a "progressbar" will be displayed in page title,
+																				// indicating that the page is ready for interaction
+	if (!isImage)	{
+		hc=posts.find('.hc.nest');
+		if (hc.length) {
+			hc.css('position','relative');										//fix broken themes with image links being under a large div		
+			posts=hc.parent();
+		};
+	};
+	cnt=0;																		//processed posts counter
+	jQuery.each(posts, function(i,v){											//for every post we need to find its ID and request info from API with it
+		id='';
+		h=jQuery(v).find("a[href*='"+namae+"/post/']");							//several attempts to find selflink
+		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");		//workaround for Optica theme that doesn't have selflinks within .post elements
+		h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");
+		if (h.length) 
+			id=getID(h[0].href);												//for every post on page find the self-link inside of post, containing post ID
+		if (id == '') {															//if no link was found, try to find ID in attributes of nodes
+			phtst=jQuery(v).find("div[id^='photoset']");						//photosets have IDs inside, well, id attributes starting with photoset_
+			pht=jQuery(v).attr('id');											//single photos might have ID inside same attribute
+			if (phtst.length) 
+				id=phtst.attr('id').split('_')[1]
+			else if (pht)
+				id=getID(pht)
+			else {				
+				document.title+='✗';
+				if (debug) alert('IDs not found');
+				throw new Error('IDs not found');
+				return false;
+			};
+		};												//TODO: only call API if no DB record is found for images in current post
+		if (isDash)
+			namae=jQuery(v).find('a.post_info_link')[0].hostname;
+		jQuery.ajax({															//get info about current post via tumblr API based on the ID
+			type:'GET',
+			url: "http://api.tumblr.com/v2/blog/"+namae+"/posts/photo",
+			dataType:'jsonp',
+			data: {
+				api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
+				id: id
+			},
+			async:false
+		})	.done(function(result) { process( result, v,i);})
+			.fail(function(jqXHR, textStatus, errorThrown) { alert( 'Error: '+textStatus);})
+			.always(function(){
+				cnt++;
+				if (isImage)													//redirect to actual image from image page after we got the ID
+					document.location.href=jQuery('img#content-image')[0].src;
+				ifr=undefined;
+				if (cnt>=posts.length) {										//at the end of processing indicate it's finished and cleanup flash
+					document.title+=']100%'; 
+					cleanUp();
+				};
+			});
+	});	
 };
 
-function onDOMContentLoaded(){		 
-	if  (jQuery.fn.jquery.split('.')[1]<5)  {			//I never asked for this
-		var scriptNode = document.createElement ("script");						// but stupid @require fails to overwrite existing jQuery on site,		
-		scriptNode.addEventListener("load", function(){$.noConflict();});		// which might be too old (<1.5) for the script to work (ajax.done and stuff)
-		scriptNode.src = 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js';
-		document.getElementsByTagName('head')[0].appendChild (scriptNode);		//have to do it manually
-	};
- 
-	tagsDB = new SwfStore({														//loading tag database, holds pairs "filename	is_saved,tag1,tag2,...,tagN"
+function mutex(){																//check readiness of libraries being loaded simultaneously
+	if (J&&T){		
+		J=T=false;																											
+		main();																	//when everything is loaded, proceed further
+	}
+};
+
+function onDOMContentLoaded(){													//load plugins 
+	if (window.top != window.self)  											//don't run on frames or iframes
+		return;
+	if (isDash && !enableOnDashboard)
+		return;
+	if (jQuery.fn.jquery.split('.')[1]<5) {										//@require doesn't load jQuery if it's already present on the site
+			var scriptNode = document.createElement ("script");					// but existing version might be older than required (1.5)
+			scriptNode.addEventListener("load", function(){ $.noConflict();});	// force load the newer jQuery if that's the case
+			scriptNode.src = '//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js';
+			document.getElementsByTagName('head')[0].appendChild (scriptNode);
+		}
+	else 
+		J=true; 
+	
+	tagsDB = new SwfStore({														//main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
 		namespace: "animage",
 		swf_url: storeUrl, 
-		onready: function(){
-			main();
-		},
 		debug: debug,
+		onready: function(){
+			debug=(tagsDB.get(':debug:')=='true');								//update initial debug value with the one saved in DB
+			tagsDB.config.debug=debug;
+			
+			T=true;
+			mutex();
+		},
 		onerror: function() {
-			alert('tagsDB failed to load');
+			if (debug)
+				alert('tagsDB failed to load')									//for some reason Chrome tends to raise flashDB loading error if the tab wasn't accessed in time
+			else																//even if no actual error happened, in fact it might even continue to work after that
+				document.title="tagsDB load error";								//TODO: fix this bullshit for once
 		}
 	}); 
 };
 
-function process (res, v){														//process information obtained from API by post ID
+function process(res, v,i) {														//process information obtained from API by post ID
+	var link_url='';
+	var img;
 	if (res.meta.status!='200') {
-		console.log('API error: '+res.meta.msg);
+		if (debug) alert('API error: '+res.meta.msg);
+		throw new Error('API error: '+res.meta.msg);
 		return;
 	};
 	if (res.response.posts[0].type!='photo') {									//we're only interested in photo posts
-		document.title+=String.fromCharCode(160) ;
+		document.title+=' ';
 		return;																	
 	};
-	bar='|';																	//piece of progressbar, | for every image in photoset post, - for single photo post
-																				// empty space for non-photo or tagless posts, ✗ for errors
-	link_url=res.response.posts[0].link_url;
-	ext=getFname(link_url).substring(getFname(link_url).lastIndexOf('.'));
-	r=/(jpe*g|bmp|png|gif)/gi;													//check if this is actually an image link
-	link_url=(r.test(ext))?link_url:'';
-	photoset=res.response.posts[0].photos.length;								//find whether this is a single photo post or a photoset
-	if (photoset-1) {
-		ifr=jQuery(v).find('iframe.photoset').contents();
-		if (ifr.length==0)
-			ifr=jQuery(v).find("div[id^='photoset']");							//some themes store photosets in iframes, others don't
-	}
-	else 				
-		bar='-';
-	url=(link_url)?link_url:res.response.posts[0].photos[0].original_size.url;
+	v=jQuery(v);
+	photos=res.response.posts[0].photos.length;									//find whether this is a single photo post or a photoset
+	if (photos>1) {
+		ifr=v.find('iframe.photoset').contents().find("div[id^='photoset']");
+		ifr=ifr.length?ifr:v.find('figure.photoset');
+		if (ifr.length==0)														//some photosets are in iframes, some aren't
+			ifr=v.find("div[id^='photoset']");
+	} else {
+		link_url+=res.response.posts[0].link_url;								//for a single photo post, link url might have the highest-quality image version,
+		ext=link_url.split('.').pop();											// unaffected by tumblr compression
+		r=/(jpe*g|bmp|png|gif)/gi;												//check if this is actually an image link
+		link_url=(r.test(ext))?link_url:''; 
 		
+		img=v.find('img[src*="tumblr_"]');										//find image in the post to linkify it
+		if (img.length) {
+			p=img.parent().wrap('<p/>');										//Parent might be either the link itself or contain it as a child
+			lnk=p.parent().find('a[href*="/image/"]');
+			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
+			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
+			if ((lnk.length) && (lnk[0].href))					
+				lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
+			else 																
+				img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
+			p.unwrap();															//^ this might potentially break themes like Fluid by PU
+		};
+	};
+	bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
+																				// empty space for non-photo or tagless posts, ✗ for errors
+
 	tags=res.response.posts[0].tags;											//get tags associated with the post
-	if (tags.length!=0) {														//nothing to do here without them
-														//to-do: add tags retrieval from reblog source if no tags were found here
-		tags.unshift('0');														//assume image is not saved yet
-		//jQuery.each(tags,function(i,v){tags[i]=v.replace(/\,/g,'.');});			
-		for (j=0; j<photoset; j++) {		
-			document.title+=bar;														
-			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
-			if (photoset-1) {
-				link=jQuery(ifr).find('a');										//let's hope all links of this kind in themes have this class
-				if ((link.length)&&(link[j].href)) 
-					removeEvents(link[j]);											//remove event listeners such as onclick, because in Chrome they mess with middlebutton new tab opening
-			};
-			tst=tagsDB.get( getFname(url) );									//check if there's already a record in database for this image				
-			if ((!tst)||(debug))  												//if there isn't, make one, putting the flag and tags there
-				tagsDB.set(getFname(url), tags.toString());			
-														//to-do: make tags cumulative, adding up upon visiting different reposts of same image?
-			if ((tst)&&(tst.split(',')[0]=='1')&&(document.location.href.indexOf('/image/')==-1)) {																		
-																				//otherwise if there is a record and it says the image has been saved
-				if (photoset==1){												//add a border of highlight color around the image to indicate that
-					if (jQuery(v).find('.media').length)
-						jQuery(v).find('.media')[0].style.background=highlight
-					else if (jQuery(v).find('.post-content').length)
-						jQuery(v).find('img')[0].style.background=highlight		//wish I had a single straightforward way to do that for all tumblr themes
-					else
-						v.style.background=highlight;
-				}
-				else 															//and for photosets too
-					jQuery(ifr).find('img')[j].style.border='4px solid '+highlight;	
-			};
+	debugger;
+	if ((tags.length)&&(photos>1))
+		removeEvents(ifr[0]);
+	DBrec={s:0, t:tags.toString().toLowerCase()};								//create an object for database record
+	for (j=0; j<photos; j++) {
+		url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
+		tst=tagsDB.get(getFname(url));											//check if there's already a record in database for this image	
+		if (((!tst)||(debug))&&(tags.length))  									//if there isn't, make one, putting the flag and tags there
+			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
+														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
+														//TODO: add tags retrieval from reblog source if no tags were found here
+		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) {						//otherwise if there is a record and it says the image has been saved
+			img=(photos==1)?img:jQuery(ifr.find('img')[j]);
+			img.css('outline','3px solid invert').css('outline-offset','-3px');	//add a border of highlight color around the image to indicate that
 		};
-	}
-	else document.title+=String.fromCharCode(160);								//empty space indicates no found tags for a post
-	lnk=jQuery(v).find('img')[0];
-	if (lnk)
-		if ( (lnk.parentNode.href) && ((lnk.parentNode.href.indexOf('/image/')!=-1)||(lnk.parentNode.href==res.response.posts[0].link_url)))	{
-			lnk.parentNode.href=url;											//make the photos link directly to the best quality image instead of a page
-			removeEvents(lnk.parentNode);										//looks like it's impossible to know if there are even listeners so I have to process it anyway
-		};
+	};	
+	document.title+=(tags.length)?bar:' ';										//empty space indicates no found tags for a post
 };
- 
+
 function removeEvents(node){	//remove event listeners such as onclick, because in Chrome they mess with middlebutton new tab opening
 	if (fixMiddleClick) {
 		elClone = node.cloneNode(true);											
@@ -239,4 +269,4 @@ function removeEvents(node){	//remove event listeners such as onclick, because i
 		//jQuery(node).on('click','');   jQuery(node).removeAttr('onclick');
 	};
 };
- 
+//TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage)

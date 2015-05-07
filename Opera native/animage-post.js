@@ -17,13 +17,13 @@
 // ==Settings=====================================================
 
 	var debug=		false;														//initial debug value, get changed to settings value after DB creation
-																				//enabling debug makes DB entries for images updated every time post is visited
-																				//also it enables error notifications and disables cleanup ( causes lag on tab close)
+																				// enabling debug makes DB entries for images updated every time post is visited
+																				// also it enables error notifications and disables cleanup (causes lag on tab close)
 	var storeUrl=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
 																				//flash databases are bound to the URL, must be same as in the other script
 																				
 	var enableOnDashboard= true;												//will try to collect post info from dashboard posts too
-																				//might be slow and/or glitchy so made optional
+																				// might be slow and/or glitchy so made optional
 // ==/Settings====================================================
 
 var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};		//external script loader function
@@ -37,7 +37,7 @@ var isDash=(namae.indexOf('www.')==0);											//processing for non-blog pages
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
 function cleanUp(){																//remove variables and flash objects from memory 
-	if (debug) return;															//without removal there would be a noticeable lag upon tab closing in Opera
+	if (debug) return;															// without removal there would be a noticeable lag upon tab closing in Opera
 	delete tagsDB;
 	jQuery("object[id^='SwfStore_animage_']").remove();
 };
@@ -72,10 +72,10 @@ function getID(lnk){															//extract numerical post ID from self-link
 
 function main(){																//search for post IDs on page and call API to get info about them
 	if (isDash)
-		posts=jQuery('ol.posts').find('div.post').not('.new_post')				//getting posts on dashboard is straightforward with its constant design
-	else {																		//but outside of it are all kinds of faulty designs, so we have to experiment
+		posts=jQuery('ol.posts').find('div.post').not('.new_post')				//getting posts on dashboard is straightforward with its constant design,
+	else {																		// but outside of it are all kinds of faulty designs, so we have to experiment
 		posts=jQuery('article.entry > div.post').not('.n').parent();			//some really stupid plain theme
-		posts=(posts.length)?posts:jQuery('.post');
+		posts=(posts.length)?posts:jQuery('.post');								//general way to obtain posts that are inside containers with class='post'
 		if (isImage) 
 			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
 				document.location.href=jQuery('img#content-image')[0].src		//proceed directly to the image if it already has a DB record with tags	
@@ -169,7 +169,7 @@ function onDOMContentLoaded(){													//load plugins
 	else 
 		J=true; 
 	
-	tagsDB = new SwfStore({														//loading tag database, holds pairs "filename	is_saved,tag1,tag2,...,tagN"
+	tagsDB = new SwfStore({														//main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
 		namespace: "animage",
 		swf_url: storeUrl, 
 		debug: debug,
