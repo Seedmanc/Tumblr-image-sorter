@@ -139,7 +139,6 @@ function main(){																//search for post IDs on page and call API to ge
 			.always(function(){
 				if (isImage)													//redirect to actual image from image page after we got the ID
 					document.location.href=jQuery('img#content-image')[0].src;
-				ifr=undefined;
 				if (i==posts.length-1) {										//at the end of processing indicate it's finished and cleanup flash
 					document.title+='] 100%'; 
 					cleanUp();

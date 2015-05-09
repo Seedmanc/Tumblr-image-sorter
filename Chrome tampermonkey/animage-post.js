@@ -21,19 +21,21 @@
 
 // ==Settings=====================================================
 
-	var fixMiddleClick=	false;													//Chrome launches left onClick events for middle click too
-																				// images open in photoset viewer instead of a new tab which is required for the script
-																				// this option will fix this by removing the view in photoset feature altogether
-																				// might cause unexpected behaviour and mess with progressbar in title
+	var highlightColor=	'black';												//Because chrome sucks it does not support outline-color invert which ensured visibility
+																				// you'll have to specify a color to mark saved images and hope it won't blend with bg
+
+	var fixMiddleClick=	false;													//Because chrome sucks, it launches left onClick events for middle click as well,
+																				// which is wrong, images open in photoset viewer instead of a new tab as required for the script
+																				// this option will 'fix' this by removing the view in photoset feature altogether
 																				// alternatively you'll have to right-click open in a new tab instead
 																				
-	var debug=		false;														//initial debug value, gets changed to settings value after DB creation
+	var debug=			false;													//Initial debug value, gets changed to settings value after DB creation
 																				// enabling debug makes DB entries for images updated every time post is visited
 																				// also it enables error notifications and disables cleanup
-	var storeUrl=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
-																				//flash databases are bound to the URL, must be same as in the other script
+	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
+																				//Flash databases are bound to the URL, must be same as in the other script
 																				
-	var enableOnDashboard= true;												//will try to collect post info from dashboard posts too
+	var enableOnDashboard= true;												//Will try to collect post info from dashboard posts too
 																				// might be slow and/or glitchy so made optional
 // ==/Settings====================================================
 
@@ -79,6 +81,44 @@ function getID(lnk){															//extract numerical post ID from self-link
 		return Result;
 };
 
+function identifyPost(v){														
+	id='';
+	h=jQuery(v).find("a[href*='"+namae+"/post/']");								//several attempts to find selflink
+	h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");			//workaround for Optica theme that doesn't have selflinks within .post elements
+	h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");
+	if (h.length) 
+		id=getID(h[0].href);													//for every post on page find the self-link inside of post, containing post ID
+	if (id == '') {																//if no link was found, try to find ID in attributes of nodes
+		phtst=jQuery(v).find("div[id^='photoset']");							//photosets have IDs inside, well, id attributes starting with photoset_
+		pht=jQuery(v).attr('id');												//single photos might have ID inside same attribute
+		if (phtst.length) 
+			id=phtst.attr('id').split('_')[1]
+		else if (pht)
+			id=getID(pht)
+		else {				
+			document.title+='✗';
+			if (debug) alert('IDs not found');
+			throw new Error('IDs not found');
+			return false;
+		};
+	};												//TODO: only call API if no DB record is found for images in current post
+	if (isDash)
+		namae=jQuery(v).find('a.post_info_link')[0].hostname;
+			
+    return new Promise(function(resolve, reject) {								//I have no idea what this is
+     	jQuery.ajax({															//get info about current post via tumblr API based on the ID
+			type:'GET',
+			url: "http://api.tumblr.com/v2/blog/"+namae+"/posts/photo",
+			dataType:'jsonp',
+			data: {
+				api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
+				id: id
+			}
+		}).done(function(result) { resolve({r:result, v:v});})
+		  .fail(function(jqXHR, textStatus, errorThrown) { reject(Error(textStatus));});
+    });	
+};
+
 function main(){																//search for post IDs on page and call API to get info about them
 	if (isDash)
 		posts=jQuery('ol.posts').find('div.post').not('.new_post')				//getting posts on dashboard is straightforward with its constant design,
@@ -112,52 +152,16 @@ function main(){																//search for post IDs on page and call API to ge
 			posts=hc.parent();
 		};
 	};
-	cnt=0;																		//processed posts counter
-	jQuery.each(posts, function(i,v){											//for every post we need to find its ID and request info from API with it
-		id='';
-		h=jQuery(v).find("a[href*='"+namae+"/post/']");							//several attempts to find selflink
-		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");		//workaround for Optica theme that doesn't have selflinks within .post elements
-		h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");
-		if (h.length) 
-			id=getID(h[0].href);												//for every post on page find the self-link inside of post, containing post ID
-		if (id == '') {															//if no link was found, try to find ID in attributes of nodes
-			phtst=jQuery(v).find("div[id^='photoset']");						//photosets have IDs inside, well, id attributes starting with photoset_
-			pht=jQuery(v).attr('id');											//single photos might have ID inside same attribute
-			if (phtst.length) 
-				id=phtst.attr('id').split('_')[1]
-			else if (pht)
-				id=getID(pht)
-			else {				
-				document.title+='✗';
-				if (debug) alert('IDs not found');
-				throw new Error('IDs not found');
-				return false;
-			};
-		};												//TODO: only call API if no DB record is found for images in current post
-		if (isDash)
-			namae=jQuery(v).find('a.post_info_link')[0].hostname;
-		jQuery.ajax({															//get info about current post via tumblr API based on the ID
-			type:'GET',
-			url: "http://api.tumblr.com/v2/blog/"+namae+"/posts/photo",
-			dataType:'jsonp',
-			data: {
-				api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
-				id: id
-			},
-			async:false
-		})	.done(function(result) { process( result, v,i);})
-			.fail(function(jqXHR, textStatus, errorThrown) { alert( 'Error: '+textStatus);})
-			.always(function(){
-				cnt++;
-				if (isImage)													//redirect to actual image from image page after we got the ID
-					document.location.href=jQuery('img#content-image')[0].src;
-				ifr=undefined;
-				if (cnt>=posts.length) {										//at the end of processing indicate it's finished and cleanup flash
-					document.title+=']100%'; 
-					cleanUp();
-				};
-			});
-	});	
+	
+	promisePosts(posts.toArray()).then(function() {								//the what
+ 		if (isImage)															//redirect to actual image from image page after we got the ID
+ 			document.location.href=jQuery('img#content-image')[0].src;						
+ 		document.title+=']100%';												//at the end of processing indicate it's finished and cleanup flash
+ 		cleanUp();
+	}).catch(function(err) {													//catch any error that happened along the way
+ 		document.title+='✗';  
+ 		if (debug) alert( 'Error: '+err.message);
+	}); 	
 };
 
 function mutex(){																//check readiness of libraries being loaded simultaneously
@@ -201,10 +205,12 @@ function onDOMContentLoaded(){													//load plugins
 	}); 
 };
 
-function process(res, v,i) {														//process information obtained from API by post ID
+function process(result) {														//process information obtained from API by post ID
+	v=jQuery(result.v);
+	res=result.r;
 	var link_url='';
 	var img;
-	if (res.meta.status!='200') {
+	if (res.meta.status!='200') {												//I don't even know if this is reachable
 		if (debug) alert('API error: '+res.meta.msg);
 		throw new Error('API error: '+res.meta.msg);
 		return;
@@ -213,13 +219,14 @@ function process(res, v,i) {														//process information obtained from AP
 		document.title+=' ';
 		return;																	
 	};
-	v=jQuery(v);
 	photos=res.response.posts[0].photos.length;									//find whether this is a single photo post or a photoset
 	if (photos>1) {
-		ifr=v.find('iframe.photoset').contents().find("div[id^='photoset']");
+		ifr=v.find('iframe.photoset').contents();
 		ifr=ifr.length?ifr:v.find('figure.photoset');
 		if (ifr.length==0)														//some photosets are in iframes, some aren't
-			ifr=v.find("div[id^='photoset']");
+			ifr=v.find("div[id^='photoset'] img")
+		else 
+			ifr=ifr.find('img');
 	} else {
 		link_url+=res.response.posts[0].link_url;								//for a single photo post, link url might have the highest-quality image version,
 		ext=link_url.split('.').pop();											// unaffected by tumblr compression
@@ -228,7 +235,7 @@ function process(res, v,i) {														//process information obtained from AP
 		
 		img=v.find('img[src*="tumblr_"]');										//find image in the post to linkify it
 		if (img.length) {
-			p=img.parent().wrap('<p/>');										//Parent might be either the link itself or contain it as a child
+			p=img.parent().wrap('<p/>');										//what would you do? Parent might be either the link itself or contain it as a child
 			lnk=p.parent().find('a[href*="/image/"]');
 			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
 			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
@@ -243,9 +250,6 @@ function process(res, v,i) {														//process information obtained from AP
 																				// empty space for non-photo or tagless posts, ✗ for errors
 
 	tags=res.response.posts[0].tags;											//get tags associated with the post
-	debugger;
-	if ((tags.length)&&(photos>1))
-		removeEvents(ifr[0]);
 	DBrec={s:0, t:tags.toString().toLowerCase()};								//create an object for database record
 	for (j=0; j<photos; j++) {
 		url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
@@ -255,18 +259,29 @@ function process(res, v,i) {														//process information obtained from AP
 														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
 														//TODO: add tags retrieval from reblog source if no tags were found here
 		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) {						//otherwise if there is a record and it says the image has been saved
-			img=(photos==1)?img:jQuery(ifr.find('img')[j]);
-			img.css('outline','3px solid invert').css('outline-offset','-3px');	//add a border of highlight color around the image to indicate that
+			img=(photos==1)?img:jQuery(ifr[j]);
+			img.css('outline','3px solid '+highlightColor).css('outline-offset','-3px');	
+																				//add a border of highlight color around the image to indicate that
 		};
 	};	
 	document.title+=(tags.length)?bar:' ';										//empty space indicates no found tags for a post
 };
 
-function removeEvents(node){	//remove event listeners such as onclick, because in Chrome they mess with middlebutton new tab opening
+function promisePosts(posts){													//Because chrome sucks I have write a bunch of nonsensical code just to make sure it behaves
+																				// and processes posts in their order instead of randomly. 																				
+ 	return posts.map(identifyPost).reduce(function(sequence, chapterPromise) {	// Opera did everything properly right away without tinkering
+ 		return sequence.then(function() {
+ 			return chapterPromise;
+		}).then(function(chapter) {												//copied directly from some html5 site, don't ask me about variable names, ask chrome why it sucks
+			process(chapter);
+		});
+	}, Promise.resolve());
+};
+
+function removeEvents(node){													//remove event listeners such as onclick, because in Chrome they mess with middlebutton new tab opening
 	if (fixMiddleClick) {
 		elClone = node.cloneNode(true);											
-		node.parentNode.replaceChild(elClone, node);		
-		//jQuery(node).on('click','');   jQuery(node).removeAttr('onclick');
+		node.parentNode.replaceChild(elClone, node);		 
 	};
 };
 //TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage)
