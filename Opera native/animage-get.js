@@ -847,3 +847,4 @@ function cleanup(full){													//remove variables and flash objects from me
 	x.parentNode.removeChild(x); 
 }
 //TODO: add save button activation via keyboard
+//TODO: improve the button: open assigned folder directly, use modern open dialog

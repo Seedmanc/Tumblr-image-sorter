@@ -47,7 +47,7 @@ var isDash=(namae.indexOf('www.')==0);												//processing for non-blog page
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
 function cleanUp(){																	//remove variables and flash objects from memory 
-	if (true) return;											//TODO: remove cleanup in Chrome
+	if (true) return;											//TODO: remove cleanup in chrome
 	delete tagsDB;
 	jQuery("object[id^='SwfStore_animage_']").remove();
 };
@@ -66,7 +66,7 @@ function getFname(fullName){														//extract filename from image URL and 
 
 function getID(lnk){																//extract numerical post ID from self-link
 	if (lnk.search(/[^0-9]/g)==-1)
-		return lnk;
+		return lnk;																	//sometimes the argument is the ID itself that needs checking
 	Result=lnk.substring(lnk.indexOf('/post/')+7+lnk.indexOf('image/'));			//one of those will be -1, another the actual offset	
 	Result=Result.replace(/(#).*$/gim,'');											//remove url postfix 
 	i=Result.lastIndexOf('/');
@@ -74,7 +74,7 @@ function getID(lnk){																//extract numerical post ID from self-link
 		Result=Result.substring(0,i);
 	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) {
 		if (debug) alert('IDentification error: '+Result);
-		throw new Error('IDentification error');
+		throw new Error('IDentification error: '+Result);
 	}
 	else
 		return Result;
@@ -84,9 +84,9 @@ function identifyPost(v){															//Find the ID of post in question and re
 	id='';
 	h=jQuery(v).find("a[href*='"+namae+"/post/']");									//several attempts to find selflink
 	h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");				//workaround for Optica theme that doesn't have selflinks within .post elements
-	h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");
+	h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");					//IDs can be found both in links to post and to image page
 	if (h.length) 
-		id=getID(h[0].href);														//for every post on page find the self-link inside of post, containing post ID
+		id=getID(h[0].href);														
 	if (id == '') {																	//if no link was found, try to find ID in attributes of nodes
 		phtst=jQuery(v).find("div[id^='photoset']");								//photosets have IDs inside, well, id attributes starting with photoset_
 		pht=jQuery(v).attr('id');													//single photos might have ID inside same attribute
@@ -102,7 +102,7 @@ function identifyPost(v){															//Find the ID of post in question and re
 		};
 	};												//TODO: only call API if no DB record is found for images in current post
 	if (isDash)
-		namae=jQuery(v).find('a.post_info_link')[0].hostname;
+		namae=jQuery(v).find('a.post_info_link')[0].hostname;						//On dashboard every post might have a different author
 			
     return new Promise(function(resolve, reject) {									//I have no idea what this is
      	jQuery.ajax({																//get info about current post via tumblr API based on the ID
@@ -113,7 +113,7 @@ function identifyPost(v){															//Find the ID of post in question and re
 				api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
 				id: id
 			}
-		}).done(function(result) { resolve({r:result, v:v});})
+		}).done(function(result) { resolve( {r:result, v:v});})						//have to return two values at once, data and pointer to post on page
 		  .fail(function(jqXHR, textStatus, errorThrown) { reject(Error(textStatus));});
     });	
 };
@@ -122,7 +122,7 @@ function main(){																	//search for post IDs on page and call API to g
 	if (isDash)
 		posts=jQuery('ol.posts').find('div.post').not('.new_post')					//getting posts on dashboard is straightforward with its constant design,
 	else {																			// but outside of it are all kinds of faulty designs, so we have to experiment
-		posts=jQuery('article.entry > div.post').not('.n').parent();				//some really stupid plain theme
+		posts=jQuery('article.entry > div.post').not('.n').parent();				//some really stupid plain theme have to be checked before everything
 		posts=(posts.length)?posts:jQuery('.post');									//general way to obtain posts that are inside containers with class='post'
 		if (isImage) 
 			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
@@ -142,13 +142,15 @@ function main(){																	//search for post IDs on page and call API to g
 		};
 	};
 
-	document.title="Rdy:[";															//A "progressbar" will be displayed in page title,
+	document.title="Rdy:[";															//Because chrome sucks it has no window title area
+																					//We're limited to tab title which is very small
+																					//A "progressbar" will be displayed in page title,
 																					// indicating that the page is ready for interaction
 	if (!isImage)	{
 		hc=posts.find('.hc.nest');
 		if (hc.length) {
 			hc.css('position','relative');											//fix broken themes with image links being under a large div		
-			posts=hc.parent();
+			posts=hc.parent();														//because sharing is caring
 		};
 	};
 	
@@ -171,9 +173,9 @@ function mutex(){																	//check readiness of libraries being loaded si
 };
 
 function onDOMContentLoaded(){														//load plugins 
-	if (window.top != window.self)  												//don't run on frames or iframes
+	if (window.top != window.self)  												//don't run on (i)frames
 		return;
-	if (isDash && !enableOnDashboard)
+	if (isDash && !enableOnDashboard)												//don't run on dashboard unless enabled
 		return;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site
 			var scriptNode = document.createElement ("script");						// but existing version might be older than required (1.5)
@@ -190,23 +192,22 @@ function onDOMContentLoaded(){														//load plugins
 		debug: debug,
 		onready: function(){
 			debug=(tagsDB.get(':debug:')=='true');									//update initial debug value with the one saved in DB
-			tagsDB.config.debug=debug;
-			
+			tagsDB.config.debug=debug;			
 			T=true;
 			mutex();
 		},
 		onerror: function() {
 			if (debug)
-				alert('tagsDB failed to load')										//for some reason Chrome tends to raise flashDB loading error if the tab wasn't accessed in time
+				alert('tagsDB failed to load')										//Because chrome sucks it tends to raise flashDB loading error if the tab wasn't accessed soon enough
 			else																	//even if no actual error happened, in fact it might even continue to work after that
 				document.title="tagsDB load error";				//TODO: fix this bullshit for once
 		}
 	}); 
 };
 
-function process(result) {															//process information obtained from API by post ID
-	v=jQuery(result.v);
-	res=result.r;
+function process(postData) {														//process information obtained from API by post ID
+	v=jQuery(postData.v);															//pointer to post on page
+	res=postData.r;																	//API response
 	var link_url='';
 	var img;
 	if (res.meta.status!='200') {													//I don't even know if this is reachable
@@ -234,7 +235,7 @@ function process(result) {															//process information obtained from API
 		
 		img=v.find('img[src*="tumblr_"]');											//find image in the post to linkify it
 		if (img.length) {
-			p=img.parent().wrap('<p/>');											//what would you do? Parent might be either the link itself or contain it as a child
+			p=img.parent().wrap('<p/>');											//Parent might be either the link itself or contain it as a child
 			lnk=p.parent().find('a[href*="/image/"]');
 			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
 			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
@@ -253,7 +254,6 @@ function process(result) {															//process information obtained from API
 	for (j=0; j<photos; j++) {
 		url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
 		tst=tagsDB.get(getFname(url));												//check if there's already a record in database for this image	
-		if (((!tst)||(debug))&&(tags.length))  										//if there isn't, make one, putting the flag and tags there
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
 														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
 														//TODO: add tags retrieval from reblog source if no tags were found here
@@ -263,11 +263,11 @@ function process(result) {															//process information obtained from API
 																					//add a border of highlight color around the image to indicate that
 		};
 	};	
-	document.title+=(tags.length)?bar:' ';											//empty space indicates no found tags for a post
+	document.title+=(tags.length)?bar:' ';											//empty space indicates no found tags for the post
 };
 
 function promisePosts(posts){														//Because chrome sucks I have write a bunch of nonsensical code just to make sure it behaves
-																					// and processes posts in their order instead of randomly. 																				
+																					// and processes posts in their order instead of randomly. 				
  	return posts.map(identifyPost).reduce(function(sequence, chapterPromise) {		// Opera did everything properly right away without tinkering
  		return sequence.then(function() {
  			return chapterPromise;
@@ -277,10 +277,10 @@ function promisePosts(posts){														//Because chrome sucks I have write a
 	}, Promise.resolve());
 };
 
-function removeEvents(node){														//remove event listeners such as onclick, because in Chrome they mess with middlebutton new tab opening
+function removeEvents(node){														//remove event listeners such as onclick, because in chrome they mess with middlebutton new tab opening
 	if (fixMiddleClick) {
 		elClone = node.cloneNode(true);											
 		node.parentNode.replaceChild(elClone, node);		 
 	};
 };
-//TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage)
+//TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage). Also will make it possible to have a backlink from image page
