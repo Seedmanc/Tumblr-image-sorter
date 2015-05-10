@@ -162,6 +162,7 @@ function main(){																	//search for post IDs on page and call API to g
 	}).catch(function(err) {														//catch any error that happened along the way
  		document.title+='✗';  
  		if (debug) alert( 'Error: '+err.message);
+		throw err;
 	}); 	
 };
 
@@ -178,8 +179,13 @@ function onDOMContentLoaded(){														//load plugins
 	if (isDash && !enableOnDashboard)												//don't run on dashboard unless enabled
 		return;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site
+	debugger;
 			var scriptNode = document.createElement ("script");						// but existing version might be older than required (1.5)
-			scriptNode.addEventListener("load", function(){ $.noConflict();});		// force load the newer jQuery if that's the case
+			scriptNode.addEventListener("load", function(){ 
+				$.noConflict();
+				J=true;
+				mutex();
+			});		// force load the newer jQuery if that's the case
 			scriptNode.src = '//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js';
 			document.getElementsByTagName('head')[0].appendChild (scriptNode);
 		}
@@ -254,6 +260,7 @@ function process(postData) {														//process information obtained from AP
 	for (j=0; j<photos; j++) {
 		url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
 		tst=tagsDB.get(getFname(url));												//check if there's already a record in database for this image	
+		if (((!tst)||(debug))&&(tags.length))  										//if there isn't or we're in debug mode, make one, putting the flag and tags there
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
 														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
 														//TODO: add tags retrieval from reblog source if no tags were found here
