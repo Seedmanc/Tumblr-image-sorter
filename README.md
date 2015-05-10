@@ -158,6 +158,10 @@ I still have yet to find a way for a userscript to load information from a file 
 
 Should help when finding reblogs without any tags, as well as solve the problem of overwriting tag entries.
 
+* Add support for infinite scroll
+
+Will probably have to hook on the post retrieval even or something. Oh the glitches.
+
 * Make simplified generalized version without translation capabilities for use cases with English-only tags.
 
 Will have to think of a way to store folder lists more efficiently than in an object.
