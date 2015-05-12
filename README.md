@@ -56,7 +56,7 @@ In case of unrecognized tags presence they're all added to filename; if there ar
 
 ## Script contents
 Currently the project consists of two userscripts, called "animage-post" and "animage-get". Note that despite having "animage" in the name they are configured to work with the majority of tumblr blogs, or, rather, themes, and also on the dashboard. "Animage" is there just for legacy reasons, because I started development of this project when I was only using http://animage.tumblr.com.
-* animage-**post** runs on tumblr pages that have posts - including /search/, /tagged/, /dashboard and pretty much every page within a personal tumblr blog except for /archive so far. This script collects tag data for every post and *posts* it to the tag DB (thus the name) for later use. The script does not have any GUI and does not require user interaction; however it shows a progressbar in page's title that gets filled with numbers representing amount of images in every found photo post on page or empty space if no tags or photos are found. 
+* animage-**post** runs on tumblr pages that have posts - including /search/, /tagged/, /dashboard and pretty much every page within a personal tumblr blog except for /archive so far. This script collects tag data for every post and *posts* it to the tag DB (thus the name) for later use. The script does not require user interaction; it shows a progressbar in page title that gets filled with numbers representing amount of images in every found photo post on page or empty space if no tags or photos are found. 
 * animage-**get** runs on the directly-linked images opened on separate tabs. It gets the tag data from DB for the currently opened image, prepares filename and path and allows you to *get* the image and this information required to save it. The file name is formed with Downloadify flash button, the path is copied to system clipboard upon clicking it. 
 The GET script provides a GUI, allowing the user to fill in those databases with tags and their translations if required. GUI also can be used to toggle debug mode and export or import auxiliary tag databases.
 
@@ -161,6 +161,10 @@ Should help when finding reblogs without any tags, as well as solve the problem 
 * Add support for infinite scroll
 
 Will probably have to hook on the post retrieval even or something. Oh the glitches.
+
+* Add ability to enter new tags in addition to editing existing, plus implement propagation of changes among images of same post. 
+
+This will help when a large photoset has no tags, rendering the script useless. Dunno how to make that propagation live though.
 
 * Make simplified generalized version without translation capabilities for use cases with English-only tags.
 
