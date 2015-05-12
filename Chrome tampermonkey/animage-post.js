@@ -40,7 +40,7 @@
 // ==/Settings====================================================
 
  tagsDB=null;
-var J=T=false;
+var J=T=P=false;
 var isImage=(document.location.href.indexOf('/image/')!=-1);						//processing for image pages is different from regular posts
 var namae=document.location.host; 				
 var isDash=(namae.indexOf('www.')==0);												//processing for non-blog pages of tumblr like dashboard is different too
@@ -107,13 +107,13 @@ function identifyPost(v){															//Find the ID of post in question and re
     return new Promise(function(resolve, reject) {									//I have no idea what this is
      	jQuery.ajax({																//get info about current post via tumblr API based on the ID
 			type:'GET',
-			url: "http://api.tumblr.com/v2/blog/"+namae+"/posts/photo",
+			url: "//api.tumblr.com/v2/blog/"+namae+"/posts/photo",
 			dataType:'jsonp',
 			data: {
 				api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
 				id: id
 			}
-		}).done(function(result) { resolve( {r:result, v:v});})						//have to return two values at once, data and pointer to post on page
+		}).done(function(result) {resolve( {r:result, v:v});})						//have to return two values at once, data and pointer to post on page
 		  .fail(function(jqXHR, textStatus, errorThrown) { reject(Error(textStatus));});
     });	
 };
@@ -167,8 +167,8 @@ function main(){																	//search for post IDs on page and call API to g
 };
 
 function mutex(){																	//check readiness of libraries being loaded simultaneously
-	if (J&&T){		
-		J=T=false;																											
+	if (J&&T&&P){		
+		J=T=P=false;																											
 		main();																		//when everything is loaded, proceed further
 	}
 };
@@ -176,16 +176,27 @@ function mutex(){																	//check readiness of libraries being loaded si
 function onDOMContentLoaded(){														//load plugins 
 	if (window.top != window.self)  												//don't run on (i)frames
 		return;
-	if (isDash && !enableOnDashboard)												//don't run on dashboard unless enabled
-		return;
+	if (isDash)
+		if (!enableOnDashboard)														//don't run on dashboard unless enabled
+			return
+		else {																		//Because tumblr sucks it replaces native Promise implementation
+			var scriptNode = document.createElement ("script");						// with it's own bullshit on dashboard via index.js
+			scriptNode.addEventListener("load", function(){ 
+				P=true;
+				mutex();
+			});																		//therefore I have to fix that by overwriting it back by a polyfill
+			scriptNode.src = '//dl.dropboxusercontent.com/u/74005421/js%20requisites/es6-promise.min.js';
+			document.getElementsByTagName('head')[0].appendChild (scriptNode);
+		}
+	else
+		P=true;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site
-	debugger;
 			var scriptNode = document.createElement ("script");						// but existing version might be older than required (1.5)
 			scriptNode.addEventListener("load", function(){ 
 				$.noConflict();
 				J=true;
 				mutex();
-			});		// force load the newer jQuery if that's the case
+			});																		// force load the newer jQuery if that's the case
 			scriptNode.src = '//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js';
 			document.getElementsByTagName('head')[0].appendChild (scriptNode);
 		}
@@ -274,7 +285,7 @@ function process(postData) {														//process information obtained from AP
 };
 
 function promisePosts(posts){														//Because chrome sucks I have write a bunch of nonsensical code just to make sure it behaves
-																					// and processes posts in their order instead of randomly. 				
+																					// and processes posts in their order instead of randomly. 		
  	return posts.map(identifyPost).reduce(function(sequence, chapterPromise) {		// Opera did everything properly right away without tinkering
  		return sequence.then(function() {
  			return chapterPromise;
