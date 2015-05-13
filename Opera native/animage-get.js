@@ -110,6 +110,9 @@
 
 	var allowUnicode=	false;											//Whether to allow unicode characters for manual translation input, not tested
 	
+	var useFolderNames=	true;											//In addition to tags listed in folders object, use also folder names themselves as tags
+																		//This way you won't have to provide both roman and kanji spellings for names as separate tags
+	
 	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
 																		//flash databases are bound to the URL, must be same as in the other script
 	var	downloadifySwf=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.swf';			
@@ -287,6 +290,11 @@ function trimObj(obj){ 													//remove trailing whitespace in object keys 
 			k=key.trim().toLowerCase();
 			delete obj[key];
 			obj[k]=t;
+			if (!(typeof t == 'boolean') && useFolderNames) {
+				rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
+				x=getFname(t).toLowerCase().replace(rx,'');
+				obj[x]=t;
+			};
 			if (exclrgxp.test(obj[k]))  								//can't continue until the problem is fixed
 				throw new Error('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"'); 
 		};
@@ -507,7 +515,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		delete ansi[x];													//I have to again check for both orders even though I deleted one of them before
 		delete ansi[y];													// but at the time of deletion there was no way to know yet which one would match the kanji tag
 	});																	//this also gets rid of reverse duplicates between recognized tags and ansi
-		
+	fldrs=mkUniq(fldrs);	
 	fldrs2=[];						
 	fldrs=$.grep(fldrs,function(v,i){									//a trick to process folders for meta tags, having subfolders for names inside
 		fmeta=getFname(v);
