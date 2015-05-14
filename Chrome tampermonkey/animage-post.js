@@ -24,7 +24,7 @@
 	var highlightColor=	'black';													//Because chrome sucks it does not support outline-color invert which ensured visibility
 																					// you'll have to specify a color to mark saved images and hope it won't blend with bg
 
-	var fixMiddleClick=	false;														//Because chrome sucks, it launches left onClick events for middle click as well,
+	var fixMiddleClick=	true;														//Because chrome sucks, it launches left onClick events for middle click as well,
 																					// which is wrong, images open in photoset viewer instead of a new tab as required for the script
 																					// this option will 'fix' this by removing the view in photoset feature altogether
 																					// alternatively you'll have to right-click open in a new tab instead
@@ -81,13 +81,15 @@ function getID(lnk){																//extract numerical post ID from self-link
 };
 
 function identifyPost(v){															//Find the ID of post in question and request info via API for it
+	if (isDash)
+		namae=jQuery(v).find('a.post_permalink')[0].hostname;						//On dashboard every post might have a different author
 	id='';
 	h=jQuery(v).find("a[href*='"+namae+"/post/']");									//several attempts to find selflink
 	h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");				//workaround for Optica theme that doesn't have selflinks within .post elements
 	h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");					//IDs can be found both in links to post and to image page
 	if (h.length) 
 		id=getID(h[0].href);														
-	if (id == '') {																	//if no link was found, try to find ID in attributes of nodes
+	if (id == '') { 																//if no link was found, try to find ID in attributes of nodes
 		phtst=jQuery(v).find("div[id^='photoset']");								//photosets have IDs inside, well, id attributes starting with photoset_
 		pht=jQuery(v).attr('id');													//single photos might have ID inside same attribute
 		if (phtst.length) 
@@ -100,9 +102,7 @@ function identifyPost(v){															//Find the ID of post in question and re
 			throw new Error('IDs not found');
 			return false;
 		};
-	};												//TODO: only call API if no DB record is found for images in current post
-	if (isDash)
-		namae=jQuery(v).find('a.post_info_link')[0].hostname;						//On dashboard every post might have a different author
+	};												//TODO: only call API if no DB record was found for images in current post
 			
     return new Promise(function(resolve, reject) {									//I have no idea what this is
      	jQuery.ajax({																//get info about current post via tumblr API based on the ID
@@ -113,8 +113,8 @@ function identifyPost(v){															//Find the ID of post in question and re
 				api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
 				id: id
 			}
-		}).done(function(result) {resolve( {r:result, v:v});})						//have to return two values at once, data and pointer to post on page
-		  .fail(function(jqXHR, textStatus, errorThrown) { reject(Error(textStatus));});
+		}).done(function(result) {resolve({r:result, v:v});})						//have to return two values at once, data and pointer to post on page
+		  .fail(function(jqXHR, textStatus, errorThrown) {reject(Error(textStatus));});
     });	
 };
 
@@ -145,8 +145,7 @@ function main(){																	//search for post IDs on page and call API to g
 	document.title="Rdy:[";															//Because chrome sucks it has no window title area
 																					//We're limited to tab title which is very small
 																					//A "progressbar" will be displayed in page title,
-																					// indicating that the page is ready for interaction
-	if (!isImage)	{
+	if (!isImage)	{																//indicating that the page is ready for interaction
 		hc=posts.find('.hc.nest');
 		if (hc.length) {
 			hc.css('position','relative');											//fix broken themes with image links being under a large div		
@@ -159,7 +158,7 @@ function main(){																	//search for post IDs on page and call API to g
  			document.location.href=jQuery('img#content-image')[0].src;						
  		document.title+=']100%';													//at the end of processing indicate it's finished and cleanup flash
  		cleanUp();
-	}).catch(function(err) {														//catch any error that happened along the way
+	}).catch(function(err) { 														//catch any error that happened along the way
  		document.title+='✗';  
  		if (debug) alert( 'Error: '+err.message);
 		throw err;
@@ -173,21 +172,24 @@ function mutex(){																	//check readiness of libraries being loaded si
 	}
 };
 
+function loadAndExecute(url, callback){												//Load specified js library and launch a function after that
+	var scriptNode = document.createElement ("script");	
+	scriptNode.addEventListener("load", callback);
+	scriptNode.src = url;
+	document.getElementsByTagName('head')[0].appendChild(scriptNode);
+};
+
 function onDOMContentLoaded(){														//load plugins 
 	if (window.top != window.self)  												//don't run on (i)frames
 		return;
 	if (isDash)
 		if (!enableOnDashboard)														//don't run on dashboard unless enabled
 			return
-		else {																		//Because tumblr sucks it replaces native Promise implementation
-			var scriptNode = document.createElement ("script");						// with it's own bullshit on dashboard via index.js
-			scriptNode.addEventListener("load", function(){ 
-				P=true;
+		else 																		//Because tumblr sucks it replaces native Promise implementation
+			loadAndExecute('//dl.dropboxusercontent.com/u/74005421/js%20requisites/es6-promise.min.js', function(){ 
+				P=true;																// with it's own bullshit on dashboard via index.js
 				mutex();
-			});																		//therefore I have to fix that by overwriting it back by a polyfill
-			scriptNode.src = '//dl.dropboxusercontent.com/u/74005421/js%20requisites/es6-promise.min.js';
-			document.getElementsByTagName('head')[0].appendChild (scriptNode);
-		}
+			})																		//therefore I have to fix that by overwriting it back by a polyfill
 	else
 		P=true;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site

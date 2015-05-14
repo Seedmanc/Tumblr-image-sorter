@@ -104,6 +104,8 @@ function main(){																//search for post IDs on page and call API to ge
 		};
 	};
 	jQuery.each(posts, function(i,v){											//for every post we need to find its ID and request info from API with it
+		if (isDash)
+			namae=jQuery(v).find('a.post_permalink')[0].hostname;
 		id='';
 		h=jQuery(v).find("a[href*='"+namae+"/post/']");							//several attempts to find selflink
 		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");		//workaround for Optica theme that doesn't have selflinks within .post elements
@@ -124,8 +126,6 @@ function main(){																//search for post IDs on page and call API to ge
 				return false;
 			};
 		};												//TODO: only call API if no DB record is found for images in current post
-		if (isDash)
-			namae=jQuery(v).find('a.post_info_link')[0].hostname;
 		jQuery.ajax({															//get info about current post via tumblr API based on the ID
 			type:'GET',
 			url: "http://api.tumblr.com/v2/blog/"+namae+"/posts/photo",
@@ -189,6 +189,7 @@ function process(res, v) {														//process information obtained from API 
 	var link_url='';
 	var img;
 	if (res.meta.status!='200') {
+		document.title+='✗';
 		if (debug) alert('API error: '+res.meta.msg);
 		throw new Error('API error: '+res.meta.msg);
 		return;
