@@ -30,10 +30,11 @@ var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElem
 
  tagsDB=null;
 var J=T=false;
-var isImage=(document.location.href.indexOf('/image/')!=-1);					//processing for image pages is different from regular posts
-
 var namae=document.location.host; 			
+var isImage=(document.location.href.indexOf('/image/')!=-1);					//processing for image pages is different from regular posts
+var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(namae.indexOf('www.')==0);											//processing for non-blog pages of tumblr like dashboard is different too
+
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
 function cleanUp(){																//remove variables and flash objects from memory 
@@ -104,28 +105,34 @@ function main(){																//search for post IDs on page and call API to ge
 		};
 	};
 	jQuery.each(posts, function(i,v){											//for every post we need to find its ID and request info from API with it
-		if (isDash)
-			namae=jQuery(v).find('a.post_permalink')[0].hostname;
-		id='';
-		h=jQuery(v).find("a[href*='"+namae+"/post/']");							//several attempts to find selflink
-		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");		//workaround for Optica theme that doesn't have selflinks within .post elements
-		h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");
-		if (h.length) 
-			id=getID(h[0].href);												//for every post on page find the self-link inside of post, containing post ID
-		if (id == '') {															//if no link was found, try to find ID in attributes of nodes
-			phtst=jQuery(v).find("div[id^='photoset']");						//photosets have IDs inside, well, id attributes starting with photoset_
-			pht=jQuery(v).attr('id');											//single photos might have ID inside same attribute
-			if (phtst.length) 
-				id=phtst.attr('id').split('_')[1]
-			else if (pht)
-				id=getID(pht)
-			else {				
-				document.title+='✗';
-				if (debug) alert('IDs not found');
-				throw new Error('IDs not found');
-				return false;
-			};
-		};												//TODO: only call API if no DB record is found for images in current post
+		if (isDash) {
+			self=jQuery(v).find('a.post_permalink')[0];							//again everything is simple when on dashboard
+			namae=self.hostname;												//On dashboard every post might have a different author
+			id=getID(self.href);
+		} else if (isPost)
+			id=getID(document.location.href)									//even simpler on the post page
+		else {																	//but in the wild it gets tricky
+			id='';
+			h=jQuery(v).find("a[href*='"+namae+"/post/']");						//several attempts to find selflink
+			h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");	//workaround for Optica theme that doesn't have selflinks within .post elements
+			h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");
+			if (h.length) 
+				id=getID(h[h.length-1].href);									//for every post on page find the self-link inside of post, containing post ID
+			if (id == '') {														//if no link was found, try to find ID in attributes of nodes
+				phtst=jQuery(v).find("div[id^='photoset']");					//photosets have IDs inside, well, id attributes starting with photoset_
+				pht=jQuery(v).attr('id');										//single photos might have ID inside same attribute
+				if (phtst.length) 
+					id=phtst.attr('id').split('_')[1]
+				else if (pht)
+					id=getID(pht)
+				else {				
+					document.title+='✗';										//give up
+					if (debug) alert('IDs not found');
+					throw new Error('IDs not found');
+					return false;
+				};
+			};	
+		};											//TODO: only call API if no DB record is found for images in current post
 		jQuery.ajax({															//get info about current post via tumblr API based on the ID
 			type:'GET',
 			url: "http://api.tumblr.com/v2/blog/"+namae+"/posts/photo",

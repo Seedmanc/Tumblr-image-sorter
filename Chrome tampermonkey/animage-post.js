@@ -41,8 +41,9 @@
 
  tagsDB=null;
 var J=T=P=false;
-var isImage=(document.location.href.indexOf('/image/')!=-1);						//processing for image pages is different from regular posts
 var namae=document.location.host; 				
+var isImage=(document.location.href.indexOf('/image/')!=-1);						//processing for image pages is different from regular posts
+var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(namae.indexOf('www.')==0);												//processing for non-blog pages of tumblr like dashboard is different too
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
@@ -81,29 +82,34 @@ function getID(lnk){																//extract numerical post ID from self-link
 };
 
 function identifyPost(v){															//Find the ID of post in question and request info via API for it
-	if (isDash)
-		namae=jQuery(v).find('a.post_permalink')[0].hostname;						//On dashboard every post might have a different author
-	id='';
-	h=jQuery(v).find("a[href*='"+namae+"/post/']");									//several attempts to find selflink
-	h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");				//workaround for Optica theme that doesn't have selflinks within .post elements
-	h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");					//IDs can be found both in links to post and to image page
-	if (h.length) 
-		id=getID(h[0].href);														
-	if (id == '') { 																//if no link was found, try to find ID in attributes of nodes
-		phtst=jQuery(v).find("div[id^='photoset']");								//photosets have IDs inside, well, id attributes starting with photoset_
-		pht=jQuery(v).attr('id');													//single photos might have ID inside same attribute
-		if (phtst.length) 
-			id=phtst.attr('id').split('_')[1]
-		else if (pht)
-			id=getID(pht)
-		else {				
-			document.title+='✗';
-			if (debug) alert('IDs not found');
-			throw new Error('IDs not found');
-			return false;
-		};
-	};												//TODO: only call API if no DB record was found for images in current post
-			
+	if (isDash) {
+		self=jQuery(v).find('a.post_permalink')[0];									//again everything is simple when on dashboard
+		namae=self.hostname;														//On dashboard every post might have a different author
+		id=getID(self.href);
+	} else if (isPost)
+		id=getID(document.location.href)											//even simpler on the post page
+	else {																			//but it gets tricky in the wild
+		id='';
+		h=jQuery(v).find("a[href*='"+namae+"/post/']");								//several attempts to find selflink
+		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");			//workaround for Optica theme that doesn't have selflinks within .post elements
+		h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");				//IDs can be found both in links to post and to image page
+		if (h.length) 
+			id=getID(h[h.length-1].href);														
+		if (id == '') {																//if no link was found, try to find ID in attributes of nodes
+			phtst=jQuery(v).find("div[id^='photoset']");							//photosets have IDs inside, well, id attributes starting with photoset_
+			pht=jQuery(v).attr('id');												//single photos might have ID inside same attribute
+			if (phtst.length) 
+				id=phtst.attr('id').split('_')[1]
+			else if (pht)
+				id=getID(pht)
+			else {				
+				document.title+='✗';												//give up
+				if (debug) alert('IDs not found');
+				throw new Error('IDs not found');
+				return false;
+			};
+		};			
+	};											//TODO: only call API if no DB record was found for images in current post			
     return new Promise(function(resolve, reject) {									//I have no idea what this is
      	jQuery.ajax({																//get info about current post via tumblr API based on the ID
 			type:'GET',
@@ -116,6 +122,17 @@ function identifyPost(v){															//Find the ID of post in question and re
 		}).done(function(result) {resolve({r:result, v:v});})						//have to return two values at once, data and pointer to post on page
 		  .fail(function(jqXHR, textStatus, errorThrown) {reject(Error(textStatus));});
     });	
+};
+
+function loadAndExecute(url, callback){										//Load specified js library and launch a function after that
+	var scriptNode = document.createElement ("script");	
+	scriptNode.addEventListener("load", callback);
+	scriptNode.onerror=function(){ 
+		document.title+='✗';
+		if (debug) alert("Can't access "+url);
+	};
+	scriptNode.src = url;
+	document.head.appendChild(scriptNode);
 };
 
 function main(){																	//search for post IDs on page and call API to get info about them
@@ -158,7 +175,7 @@ function main(){																	//search for post IDs on page and call API to g
  			document.location.href=jQuery('img#content-image')[0].src;						
  		document.title+=']100%';													//at the end of processing indicate it's finished and cleanup flash
  		cleanUp();
-	}).catch(function(err) { 														//catch any error that happened along the way
+	}).catch(function(err) {														//catch any error that happened along the way
  		document.title+='✗';  
  		if (debug) alert( 'Error: '+err.message);
 		throw err;
@@ -172,36 +189,26 @@ function mutex(){																	//check readiness of libraries being loaded si
 	}
 };
 
-function loadAndExecute(url, callback){												//Load specified js library and launch a function after that
-	var scriptNode = document.createElement ("script");	
-	scriptNode.addEventListener("load", callback);
-	scriptNode.src = url;
-	document.getElementsByTagName('head')[0].appendChild(scriptNode);
-};
-
 function onDOMContentLoaded(){														//load plugins 
 	if (window.top != window.self)  												//don't run on (i)frames
 		return;
-	if (isDash)
-		if (!enableOnDashboard)														//don't run on dashboard unless enabled
-			return
-		else 																		//Because tumblr sucks it replaces native Promise implementation
-			loadAndExecute('//dl.dropboxusercontent.com/u/74005421/js%20requisites/es6-promise.min.js', function(){ 
-				P=true;																// with it's own bullshit on dashboard via index.js
-				mutex();
-			})																		//therefore I have to fix that by overwriting it back by a polyfill
+	if (isDash && !enableOnDashboard)												//don't run on dashboard unless enabled
+		return;
+			
+	if (!(Promise && Promise.resolve))  											//Because tumblr sucks it replaces native Promise implementation
+		loadAndExecute('//dl.dropboxusercontent.com/u/74005421/js%20requisites/es6-promise.min.js', function(){ 
+			P=true;																	// with it's own bullshit on dashboard via index.js that doesn't work
+			mutex();
+		})																			//therefore I have to fix that by overwriting it back by a polyfill
 	else
 		P=true;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site
-			var scriptNode = document.createElement ("script");						// but existing version might be older than required (1.5)
-			scriptNode.addEventListener("load", function(){ 
-				$.noConflict();
+			loadAndExecute('//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js', function(){ 
+				$.noConflict();														// but existing version might be older than required (1.5)
 				J=true;
-				mutex();
-			});																		// force load the newer jQuery if that's the case
-			scriptNode.src = '//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js';
-			document.getElementsByTagName('head')[0].appendChild (scriptNode);
-		}
+				mutex();															// force load the newer jQuery if that's the case
+			});			
+	}
 	else 
 		J=true; 
 	
