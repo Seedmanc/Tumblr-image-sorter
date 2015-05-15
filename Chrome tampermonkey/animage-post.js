@@ -129,7 +129,7 @@ function loadAndExecute(url, callback){										//Load specified js library and
 	scriptNode.addEventListener("load", callback);
 	scriptNode.onerror=function(){ 
 		document.title+='✗';
-		if (debug) alert("Can't access "+url);
+		if (debug) alert("Can't load "+url);
 	};
 	scriptNode.src = url;
 	document.head.appendChild(scriptNode);

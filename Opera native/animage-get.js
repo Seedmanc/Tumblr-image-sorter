@@ -21,7 +21,7 @@
 	var ms=				'!';											//Metasymbol, denotes folders for categories instead of names, must be their first character
 	
 	var folders=		{												//Folder and names matching database
-		"	!!group	"	:	"	!!group	",								//used both for tag translation and providing the list of existing folders
+		"	!!group	"	:	"	!!group	",								// used both for tag translation and providing the list of existing folders
 		"	!!solo	"	:	"	!!solo	",								//trailing whitespaces are voluntary in both keys and values,
 		"	!!unsorted"	:	"	!!unsorted	", 							//first three key names are not to be changed, but folder names can be anything
 		"	原由実	"	:	"	!iM@S\\Hara Yumi	",					//subfolders for categories instead of names must have the metasymbol as first symbol
@@ -122,10 +122,18 @@
 																		//and save button even if no tags were found, also disables cleanup (lag on tab close)
 // ==/Settings=====================================================
 												//TODO add support for no subfolders configuration
-var load,execute,loadAndExecute;load=function(a,b,c){var d;d=document.createElement("script"),d.setAttribute("src",a),b!=null&&d.addEventListener("load",b),c!=null&&d.addEventListener("error",c),document.body.appendChild(d);return d},execute=function(a){var b,c;typeof a=="function"?b="("+a+")();":b=a,c=document.createElement("script"),c.textContent=b,document.body.appendChild(c);return c},loadAndExecute=function(a,b){return load(a,function(){return execute(b)})};
-																		//external script loader function
 
-																		//communication between functions here is mostly done via global variables
+function loadAndExecute(url, callback){									//Load specified js library and launch a function after that
+	var scriptNode = document.createElement ("script");	
+	scriptNode.addEventListener("load", callback);
+	scriptNode.onerror=function(){ 
+		document.title+='✗';
+		if (debug) alert("Can't load "+url);
+	};
+	scriptNode.src = url;
+	document.head.appendChild(scriptNode);
+};
+																		//Communication between functions here is mostly done via global variables
  tagsDB=null;
  names=null ;
  meta=null ; 															//these three must be deletable on cleanup
@@ -325,6 +333,8 @@ function debugSwitch(checkbox){											//toggling debug mode requires page re
 document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
 
 function onDOMcontentLoaded(){ 											//load plugins and databases
+	if (window.top != window.self)  									//don't run on frames or iframes
+		return;
 	href=document.location.href;
 	if (href.indexOf('tumblr')!=-1) 									//if not on tumblr
 		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))		//check if this is actually an image link
@@ -367,7 +377,9 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 			runonce=false;	
 		},
 		onerror: function() {
-			alert('tagsDB failed to load');}
+			if (debug) 
+				alert('tagsDB failed to load');
+		}
 	});
 };
 
@@ -850,9 +862,11 @@ function cleanup(full){													//remove variables and flash objects from me
 		exim[0].parentNode.removeChild(exim[0]);						//meh
 	}
 	x=document.querySelectorAll("object[id^='SwfStore_meta_']")[0];		
-	x.parentNode.removeChild(x); 										//eww
-	x=document.querySelectorAll("object[id^='SwfStore_names_']")[0];
-	x.parentNode.removeChild(x); 
+	if (x) {
+		x.parentNode.removeChild(x); 									//eww
+		x=document.querySelectorAll("object[id^='SwfStore_names_']")[0];
+		x.parentNode.removeChild(x); 
+	};
 }
 //TODO: add save button activation via keyboard
 //TODO: improve the button: open assigned folder directly, use modern open dialog
