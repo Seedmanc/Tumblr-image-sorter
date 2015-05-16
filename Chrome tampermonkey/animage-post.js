@@ -37,6 +37,8 @@
 																				
 	var enableOnDashboard= true;													//Will try to collect post info from dashboard posts too
 																					// might be slow and/or glitchy so made optional
+	var Googlify= true;																//Make every inline image of a post  link to its reverse image search on Google
+																					//might break themes like PixelUnion Fluid
 // ==/Settings====================================================
 
  tagsDB=null;
@@ -233,6 +235,13 @@ function process(postData) {														//process information obtained from AP
 		if (debug) alert('API error: '+res.meta.msg);
 		throw  new Error('API error: '+res.meta.msg);
 		return;
+	};
+	if (Googlify) {
+		inlimg=$('img[src*="tumblr_inline_"]');
+		$.each(inlimg,function(ix,vl) {
+			a='<a href="http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src)+'"  ></a>';
+			$(vl).wrap(a);
+		});
 	};
 	if (res.response.posts[0].type!='photo') {										//we're only interested in photo posts
 		document.title+=' ';
