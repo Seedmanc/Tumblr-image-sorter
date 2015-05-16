@@ -87,7 +87,7 @@ Basically, every theme that has post containers with `'class="post"'` and contai
 |Minimal by Artur Kim|	http://arturkim.com 	|100|
 |o by inky|	http://www.tumblr.com/theme/1386 	|90|
 |Optica|	http://www.tumblr.com/theme/37310 	|100|
-|PixelUnion Fluid|	http://www.tumblr.com/theme/979	|70  |
+|PixelUnion Fluid|	http://www.tumblr.com/theme/979	|65  |
 |plain by selkas|	http://selkas.tumblr.com 	|80|
 |redux|	http://thm--reducereuseandredux.tumblr.com 	|90|
 |Simple Things|	http://singleatheme.tumblr.com	|100|
@@ -95,6 +95,8 @@ Basically, every theme that has post containers with `'class="post"'` and contai
 |Tincture|	http://tincturetheme.tumblr.com 	|75|
 |tuesday by selkas|	http://selkas.tumblr.com 	|85|
 |Viwan theme|	http://viwan-th.tumblr.com	|95|
+
+PixelUnion Fluid is very weird and I coudln't find enough blogs using it to test all features. The Minimalist theme might miss the saved indication feature.
 
 Themes with inbuilt flash content such as music players are not supported. It seems that flash presence makes flash cookies DB unable to load. There is a chance that it might not an issue of my script but rather of the flash cookies themselves. So far I have no idea how to fix this, but such themes are a minority anyway.
 
