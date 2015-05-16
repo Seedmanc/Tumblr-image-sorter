@@ -256,7 +256,7 @@ port=document.createElement('table');									//subtable for settings and im/exp
 	row4.insertCell(0).id='im';
 	port.id='port';
 
-trimObj(folders);														//run checks on user-input content and format it
+trimObj(folders, useFolderNames);										//run checks on user-input content and format it
 trimObj(ignore);																												
 																		
 var xhr = new XMLHttpRequest();											//redownloads opened image as blob 
@@ -281,7 +281,7 @@ var xhr = new XMLHttpRequest();											//redownloads opened image as blob
 	};
 };
 
-function trimObj(obj){ 													//remove trailing whitespace in object keys and values & check correctness of user input
+function trimObj(obj, ufn){									//remove trailing whitespace in object keys and values & check correctness of user input
 	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;										//make sure that folder names have no illegal characters
   try {
 	roota=root.split('\\');
@@ -292,17 +292,18 @@ function trimObj(obj){ 													//remove trailing whitespace in object keys 
 		throw new Error ('Illegal character as metasymbol: "'+ms+'"');
 	for (var key in obj) {												//convert keys to lower case for better matching
 		if (obj.hasOwnProperty(key)) { 
-			t=obj[key];
-			if (typeof t == 'string')
-				t=t.trim();
-			k=key.trim().toLowerCase();
+			t=obj[key];			
 			delete obj[key];
-			obj[k]=t;
-			if (!(typeof t == 'boolean') && useFolderNames) {
-				rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
-				x=getFname(t).toLowerCase().replace(rx,'');
-				obj[x]=t;
+			if (typeof t == 'string') {
+				t=t.trim();
+				if (ufn) {
+					rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
+					x=getFname(t).toLowerCase().replace(rx,'');
+					obj[x]=t;
+				};
 			};
+			k=key.trim().toLowerCase();
+			obj[k]=t;
 			if (exclrgxp.test(obj[k]))  								//can't continue until the problem is fixed
 				throw new Error('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"'); 
 		};

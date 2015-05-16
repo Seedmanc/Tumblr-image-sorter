@@ -31,7 +31,7 @@
 																				
 	var debug=			false;														//Initial debug value, gets changed to settings value after DB creation
 																					// enabling debug makes DB entries for images updated every time post is visited
-																					// also it enables error notifications and disables cleanup
+																					// also it enables error notifications
 	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
 																					//Flash databases are bound to the URL, must be same as in the other script
 																				
@@ -46,12 +46,6 @@ var isImage=(document.location.href.indexOf('/image/')!=-1);						//processing f
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(namae.indexOf('www.')==0);												//processing for non-blog pages of tumblr like dashboard is different too
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
-
-function cleanUp(){																	//remove variables and flash objects from memory 
-	if (true) return;											//TODO: remove cleanup in chrome
-	delete tagsDB;
-	jQuery("object[id^='SwfStore_animage_']").remove();
-};
 
 function getFname(fullName){														//extract filename from image URL and format it
 	fullName=fullName||'';													
@@ -173,8 +167,7 @@ function main(){																	//search for post IDs on page and call API to g
 	promisePosts(posts.toArray()).then(function() {									//the what
  		if (isImage)																//redirect to actual image from image page after we got the ID
  			document.location.href=jQuery('img#content-image')[0].src;						
- 		document.title+=']100%';													//at the end of processing indicate it's finished and cleanup flash
- 		cleanUp();
+ 		document.title+=']100%';													//at the end of processing indicate it's finished
 	}).catch(function(err) {														//catch any error that happened along the way
  		document.title+='✗';  
  		if (debug) alert( 'Error: '+err.message);
@@ -224,9 +217,9 @@ function onDOMContentLoaded(){														//load plugins
 		},
 		onerror: function() {
 			if (debug)
-				alert('tagsDB failed to load')										//Because chrome sucks it tends to raise flashDB loading error if the tab wasn't accessed soon enough
-			else																	//even if no actual error happened, in fact it might even continue to work after that
-				document.title="tagsDB load error";				//TODO: fix this bullshit for once
+				alert('tagsDB failed to load')										
+			else																	
+				document.title="tagsDB load error";	
 		}
 	}); 
 };
@@ -238,7 +231,7 @@ function process(postData) {														//process information obtained from AP
 	var img;
 	if (res.meta.status!='200') {													//I don't even know if this is reachable
 		if (debug) alert('API error: '+res.meta.msg);
-		throw new Error('API error: '+res.meta.msg);
+		throw  new Error('API error: '+res.meta.msg);
 		return;
 	};
 	if (res.response.posts[0].type!='photo') {										//we're only interested in photo posts
@@ -273,7 +266,7 @@ function process(postData) {														//process information obtained from AP
 		};
 	};
 	bar=String.fromCharCode(10111+photos);											//piece of progressbar, (№) for amount of photos in a post
-																					// empty space for non-photo or tagless posts, ✗ for errors
+																					// empty space for non-photo posts, ✗ for errors
 
 	tags=res.response.posts[0].tags;												//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
@@ -290,7 +283,7 @@ function process(postData) {														//process information obtained from AP
 																					//add a border of highlight color around the image to indicate that
 		};
 	};	
-	document.title+=(tags.length)?bar:' ';											//empty space indicates no found tags for the post
+	document.title+=(tags.length)?bar:'-';											//empty space indicates no found tags for the post
 };
 
 function promisePosts(posts){														//Because chrome sucks I have write a bunch of nonsensical code just to make sure it behaves
