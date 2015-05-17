@@ -24,8 +24,9 @@
 																				
 	var enableOnDashboard= true;												//will try to collect post info from dashboard posts too
 																				// might be slow and/or glitchy so made optional
-	var Googlify= true;															//Make every inline image of a post  link to its reverse image search on Google
-																				//might break themes like PixelUnion Fluid
+	var linkify= true;															//Make every image (even inline images in non-photo posts) to be processed
+																				// and linked to either itself, it's larger version or its reverse image search
+																				// might break themes like PixelUnion Fluid
 // ==/Settings====================================================
 
 function loadAndExecute(url, callback){											//Load specified js library and launch a function after that
@@ -205,8 +206,7 @@ function onDOMContentLoaded(){													//load plugins
 
 function process(res, v) {														//process information obtained from API by post ID
 	var link_url='';
-	var img;
-	var inlimg;
+	var img,inlimg=[];
 	if (res.meta.status!='200') {
 		document.title+='✗';
 		if (debug) alert('API error: '+res.meta.msg);
@@ -214,17 +214,27 @@ function process(res, v) {														//process information obtained from API 
 		return;
 	};	
 	v=jQuery(v);	
-	if (Googlify) {
-		inlimg=v.find('img[src*="tumblr_inline_"]');							//find inline images
-		jQuery.each(inlimg, function(ix,vl) {
-			if ((jQuery(vl).parent().is('a')||jQuery(vl).parent().parent().is('a')))
-				return true;													//only linkify if there's no link present yet
-			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1)
-				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280')			//if there is an HD version, link it
-			else
+	if (linkify) {																//find inline images
+		inlimg=jQuery.grep(v.find('img[src*="tumblr_inline_"]'), function(vl,ix) {
+			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
+				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');		//if there is an HD version, link it
+				r=true;
+			}
+			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
-			a='<a href="'+href+'" style=""></a>';								//otherwise link to google reverse image search
-			jQuery(vl).wrap(a);
+				r=false;														//otherwise link to google reverse image search
+				bar='G';														//indicate that in non-photo posts
+			};
+			a='<a href="'+href+'" style=""></a>';
+			i=jQuery(vl);
+			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;
+																				//i dunno either
+			if (x.parent().is('a')) 											//basically either direct parent or grandparent of the image can be a link already
+				x.unwrap();														//in which case we need to remove it before creating our own
+			i.wrap(a);
+			if (typeof pxuDemoURL!== 'undefined' && pxuDemoURL=="fluid-theme.pixelunion.net")
+				i.parent().css('position','relative');							//fix for PixelUnion Fluid
+			return r;
 		});
 	};
 	if (res.response.posts[0].type!='photo') {									//we're only interested in photo posts
@@ -232,6 +242,8 @@ function process(res, v) {														//process information obtained from API 
 		return;																	
 	};
 	photos=res.response.posts[0].photos.length;									//find whether this is a single photo post or a photoset
+	bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
+																				// empty space for non-photo posts, ✗ for errors
 	if (photos>1) {
 		img=v.find('iframe.photoset').contents();
 		img=img.length?img:v.find('figure.photoset');
@@ -245,26 +257,27 @@ function process(res, v) {														//process information obtained from API 
 		r=/(jpe*g|bmp|png|gif)/gi;												//check if this is actually an image link
 		link_url=(r.test(ext))?link_url:''; 
 		
-		img=v.find('img[src*="tumblr_"]');										//find image in the post to linkify it
-		if (img.length) {
+		img=v.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//find image in the post to linkify it
+		if (img.length && linkify) {
 			p=img.parent().wrap('<p/>');										//what would you do? Parent might be either the link itself or contain it as a child
 			lnk=p.parent().find('a[href*="/image/"]');
 			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
 			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
 			if ((lnk.length) && (lnk[0].href))					
 				lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
-			else 																
+			else if (typeof pxuDemoURL =='undefined')			
 				img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
-			p.unwrap();															//^ this might potentially break themes like Fluid by PU
+			p.unwrap();															//^ this might not work in themes like Fluid by PU
 		};
 	};
-	bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
-																				// empty space for non-photo posts, ✗ for errors
-	img=img.add(inlimg);
+	img=jQuery(img.toArray().concat(inlimg));									//make sure the resulting list of images is in order
 	tags=res.response.posts[0].tags;											//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};								//create an object for database record
-	for (j=0; j<photos; j++) {
-		url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;		
+	for (j=0; j<photos+inlimg.length; j++) {
+		if (j<photos)
+			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
+		else
+			url=img.eq(j).parent().attr('href');
 		tst=tagsDB.get(getFname(url));											//check if there's already a record in database for this image	
 		if (((!tst)||(debug))&&(tags.length))  									//if there isn't, make one, putting the flag and tags there
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
