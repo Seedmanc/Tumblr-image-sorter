@@ -230,18 +230,25 @@ function process(postData) {														//process information obtained from AP
 	v=jQuery(postData.v);															//pointer to post on page
 	res=postData.r;																	//API response
 	var link_url='';
-	var img;
+	var img,inlimg;
 	if (res.meta.status!='200') {													//I don't even know if this is reachable
 		if (debug) alert('API error: '+res.meta.msg);
 		throw  new Error('API error: '+res.meta.msg);
 		return;
 	};
 	if (Googlify) {
-		inlimg=$('img[src*="tumblr_inline_"]');
-		$.each(inlimg,function(ix,vl) {
-			a='<a href="http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src)+'"  ></a>';
-			$(vl).wrap(a);
+		inlimg=v.find('img[src*="tumblr_inline_"]');							//find inline images
+		jQuery.each(inlimg, function(ix,vl) {
+			if ((jQuery(vl).parent().is('a')||jQuery(vl).parent().parent().is('a')))
+				return true;													//only linkify if there's no link present yet
+			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1)
+				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280')			//if there is an HD version, link it
+			else
+				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
+			a='<a href="'+href+'" style=""></a>';								//otherwise link to google reverse image search
+			jQuery(vl).wrap(a);
 		});
+
 	};
 	if (res.response.posts[0].type!='photo') {										//we're only interested in photo posts
 		document.title+=' ';
@@ -249,12 +256,12 @@ function process(postData) {														//process information obtained from AP
 	};
 	photos=res.response.posts[0].photos.length;										//find whether this is a single photo post or a photoset
 	if (photos>1) {
-		ifr=v.find('iframe.photoset').contents();
-		ifr=ifr.length?ifr:v.find('figure.photoset');
-		if (ifr.length==0)															//some photosets are in iframes, some aren't
-			ifr=v.find("div[id^='photoset'] img")
+		img=v.find('iframe.photoset').contents();
+		img=img.length?img:v.find('figure.photoset');
+		if (img.length==0)															//some photosets are in iframes, some aren't
+			img=v.find("div[id^='photoset'] img")
 		else 
-			ifr=ifr.find('img');
+			img=img.find('img');
 	} else {
 		link_url+=res.response.posts[0].link_url;									//for a single photo post, link url might have the highest-quality image version,
 		ext=link_url.split('.').pop();												// unaffected by tumblr compression
@@ -276,7 +283,7 @@ function process(postData) {														//process information obtained from AP
 	};
 	bar=String.fromCharCode(10111+photos);											//piece of progressbar, (№) for amount of photos in a post
 																					// empty space for non-photo posts, ✗ for errors
-
+	img=img.add(inlimg);
 	tags=res.response.posts[0].tags;												//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
 	for (j=0; j<photos; j++) {
@@ -286,13 +293,11 @@ function process(postData) {														//process information obtained from AP
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
 														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
 														//TODO: add tags retrieval from reblog source if no tags were found here
-		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) {							//otherwise if there is a record and it says the image has been saved
-			img=(photos==1)?img:jQuery(ifr[j]);
-			img.css('outline','3px solid '+highlightColor).css('outline-offset','-3px');	
+		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 							//otherwise if there is a record and it says the image has been saved 
+			img.eq(j).css('outline','3px solid '+highlightColor).css('outline-offset','-3px');	
 																					//add a border of highlight color around the image to indicate that
-		};
 	};	
-	document.title+=(tags.length)?bar:'-';											//empty space indicates no found tags for the post
+	document.title+=(tags.length)?bar:'-';											//dash indicates no found tags for the post
 };
 
 function promisePosts(posts){														//Because chrome sucks I have write a bunch of nonsensical code just to make sure it behaves
