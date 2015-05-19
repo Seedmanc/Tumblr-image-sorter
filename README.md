@@ -104,6 +104,8 @@ Themes with inbuilt flash content such as music players are not supported. It se
 
 Aside from main functionality the script also makes slight changes to tumblr design. The most noticeable one is the outline around images that were already saved with the script (not just "save as"). This way you can keep track of pictures you have. Note that that this feature is cross-blog, meaning that if you saved a picture from one blog and then encountered it in a reblogged post in another tumblr it will still be marked as saved there.
 
+Another important ability is linking inline images in all posts (not just photo ones) to either their HD version if available or to the Google reverse image search of the particular image. If the HD version of an image is available (which must be the majority of cases from now on) it will be processed just like any other image in a photo post. This allows for collecting image and data from any kind of post, increasing coverage.
+
 Other features include changing destination of links on single image posts directly to the picture skipping the /image/ subpage of tumblr, linkifying even small images that usually don't have links over them (because GET script requires every image to be opened in a separate tab) and also fixing the particular problem in some themes where links to hi-res versions of the images in posts are covered by a transparent \<div\>, making them inaccessible.
 
 ## Usage
