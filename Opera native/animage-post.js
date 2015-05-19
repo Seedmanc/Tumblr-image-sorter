@@ -206,7 +206,11 @@ function onDOMContentLoaded(){													//load plugins
 
 function process(res, v) {														//process information obtained from API by post ID
 	var link_url='';
-	var img,inlimg=[];
+	var img=jQuery([]);
+	var inlimg=[];
+	var isPhoto=res.response.posts[0].type=='photo';
+	var photos=0;
+	var bar='';
 	if (res.meta.status!='200') {
 		document.title+='✗';
 		if (debug) alert('API error: '+res.meta.msg);
@@ -215,10 +219,12 @@ function process(res, v) {														//process information obtained from API 
 	};	
 	v=jQuery(v);	
 	if (linkify) {																//find inline images
-		inlimg=jQuery.grep(v.find('img[src*="tumblr_inline_"]'), function(vl,ix) {
+		inlimg=v.find('img[src*="tumblr_inline_"]');
+		inlimg=jQuery.grep(inlimg, function(vl,ix) {							//leave only those that have HD versions existing
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
 				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');		//if there is an HD version, link it
 				r=true;
+				bar=inlimg.length;
 			}
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
@@ -227,8 +233,7 @@ function process(res, v) {														//process information obtained from API 
 			};
 			a='<a href="'+href+'" style=""></a>';
 			i=jQuery(vl);
-			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;
-																				//i dunno either
+			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;	//i dunno either
 			if (x.parent().is('a')) 											//basically either direct parent or grandparent of the image can be a link already
 				x.unwrap();														//in which case we need to remove it before creating our own
 			i.wrap(a);
@@ -237,37 +242,40 @@ function process(res, v) {														//process information obtained from API 
 			return r;
 		});
 	};
-	if (res.response.posts[0].type!='photo') {									//we're only interested in photo posts
-		document.title+=' ';
-		return;																	
-	};
-	photos=res.response.posts[0].photos.length;									//find whether this is a single photo post or a photoset
-	bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
-																				// empty space for non-photo posts, ✗ for errors
-	if (photos>1) {
-		img=v.find('iframe.photoset').contents();
-		img=img.length?img:v.find('figure.photoset');
-		if (img.length==0)														//some photosets are in iframes, some aren't
-			img=v.find("div[id^='photoset'] img")
-		else 
-			img=img.find('img');
+	if (!isPhoto) {																//we're only interested in posts with images
+		if ((!linkify)||(inlimg.length==0)) {
+			document.title+=' ';
+			return;				
+		};
 	} else {
-		link_url+=res.response.posts[0].link_url;								//for a single photo post, link url might have the highest-quality image version,
-		ext=link_url.split('.').pop();											// unaffected by tumblr compression
-		r=/(jpe*g|bmp|png|gif)/gi;												//check if this is actually an image link
-		link_url=(r.test(ext))?link_url:''; 
-		
-		img=v.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//find image in the post to linkify it
-		if (img.length && linkify) {
-			p=img.parent().wrap('<p/>');										//what would you do? Parent might be either the link itself or contain it as a child
-			lnk=p.parent().find('a[href*="/image/"]');
-			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
-			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
-			if ((lnk.length) && (lnk[0].href))					
-				lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
-			else if (typeof pxuDemoURL =='undefined')			
-				img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
-			p.unwrap();															//^ this might not work in themes like Fluid by PU
+		photos=res.response.posts[0].photos.length;								//find whether this is a single photo post or a photoset
+		bar=String.fromCharCode(10111+photos);									//piece of progressbar, (№) for amount of photos in a post
+																				// empty space for non-photo posts, ✗ for errors
+		if (photos>1) {
+			img=v.find('iframe.photoset').contents();
+			img=img.length?img:v.find('figure.photoset');
+			if (img.length==0)													//some photosets are in iframes, some aren't
+				img=v.find("div[id^='photoset'] img")
+			else 
+				img=img.find('img');
+		} else {
+			link_url+=res.response.posts[0].link_url;							//for a single photo post, link url might have the highest-quality image version,
+			ext=link_url.split('.').pop();										// unaffected by tumblr compression
+			r=/(jpe*g|bmp|png|gif)/gi;											//check if this is actually an image link
+			link_url=(r.test(ext))?link_url:''; 
+			
+			img=v.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');//find image in the post to linkify it
+			if (img.length && linkify) {
+				p=img.parent().wrap('<p/>');									//what would you do? Parent might be either the link itself or contain it as a child
+				lnk=p.parent().find('a[href*="/image/"]');
+				lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
+				lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
+				if ((lnk.length) && (lnk[0].href))					
+					lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
+				else if (typeof pxuDemoURL =='undefined')			
+					img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
+				p.unwrap();														//^ this might not work in themes like Fluid by PU
+			};
 		};
 	};
 	img=jQuery(img.toArray().concat(inlimg));									//make sure the resulting list of images is in order

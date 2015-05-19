@@ -231,17 +231,23 @@ function process(postData) {														//process information obtained from AP
 	v=jQuery(postData.v);															//pointer to post on page
 	res=postData.r;																	//API response
 	var link_url='';
-	var img,inlimg=[];
+	var img=jQuery([]);
+	var inlimg=[];
+	var isPhoto=res.response.posts[0].type=='photo';
+	var photos=0;
+	var bar='';
 	if (res.meta.status!='200') {													//I don't even know if this is reachable
 		if (debug) alert('API error: '+res.meta.msg);
 		throw  new Error('API error: '+res.meta.msg);
 		return;
 	};
 	if (linkify) {																	//find inline images
-		inlimg=jQuery.grep(v.find('img[src*="tumblr_inline_"]'), function(vl,ix) {
+		inlimg=v.find('img[src*="tumblr_inline_"]');
+		inlimg=jQuery.grep(inlimg, function(vl,ix) {
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
 				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');			//if there is an HD version, link it
 				r=true;
+				bar=inlimg.length;
 			}
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
@@ -259,39 +265,42 @@ function process(postData) {														//process information obtained from AP
 			return r;
 		});
 	};
-	if (res.response.posts[0].type!='photo') {										//we're only interested in photo posts
-		document.title+=' ';
-		return;																	
-	};
-	photos=res.response.posts[0].photos.length;										//find whether this is a single photo post or a photoset
-	if (photos>1) {
-		img=v.find('iframe.photoset').contents();
-		img=img.length?img:v.find('figure.photoset');
-		if (img.length==0)															//some photosets are in iframes, some aren't
-			img=v.find("div[id^='photoset'] img")
-		else 
-			img=img.find('img');
-	} else {
-		link_url+=res.response.posts[0].link_url;									//for a single photo post, link url might have the highest-quality image version,
-		ext=link_url.split('.').pop();												// unaffected by tumblr compression
-		r=/(jpe*g|bmp|png|gif)/gi;													//check if this is actually an image link
-		link_url=(r.test(ext))?link_url:''; 
-		
-		img=v.find('img[src*="tumblr_"]');											//find image in the post to linkify it
-		if (img.length && linkify) {
-			p=img.parent().wrap('<p/>');											//Parent might be either the link itself or contain it as a child
-			lnk=p.parent().find('a[href*="/image/"]');
-			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
-			lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
-			if ((lnk.length) && (lnk[0].href))					
-				lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
-			else if (typeof pxuDemoURL == 'undefined')																	
-				img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
-			p.unwrap();																//^ this might not work in themes like Fluid by PU
+	if (!isPhoto) {																//we're only interested in posts with images
+		if ((!linkify)||(inlimg.length==0)) {
+			document.title+=' ';
+			return;				
 		};
-	};
-	bar=String.fromCharCode(10111+photos);											//piece of progressbar, (№) for amount of photos in a post
+	} else {
+		photos=res.response.posts[0].photos.length;									//find whether this is a single photo post or a photoset
+		if (photos>1) {
+			img=v.find('iframe.photoset').contents();
+			img=img.length?img:v.find('figure.photoset');
+			if (img.length==0)														//some photosets are in iframes, some aren't
+				img=v.find("div[id^='photoset'] img")
+			else 
+				img=img.find('img');
+		} else {
+			link_url+=res.response.posts[0].link_url;								//for a single photo post, link url might have the highest-quality image version,
+			ext=link_url.split('.').pop();											// unaffected by tumblr compression
+			r=/(jpe*g|bmp|png|gif)/gi;												//check if this is actually an image link
+			link_url=(r.test(ext))?link_url:''; 
+
+			img=v.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//find image in the post to linkify it
+			if (img.length && linkify) {
+				p=img.parent().wrap('<p/>');										//Parent might be either the link itself or contain it as a child
+				lnk=p.parent().find('a[href*="/image/"]');
+				lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
+				lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
+				if ((lnk.length) && (lnk[0].href))					
+					lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
+				else if (typeof pxuDemoURL == 'undefined')																	
+					img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
+				p.unwrap();															//^ this might not work in themes like Fluid by PU
+			};
+		};
+		bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
 																					// empty space for non-photo posts, ✗ for errors
+	};
 	img=jQuery(img.toArray().concat(inlimg));										//make sure the resulting list of images is in order
 	tags=res.response.posts[0].tags;												//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
