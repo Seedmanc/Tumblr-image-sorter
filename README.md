@@ -179,10 +179,9 @@ This will help when a large photoset has no tags, rendering the script useless. 
 Will have to think of a way to store folder lists more efficiently than in an object.
 
 ## Future possibilities
-* Add a third script which would create and show a statistics page about information collected over time. For example, it would track the amount of images collected to every folder as well as the most saved tags without a folder and make suggestions abot creating a directory for that particular tag. Perhaps such a page would also be able to have a more functional GUI than the one the GET script has to offer.
+* Add a third script which would create and show a statistics page about information collected over time. For example, it would track the amount of images collected to every folder as well as the most saved tags without a folder and make suggestions about creating a directory for that particular tag. Perhaps such a page would also be able to have a more functional GUI than the one the GET script has to offer.
 * With tag database collected and stored it will be potentially possible to implement a sorting algorithm for images already saved to disk from tumblr. All that the current algo needs is an image file name and the matching DB as input, while it outputs the path for the particular file. It should be trivial to make it run in a loop over multiple files selected from HDD. While Javascript has no capability of moving around files on disk it can create a batch command file with necessary instructions to be performed by the OS. 
 * Add support for more sites with tags, not just Tumblr, thus increasing use case coverage and popularity. Potential candidates are soup.io, egloos.com and perhaps even Pixiv. Along with aforementioned local file sorting feature it will make it possible to bring entire online tagging system to help with image organization and categorization on disk.
 
 #### License
 Blah-blah, MIT, blah, you know the stuff. Just don't claim authorship and it'll be fine.
-animage-get
