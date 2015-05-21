@@ -192,6 +192,7 @@ var style={																//in an object so you can fold it in editor
 	}									\
 	td.cell, td.radio{					\
 		border: 1px solid black;		\
+		overflow:	hidden;				\
 	}									\
 	table.cell {						\
 		background: white;				\

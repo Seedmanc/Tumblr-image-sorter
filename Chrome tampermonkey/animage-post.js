@@ -50,6 +50,16 @@ var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(namae.indexOf('www.')==0);												//processing for non-blog pages of tumblr like dashboard is different too
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
+window.onerror = function(msg, url, line, col, error) {								//general error handles
+   var extra = !col ? '' : '\ncolumn: ' + col;
+   extra += !error ? '' : '\nerror: ' + error;										//shows '✗' for errors in title and also alerts a message if debug is on
+   if (msg.search('Script error')!=-1)
+	  return true;																	//except for irrelevant errors
+   document.title+='✗';
+   var suppressErrorAlert = true;
+   return suppressErrorAlert;
+};
+
 function getFname(fullName){														//extract filename from image URL and format it
 	fullName=fullName||'';													
 	fullName=fullName.replace(/(\?).*$/gim,'');										//first remove url parameters 
@@ -70,10 +80,8 @@ function getID(lnk){																//extract numerical post ID from self-link
 	i=Result.lastIndexOf('/');
 	if (i!=-1)
 		Result=Result.substring(0,i);
-	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) {
-		if (debug) alert('IDentification error: '+Result);
-		throw new Error('IDentification error: '+Result);
-	}
+	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) 
+		throw new Error('IDentification error: '+Result)
 	else
 		return Result;
 };
@@ -100,8 +108,6 @@ function identifyPost(v){															//Find the ID of post in question and re
 			else if (pht)
 				id=getID(pht)
 			else {				
-				document.title+='✗';												//give up
-				if (debug) alert('IDs not found');
 				throw new Error('IDs not found');
 				return false;
 			};
@@ -121,12 +127,11 @@ function identifyPost(v){															//Find the ID of post in question and re
     });	
 };
 
-function loadAndExecute(url, callback){										//Load specified js library and launch a function after that
+function loadAndExecute(url, callback){												//Load specified js library and launch a function after that
 	var scriptNode = document.createElement ("script");	
 	scriptNode.addEventListener("load", callback);
 	scriptNode.onerror=function(){ 
-		document.title+='✗';
-		if (debug) alert("Can't load "+url);
+		throw new Error("Can't load "+url);
 	};
 	scriptNode.src = url;
 	document.head.appendChild(scriptNode);
@@ -172,8 +177,6 @@ function main(){																	//search for post IDs on page and call API to g
  			document.location.href=jQuery('img#content-image')[0].src;						
  		document.title+=']100%';													//at the end of processing indicate it's finished
 	}).catch(function(err) {														//catch any error that happened along the way
- 		document.title+='✗';  
- 		if (debug) alert( 'Error: '+err.message);
 		throw err;
 	}); 	
 };
@@ -207,7 +210,7 @@ function onDOMContentLoaded(){														//load plugins
 	}
 	else 
 		J=true; 
-	
+
 	tagsDB = new SwfStore({															//main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
 		namespace: "animage",
 		swf_url: storeUrl, 
@@ -218,11 +221,9 @@ function onDOMContentLoaded(){														//load plugins
 			T=true;
 			mutex();
 		},
-		onerror: function() {
-			if (debug)
-				alert('tagsDB failed to load')										
-			else																	
-				document.title="tagsDB load error";	
+		onerror: function() {			
+			document.title="tagsDB error";	
+			throw new Error('tagsDB failed to load');												
 		}
 	}); 
 };
@@ -237,7 +238,6 @@ function process(postData) {														//process information obtained from AP
 	var photos=0;
 	var bar='';
 	if (res.meta.status!='200') {													//I don't even know if this is reachable
-		if (debug) alert('API error: '+res.meta.msg);
 		throw  new Error('API error: '+res.meta.msg);
 		return;
 	};
@@ -251,8 +251,7 @@ function process(postData) {														//process information obtained from AP
 			}
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
-				r=false;															//otherwise link to google reverse image search
-				bar='G';															//indicate that in non-photo posts
+				r=false;															//otherwise link to google reverse image search 
 			};
 			a='<a href="'+href+'" style=""></a>';
 			i=jQuery(vl);
@@ -265,8 +264,8 @@ function process(postData) {														//process information obtained from AP
 			return r;
 		});
 	};
-	if (!isPhoto) {																//we're only interested in posts with images
-		if ((!linkify)||(inlimg.length==0)) {
+	if (!isPhoto) {																	//early termination if there are no images at all
+		if ((!linkify)||(inlimg.length==0)) {										//or if processing is disabled
 			document.title+=' ';
 			return;				
 		};
@@ -287,8 +286,8 @@ function process(postData) {														//process information obtained from AP
 
 			img=v.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//find image in the post to linkify it
 			if (img.length && linkify) {
-				p=img.parent().wrap('<p/>');										//Parent might be either the link itself or contain it as a child
-				lnk=p.parent().find('a[href*="/image/"]');
+				p=img.parent().wrap('<p/>');										//Parent might be either the link itself or contain it as a child,
+				lnk=p.parent().find('a[href*="/image/"]');							// depends on particular theme
 				lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
 				lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
 				if ((lnk.length) && (lnk[0].href))					
@@ -305,9 +304,9 @@ function process(postData) {														//process information obtained from AP
 	tags=res.response.posts[0].tags;												//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
 	for (j=0; j<photos+inlimg.length; j++) {
-		if (j<photos)
+		if (j<photos)																//first come the images in photo posts if exist
 			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
-		else
+		else																		//then the inline ones
 			url=img.eq(j).parent().attr('href');
 		tst=tagsDB.get(getFname(url));												//check if there's already a record in database for this image	
 		if (((!tst)||(debug))&&(tags.length))  										//if there isn't or we're in debug mode, make one, putting the flag and tags there

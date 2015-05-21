@@ -33,8 +33,7 @@ function loadAndExecute(url, callback){											//Load specified js library an
 	var scriptNode = document.createElement ("script");	
 	scriptNode.addEventListener("load", callback);
 	scriptNode.onerror=function(){ 
-		document.title+='✗';
-		if (debug) alert("Can't load "+url);
+		throw new Error("Can't load "+url);
 	};
 	scriptNode.src = url;
 	document.head.appendChild(scriptNode);
@@ -48,6 +47,17 @@ var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(namae.indexOf('www.')==0);											//processing for non-blog pages of tumblr like dashboard is different too
 
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
+
+window.onerror = function(msg, url, line, col, error) {							//general error handler
+   var extra = !col ? '' : '\ncolumn: ' + col;
+   extra += !error ? '' : '\nerror: ' + error;									//shows '✗' for errors and also alerts a message if in debug mode
+   if ((msg.search('this.swf')!=-1)||(msg.search('Script error')!=-1)) 
+	 return true;																//except for irrelevant errors
+   document.title+='✗';
+   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+   var suppressErrorAlert = true;
+   return suppressErrorAlert;
+};
 
 function cleanUp(){																//remove variables and flash objects from memory 
 	if (debug) return;															// without removal there would be a noticeable lag upon tab closing in Opera
@@ -75,10 +85,8 @@ function getID(lnk){															//extract numerical post ID from self-link
 	i=Result.lastIndexOf('/');
 	if (i!=-1)
 		Result=Result.substring(0,i);
-	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) {
-		if (debug) alert('IDentification error: '+Result);
-		throw new Error('IDentification error');
-	}
+	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) 
+		throw new Error('IDentification error')
 	else
 		return Result;
 };
@@ -137,12 +145,8 @@ function main(){																//search for post IDs on page and call API to ge
 					id=phtst.attr('id').split('_')[1]
 				else if (pht)
 					id=getID(pht)
-				else {				
-					document.title+='✗';										//give up
-					if (debug) alert('IDs not found');
-					throw new Error('IDs not found');
-					return false;
-				};
+				else 		
+					throw new Error('IDs not found');					
 			};	
 		};											//TODO: only call API if no DB record is found for images in current post
 		jQuery.ajax({															//get info about current post via tumblr API based on the ID
@@ -154,7 +158,7 @@ function main(){																//search for post IDs on page and call API to ge
 				id: id
 			}
 		})	.done(function(result) { process (result, v);})
-			.fail(function(jqXHR, textStatus, errorThrown) { alert('Error: '+textStatus);})
+			.fail(function(jqXHR, textStatus, errorThrown) { throw errorThrown;})
 			.always(function(){
 				if (isImage)													//redirect to actual image from image page after we got the ID
 					document.location.href=jQuery('img#content-image')[0].src;
@@ -199,7 +203,7 @@ function onDOMContentLoaded(){													//load plugins
 			mutex();
 		},
 		onerror: function() {
-			alert('tagsDB failed to load');
+			throw new Error('tagsDB failed to load');
 		}
 	}); 
 };
@@ -212,8 +216,6 @@ function process(res, v) {														//process information obtained from API 
 	var photos=0;
 	var bar='';
 	if (res.meta.status!='200') {
-		document.title+='✗';
-		if (debug) alert('API error: '+res.meta.msg);
 		throw new Error('API error: '+res.meta.msg);
 		return;
 	};	
@@ -229,7 +231,6 @@ function process(res, v) {														//process information obtained from API 
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
 				r=false;														//otherwise link to google reverse image search
-				bar='G';														//indicate that in non-photo posts
 			};
 			a='<a href="'+href+'" style=""></a>';
 			i=jQuery(vl);
