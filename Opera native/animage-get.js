@@ -17,7 +17,7 @@
 // ==Settings======================================================
 
 	var root=			'E:\\#-A\\!Seiyuu\\';							//Main collection folder
-	
+																		//Make sure to use double backslashes instead of single ones everywhere
 	var ms=				'!';											//Metasymbol, denotes folders for categories instead of names, must be their first character
 	
 	var folders=		{												//Folder and names matching database
@@ -104,7 +104,7 @@
 		"	ゆかな		"	:	"	Yukana	"
 	};
 
-	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};		//these tags will not count towards any category and won't be included into filename
+	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};		//These tags will not count towards any category and won't be included into filename
 																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
 																		//to disable an entry without removing it use "false" as the value
 
@@ -297,10 +297,10 @@ function trimObj(obj, ufn){									//remove trailing whitespace in object keys 
 			delete obj[key];
 			if (typeof t == 'string') {
 				t=t.trim();
-				if (ufn) {
+				if (ufn) {												//expand DB with tags produced from folder names
 					rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
 					x=getFname(t).toLowerCase().replace(rx,'');
-					obj[x]=t;
+					obj[x]=t;											
 				};
 			};
 			k=key.trim().toLowerCase();

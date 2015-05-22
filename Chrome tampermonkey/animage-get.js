@@ -1,78 +1,79 @@
 ﻿// ==UserScript==
-// @name		Animage-client
-// @description	Determines the path for saving current image to based on its tags.
-// @version		1.0
+// @name		Animage-get
+// @description	Prepare the path and file name for saving current image based on its tags.
+// @version	1.0
 // @author		Seedmanc
-// @include		http://scenario.myweb.hinet.net/*
+// @include		http*://*.amazonaws.com/data.tumblr.com/* 
 // @include		http*://*.media.tumblr.com/*
-// @include		https://mywareroom.files.wordpress.com/*
-// @include		http://mywareroom.files.wordpress.com/*
+
+//these sites are used by animage.tumblr.com to host original versions of images
+// @include		http://scenario.myweb.hinet.net/*										
+// @include		http*://mywareroom.files.wordpress.com/*
 // @include		http://e.blog.xuite.net/* 
 // @include		http://voice.x.fc2.com/*
-// @include		http://*.amazonaws.com/data.tumblr.com/* 
-// @include		https://*.amazonaws.com/data.tumblr.com/* 
+
 // @grant 		none 
-// @require 	http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js
-// @require 	http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js
-// require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.min.js
-// @require		https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.js
-// @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.js
+// @require 	https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js
+// @require 	https://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js
+// @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.min.js 
+// @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.min.js
 // @run-at 		document-start 
 // ==/UserScript==
 													
 // ==Settings=====================================================
 
-	var root='E:\\#-A\\!Seiyuu\\';										//main collection folder
-
-	var folders={														//folder and names matching database
-		"	!!group	"	:	"	!!group	",								//used both for tag translation and providing the list of existing folders
-		"	!!solo	"	:	"	!!solo	",								//trailing whitespaces are voluntary in both keys and values,
-		"	!!unsorted"	:	"	!!unsorted	",							// character case is only voluntary in key names
-		"	原由実	"	:	"	!iM@S\\Hara Yumi	",					  //first three key names are not to be changed, but folder names can be anything
-		"	今井麻美	"	:	"	!iM@S\\Imai Asami	",				 //subfolders for categories instead of names must have '!' as first symbol
+	var root=			'E:\\#-A\\!Seiyuu\\';								//Main collection folder
+																			//Make sure to use double backslashes instead of single ones everywhere	
+	var ms=				'!';												//Metasymbol, denotes folders for categories instead of names, must be their first character
+	
+	var folders=		{													//Folder and names matching database
+		"	!!group	"	:	"		!!group	",								// used both for tag translation and providing the list of existing folders
+		"	!!solo	"	:	"		!!solo	",								//trailing whitespaces are voluntary in both keys and values,
+		"	!!unsorted"	:	"		!!unsorted	", 							//first three key names are not to be changed, but folder names can be anything
+		"	原由実		"	:	"	!iM@S\\Hara Yumi",						//subfolders for categories instead of names must have the metasymbol as first symbol
+		"	今井麻美	"	:	"	!iM@S\\Imai Asami	",
 		"	沼倉愛美	"	:	"	!iM@S\\Numakura Manami	",
-		"	けいおん!	"	:	"	!K-On	",
-		"	日笠陽子	"	:	"	!K-On\\Hikasa Yoko	",
+		"	けいおん!	"	:	"	!K-On	",								//category folders can have their own tag, which, if present, will affect the folder choice
+		"	日笠陽子	"	:	"	!K-On\\Hikasa Yoko	",					//for solo and group images
 		"	寿美菜子	"	:	"	!K-On\\Kotobuki Minako	",
 		"	竹達彩奈	"	:	"	!K-On\\Taketatsu Ayana	",
 		"	豊崎愛生	"	:	"	!K-On\\Toyosaki Aki	",
 		"	クリスマス	"	:	"	!Kurisumasu	",
-		"	Lisp	"	:	"	!Lisp	",	
+		"	Lisp	"		:	"	!Lisp	",								//roman tags can be used as well
 		"	阿澄佳奈	"	:	"	!Lisp\\Asumi Kana	",
 		"	らき☆すた	"	:	"	!Lucky Star	",
-		"	遠藤綾	"	:	"	!Lucky Star\\Endo Aya	",
+		"	遠藤綾		"	:	"	!Lucky Star\\Endo Aya	",
 		"	福原香織	"	:	"	!Lucky Star\\Fukuhara Kaori	",
 		"	長谷川静香	"	:	"	!Lucky Star\\Hasegawa Shizuka	",
-		"	平野綾	"	:	"	!Lucky Star\\Hirano Aya	",
 		"	加藤英美里	"	:	"	!Lucky Star\\Kato Emiri	",
 		"	今野宏美	"	:	"	!Lucky Star\\Konno Hiromi	", 
 		"	井上麻里奈	"	:	"	!Minami-ke\\Inoue Marina	",
 		"	佐藤利奈	"	:	"	!Minami-ke\\Sato Rina	",
-		"	Petit Milady":	"	!Petit Milady	", 
-		"	悠木碧	"	:	"	!Petit Milady\\Yuuki Aoi	",
+		"	Petit Milady	":	"	!Petit Milady	", 
+		"	悠木碧		"	:	"	!Petit Milady\\Yuuki Aoi	",
 		"	ロウきゅーぶ! "	:	"	!Ro-Kyu-Bu	",
-		"	歌手		"	:	"	!Singer	",
-		"	Kalafina "	:	"	!Singer\\Kalafina	",
-		"	LiSA	"	:	"	!Singer\\LiSA	",
-		"	May'n	"	:	"	!Singer\\May'n	", 
+		"	Kalafina 	"	:	"	!Singer\\Kalafina	",
+		"	LiSA		"	:	"	!Singer\\LiSA	",
+		"	May'n		"	:	"	!Singer\\May'n	", 
 		"	茅原実里	"	:	"	!SOS-dan\\Chihara Minori",
 		"	後藤邑子	"	:	"	!SOS-dan\\Goto Yuko	",
-		"	平野綾	"	:	"	!SOS-dan\\Hirano Aya	", 
+		"	平野綾		"	:	"	!SOS-dan\\Hirano Aya	", 
 		"	スフィア	"	:	"	!Sphere	", 
-		"	戸松遥	"	:	"	!Sphere\\Tomatsu Haruka	",
-		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",
+		"	戸松遥		"	:	"	!Sphere\\Tomatsu Haruka	",
+		"	tomatsu haruka		":"	!Sphere\\Tomatsu Haruka	",				//multiple tags can point to one folder
+		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",					//not the other way, however, having keys repeating will only count the last occurrence
 		"	堀江由衣	"	:	"	!Yamato Nadeshiko\\Horie Yui",
 		"	田村ゆかり	"	:	"	!Yamato Nadeshiko\\Tamura Yukari	",
 		"	千葉紗子	"	:	"	Chiba Saeko	",
-		"	渕上舞	"	:	"	Fuchigami Mai	",
-		"	藤田咲	"	:	"	Fujita Saki	",
+		"	渕上舞		"	:	"	Fuchigami Mai	",
+		"	藤田咲		"	:	"	Fujita Saki	",
 		"	後藤沙緒里	"	:	"	Goto Saori	",
 		"	花澤香菜	"	:	"	Hanazawa Kana	",
 		"	早見沙織	"	:	"	Hayami Saori	",
 		"	井口裕香	"	:	"	Iguchi Yuka	",
 		"	井上喜久子	"	:	"	Inoue Kikuko	",
 		"	伊藤かな恵	"	:	"	Ito Kanae	",
-		"	伊藤静	"	:	"	Ito Shizuka	",
+		"	伊藤静		"	:	"	Ito Shizuka	",
 		"	門脇舞以	"	:	"	Kadowaki Mai	",
 		"	金元寿子	"	:	"	Kanemoto Hisako	",
 		"	茅野愛衣	"	:	"	Kayano Ai	",
@@ -84,197 +85,242 @@
 		"	水樹奈々	"	:	"	Mizuki Nana	",
 		"	桃井はるこ	"	:	"	Momoi Haruko	",
 		"	中原麻衣	"	:	"	Nakahara Mai	",
-		"	中島愛	"	:	"	Nakajima Megumi	",
+		"	中島愛		"	:	"	Nakajima Megumi	",
 		"	名塚佳織	"	:	"	Nazuka Kaori	",
 		"	野川さくら	"	:	"	Nogawa Sakura	",
-		"	野中藍	"	:	"	Nonaka Ai	",
+		"	野中藍		"	:	"	Nonaka Ai	",
 		"	能登麻美子	"	:	"	Noto Mamiko	",
 		"	折笠富美子	"	:	"	Orikasa Fumiko	",
-		"	朴璐美	"	:	"	Paku Romi	",
+		"	朴璐美		"	:	"	Paku Romi	",
 		"	酒井香奈子	"	:	"	!Lovedoll\\Sakai Kanako	",
 		"	榊原ゆい	"	:	"	Sakakibara Yui	",
 		"	坂本真綾	"	:	"	Sakamoto Maaya	",
 		"	佐倉綾音	"	:	"	Sakura Ayane	",
 		"	沢城みゆき	"	:	"	Sawashiro Miyuki	",
 		"	椎名へきる	"	:	"	Shiina Hekiru	",
-		"	清水愛	"	:	"	Shimizu Ai	",
+		"	清水愛		"	:	"	Shimizu Ai	",
 		"	下田麻美	"	:	"	Shimoda Asami	",
 		"	新谷良子	"	:	"	Shintani Ryoko	",
 		"	白石涼子	"	:	"	Shiraishi Ryoko	",
 		"	田中理恵	"	:	"	Tanaka Rie	",
-		"	丹下桜	"	:	"	Tange Sakura	",
+		"	丹下桜		"	:	"	Tange Sakura	",
 		"	東山奈央	"	:	"	Toyama Nao	",
 		"	植田佳奈	"	:	"	Ueda Kana	",
 		"	上坂すみれ	"	:	"	Uesaka Sumire	",
-		"	ゆかな		"	:	"	Yukana	"};
+		"	ゆかな		"	:	"	Yukana	"
+	};
 
-	ignore={'内田真礼':true, '小倉唯':true, '歌手':true, 'seiyuu':true, '声優':true};		
-																		//these tags will not count towards any category and won't be included into filename
+	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};			//These tags will not count towards any category and won't be included into filename
+																			// e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
+																			// to disable an entry without removing it use "false" as the value
 
-	var storeUrl='//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
-																		//flash databases are bound to the URL.  									
-	var debug=true;														//disable cleanup, leaving variables and flash objects in place (causes lag on tab close)
-																		//also enables export and import of names and meta tag databases to/from a text file
-																		//also will cause "downloadify" button to appear even if no DB record was found 
+	var allowUnicode=	false;												//Whether to allow unicode characters for manual translation input, not tested
+	
+	var useFolderNames=	true;												//In addition to tags listed in folders object, use also folder names themselves as tags
+																			// this way you won't have to provide both roman and kanji spellings for names as separate tags
+
+	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
+																			//Flash databases are bound to the URL, must be same as in the other script
+	var	downloadifySwf=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.swf';			
+																			//Flash button URL
+	var debug=			false;												//Initial debug value, affects creation of flashDBs, can be changed via GUI
+																			// debug enables error notification, shows im/export controls for aux dbs 
+																			// and save button even if no tags were found
 // ==/Settings=========================================================
-
-var style=" 									\
-	div#downport {								\
-		position:fixed;							\
-		border-bottom:1px solid black;			\
-	}											\
-	table#port {								\
-		width:100px;							\
-		background-color: rgba(192,192,192,0.8);\
-		border-bottom: 1px solid black;			\
-		padding:0;								\
-		font-weight:bold;						\
-		z-index:98;								\
-		border-collapse:collapse;				\
-	}											\
-	div#output {								\
-		position:absolute;						\
-		left:0; top:0;							\
-		width:100px; height:30px;				\
-		z-index:99;								\
-	}											\
-	div#down {									\
-		padding-top:0;							\
-		width:100px;							\
-		height:30px;							\
-		z-index:100;							\
-	}											\
-	input.txt {									\
-		width:95%;								\
-	}											\
-	table, tr {									\
-		text-align:center;						\
-	}											\
-	td#debug {									\
-		font-weight:normal;						\
-	}											\
-	td.cell	{									\
-		border:1px solid black;					\
-	}											\
-	td.settings {								\
-		border-left: 1px solid black;			\
-		border-right:1px solid black;			\
-	}											\
-	table.cell	{								\
-		width:100%; 							\
-		border-collapse: collapse;				\
-	}											\
-	table#translations 	{						\
-		border-spacing: 5px;					\
-		background-color: rgba(255,255,255,0.8);\
-		font-size:90%;							\
-		width:108px;							\
-		table-layout:fixed;						\
-		z-index:-1;								\
-		margin-left:-4px;						\
-		position:absolute;						\
-		top:31px;								\
-	}											\
-	a {											\
-		font-family:Arial;						\
-		font-size:small;						\
-		text-align:center;						\
-		content-align:center;					\
-	}											\
-	a.settings {								\
-		text-decoration:none;					\
-	}											\
-	th {										\
-		border:0;								\
-	}											\
-	input#submit{								\
-		width:98%;								\
-		height:29px;							\
-	}											\
-	input#debug{								\
-	    margin: 0;								\
-    	margin-bottom: 2;						\
-    	vertical-align: middle;					\
-	}											\
-";
-
- tagsDB=null;
- names=null ;
- meta=null ; 
-var retry=false;
-var filename;
+																			//Communication between functions here is mostly done via global variables
+var  tagsDB=null;
+var  names=null ;
+var  meta=null ; 															
+var filename;															
 var folder = ''; 
-var myValue;
-var a=b=c=false;
-var runonce=true; 
-var unsorted=false;
+var DBrec='';																//raw DB record, stringified object with fields for saved flag and tag list
+var N=M=T=false;															//flags indicating readyness of plugins loaded simultaneously
+//	var runonce=true; 															//flag ensuring that onready() is only executed once
+var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;										//pattern of characters not to be used in filepaths
+
+var style={																	//in an object so you can fold it in editor, if you had it in chrome, that is
+	s:"		 							\
+	div#output {						\
+		position: absolute;				\
+		left: 0;		top: 0;			\
+		width: 100px;	height: 30px;	\
+	}									\
+	div#down {							\
+		position: fixed;				\
+		z-index: 98;					\
+	}									\
+	table#port {						\
+		top: 30px;						\
+		position: fixed;				\
+		border-bottom: 1px solid black;	\
+		background: lightgray;			\
+		z-index: 97;					\
+		width: 101px;					\
+		border-collapse: collapse;		\
+	}									\
+	table#translations {				\
+		border-spacing: 5px;			\
+		position: absolute;				\
+		top: 52px;						\
+		overflow: scroll;				\
+		font-size: 90%;					\
+		margin-left: -5px;				\
+		width: 110px;					\
+		table-layout: fixed;			\
+	}									\
+	td.settings {						\
+		border-left:  1px solid black;	\
+		border-right: 1px solid black;	\
+	}									\
+	a.settings {						\
+		text-decoration: none;			\
+	}									\
+	table, tr {							\
+		text-align: center;				\
+	}									\
+	td#ex {								\
+		padding: 0;						\
+	}									\
+	input.txt {							\
+		width: 95%;						\
+	}									\
+	td.cell, td.radio{					\
+		border: 1px solid black;		\
+		overflow:	hidden;				\
+	}									\
+	table.cell {						\
+		background: white;				\
+		width: 100%; 					\
+		border-collapse: collapse;		\
+	}									\
+	a {									\
+		font-family: Arial;				\
+		font-size:   small;				\
+	}									\
+	th {								\
+		border: 0;						\
+	}									\
+	input#submit {						\
+		width:  98%;					\
+		height: 29px;					\
+	}									\
+"};
 		
-uu = document.createElement('div');										//layers that will hold the download button and table for unknown tags
-	uu.id = "output" ; 
-	uu.innerHTML="<div id='downport'><div id='down' > </div></div>";
+out = document.createElement('div');										//main layer that holds the GUI
+	out.id = "output" ; 
+	out.innerHTML="<div id='down'> </div>";									//sublayer for downloadify button
  
-tb=document.createElement('table');										//table for entering manual translation of unknown tags
+tb=document.createElement('table');											//table for entering manual translation of unknown tags
 	tb.id='translations';
 	tagcell='<table class="cell"><tr>														\
-		<td class="cell"><input type="radio" class="category"  value="name"  /></td>	\
-		<td class="cell"><input type="radio" class="category"  value="meta"/></td>			\
-		</tr><tr><td colspan="2"><a href="#" title="Click to ignore this tag for now" class="ignr">';
-																		//each cell has the following in it:
-																		//	two radiobuttons to choose a category for the tag - name or meta
-																		//	the tag itself, either in roman or in kanji
-																		//		the tag is also a link, clicking which removes the tag from results until refresh
-																		//	if the tag is in kanji, cell has text field to input translation manually
-																		// 		if there are also roman tags, they are used as options for quick input into text field
-																		//	if the tag is in roman and consists of two words, cell has a button to swap their order
-																		//		otherwise the button is disabled
+		<td class="radio"><input type="radio" class="category"  value="name"/></td>			\
+		<td class="radio"><input type="radio" class="category"  value="meta"/></td>			\
+		</tr><tr><td colspan="2"><a href="#" title="Click to ignore this tag for now" onclick=ignor3(this)>';
+																			//each cell has the following in it:
+																			//	two radiobuttons to choose a category for the tag - name or meta
+																			//	the tag itself, either in roman or in kanji
+																			//		the tag is also a link, clicking which removes the tag from results until refresh
+																			//	if the tag is in kanji, cell has text field to input translation manually
+																			// 		if there are also roman tags, they are used as options for quick input into text field
+																			//	if the tag is in roman and consists of two words, cell has a button to swap their order
+																			//		otherwise the button is disabled
 	foot=tb.createTFoot();
 	row=foot.insertRow(0);
 	row.innerHTML='<input type="submit" id="submit" onclick=submit() value="submit">';
-	head=tb.createTHead();												//at the bottom of the table there is the "submit" button that stores changes
-	row=head.insertRow(0);												// and relaunches tag analysis without reloading the image
+	head=tb.createTHead();													//at the bottom of the table there is the "submit" button that stores changes
+	row=head.insertRow(0);													// and relaunches tag analysis without reloading the image
 	row.insertCell(0).innerHTML='<table class="cell" style="font-width:95%; font-size:small;">\
 		<tr class="cell" ><th class="cell">name</th><th class="cell">meta</th></tr></table>';	
 	tb.hidden="hidden";
 	
-port=document.createElement('table');									//subtable for exporting and importing auxiliary tags database
+port=document.createElement('table');										//subtable for settings and im/export of tag databases
 	st2=port.style;
 	row= port.insertRow(0);
 	cell=row.insertCell(0);
 	cell.setAttribute('class','settings');
-	cell.innerHTML=' <a href="##"   class="settings">- settings -</a> ';	
+	cell.innerHTML=' <a href="##" onclick=toggleSettings() class="settings">- settings -</a> ';	
 	row0=port.insertRow(1);
-	cell0=row0.insertCell(0);
-	cell0.id="debug";
-	cell0.innerHTML=' <input type="checkbox" id="debug"  onchange="debugSwitch(this)" /><span> debug</span>';	
+	row0.insertCell(0).innerHTML='<input type="checkbox" id="debug"  onchange="debugSwitch(this)" /> debug';	
 	row1=port.insertRow(2);
-	row1.insertCell(0).innerHTML='<a href="###" id="ex" >export db</a>';
+	row1.insertCell(0).innerHTML=' <a href="###" onclick=ex() id="aex" class="exim">export db</a>';
 	row2=port.insertRow(3);	
+	row2.insertCell(0).id='ex';
 	row3=port.insertRow(4);
-	row3.insertCell(0).innerHTML=' <a href="####" id="im"  >import db</a> ';	
+	row3.insertCell(0).innerHTML=' <a href="####" onclick=im() id="aim" class="exim">import db</a> ';	
 	row4=port.insertRow(5);
+	row4.insertCell(0).id='im';
 	port.id='port';
 
-trimObj(folders);																														
-																		
-var xhr = new XMLHttpRequest();											//redownloads opened image as blob 
-	xhr.responseType="blob";											//so that it would be possible to get it via downloadify button
-	xhr.onreadystatechange = function() {								//supposedly the image is being taken from cache so it shouldn't cause any slowdown
+trimObj(folders, useFolderNames);											//run checks on user-input content and format it
+trimObj(ignore);	
+
+window.onerror = function(msg, url, line, col, error) {						//general error handler
+   var extra = !col ? '' : '\ncolumn: ' + col;
+   extra += !error ? '' : '\nerror: ' + error;								//shows '✗' for errors and also alerts a message if in debug mode
+   if (msg.search('this.swf')!=-1) 
+	 return true;															//except for irrelevant errors
+   document.title+='✗';
+   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+   var suppressErrorAlert = true;
+   return suppressErrorAlert;
+};
+
+var xhr = new XMLHttpRequest();												//redownloads opened image as blob 
+	xhr.responseType="blob";												//so that it would be possible to get it via downloadify button
+	xhr.onreadystatechange = function() {									//supposedly the image is being taken from cache so it shouldn't cause any slowdown
 		if (this.readyState == 4 && this.status == 200) {
 			var blob=this.response;
 			var reader = new window.FileReader();
-			debugger;
 			reader.readAsDataURL(blob); 
 			reader.onloadend = function() {
-				base64data = reader.result;             
+				base64data = reader.result;                
 				base64data=base64data.replace(/data\:image\/\w+\;base64\,/,"");
-				dl(base64data);											//call button creation function
+				dl(base64data);												//call the button creation function
 		}
-	}// else 		alert('Error getting image: '+this.status);
+	} else if ((this.status!=200)&&(this.status!=0)) {
+		if (this.status==404) {
+			cleanup(true);
+			document.title='Error '+this.status;
+			throw new Error('404');
+		};							//TODO: add fallback to tumblr hosted image if link url fails (requires storing post id and blog name)
+		throw new Error('Error getting image: '+this.status);
+	};
 };
 
-document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
+function trimObj(obj, ufn){													//remove trailing whitespace in object keys and values & check correctness of user input
+	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;											//make sure that folder names have no illegal characters
+  try {
+	roota=root.split('\\');
+	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) 
+		throw new Error('Illegal characters in root folder path: "'+root+'"');
+	ms=ms[0];																//it's a symbol, not a string, after all
+	if ((exclrgxp.test(ms))||(/\\/.test(ms)))  
+		throw new Error ('Illegal character as metasymbol: "'+ms+'"');
+	for (var key in obj) {													//convert keys to lower case for better matching
+		if (obj.hasOwnProperty(key)) { 
+			t=obj[key];			
+			delete obj[key];
+			if (typeof t == 'string') {
+				t=t.trim();
+				if (ufn) {													//expand DB with tags produced from folders names
+					rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
+					x=getFname(t).toLowerCase().replace(rx,'');
+					obj[x]=t;
+				};
+			};
+			k=key.trim().toLowerCase();
+			obj[k]=t;
+			if (exclrgxp.test(obj[k]))  									//can't continue until the problem is fixed
+				throw new Error('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"'); 
+		};
+	};
+  } catch (err) {
+		alert(err.name+': '+err.message);									//gotta notify the user somehow
+		//throw err;
+  };
+}; 															//TODO: even more checks here
 
-function toggleSettings(){
+function toggleSettings(){												//show drop-down menu with settings
 	$('table#port td').not('.settings').toggle();
 	$('table#translations').css('top',($('table#port').height()+30)+'px');
 	sign=$('a.settings')[0];
@@ -284,21 +330,30 @@ function toggleSettings(){
 		sign.innerText=sign.innerText.replace(/\-/gi,'+');
 };
 
-function debugSwitch(checkbox){
+function debugSwitch(checkbox){											//toggling debug mode requires page reload
 	debug = checkbox.checked;
 	tagsDB.set(':debug:',debug );
 	location.reload();
 };
 
+document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
+
 function onDOMcontentLoaded(){ 											//load plugins and databases
-	 $('img').wrap("<center></center>");
-	$('body')[0].appendChild(uu);
+	if (window.top != window.self)  									//don't run on frames or iframes
+		return;
+	href=document.location.href;
+	if (href.indexOf('tumblr')!=-1) 									//if not on tumblr
+		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))		//check if this is actually an image link
+			return;
+	$('img').wrap("<center></center>");
+	$('body')[0].appendChild(out);
 
 	names = new SwfStore({												//auxiliary database for names that don't have folders
 		namespace: "names",
 		swf_url: storeUrl,  
-		onready: function(){	document.title+=' N ';
-			a=true;
+		onready: function(){
+			document.title+=' N ';
+			N=true;
 			mutex();
 		},
 		onerror: function() {
@@ -309,107 +364,94 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		namespace: "meta",
 		swf_url: storeUrl,   
 		onready: function(){	
-			b=true;
+			M=true;
 			mutex();
 		},
 		onerror: function() {
 			document.title+=' ✗ meta failed to load';}
 	});
 																			
-	tagsDB = new SwfStore({												//loading tag database, holds pairs "filename	is_saved,tag1,tag2,...,tagN"
+	tagsDB = new SwfStore({												//loading main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
 		namespace: "animage",
 		swf_url: storeUrl,   
-		onready: function(){ document.title+=' T ';
+		onready: function(){ 
+			document.title+=' T ';
 			debug =(tagsDB.get(':debug:')=='true');
 			tagsDB.config.debug=debug;
 			getTags();
 		},
 		debug: debug,
-		onerror: function() {document.title='tagsdb error';
-			//alert('tagsDB failed to load');
+		onerror: function() {
+			document.title='tagsdb error';
+			throw new Error('tagsDB failed to load');
 		}
 	});
-	tagsDB.config.debug=debug;
 };
 
-function getTags(){														//manages tags acquisition for current image file name from db
-	myValue=tagsDB.get(getFname(document.location.href));				//first attempt at getting taglist for current filename is done upon the beginning of image load
-	if ((!myValue)&&(!retry)) {
-		retry=true;
-		window.addEventListener('load', getTags() , false);				//if no tags found yet the second check is scheduled to the end of image load
-        																//scheduling doesn't seem to work in Chrome though
-	} 
-	else if (myValue || debug){		
-		c=true;															//proceed only if tags were found or we're in debug mode
-		mutex();
-	}
-	else
-		cleanup(true);													//if nothing is found remove all flash objects and databases from the page as if nothing happened
+function getTags(retry){												//manages tags acquisition for current image file name from db
+	DBrec=JSON.parse(tagsDB.get(getFname(document.location.href)));		//first attempt at getting taglist for current filename is done upon the beginning of image load
+	if ((DBrec!=null) || (debug)) {										//if tags are found, all is fine, report readiness
+		T=true;															//or if we're in debug mode, proceed anyway
+		mutex();		
+	} else 
+		if ((retry) || (document.readyState=='complete'))				//otherwise if we ran out of attempts or it's too late 
+			cleanup(false)												//remove extra stuff as if nothing happened
+		else {
+			retry=true;													//but if not schedule a second attempt at retrieving tags to image load end
+			window.addEventListener('load',function(){ getTags(true);},false);
+		};										
+};										//TODO: make getTags actually return  the value to main() to get rid of global var
+
+function mutex(){														//checks readiness of plugin and databases when they're loading simultaneously 
+	if (N && M && T) {													//when everything is loaded, proceed further
+		main();
+		N=M=T=false;													//no multiple calling anymore for you
+	};
+};
+	
+function main(){ 														//launch tag processing and handle afterwork
+	$( "<style>"+style.s+"</style>" ).appendTo( "head" );				//assign functions to events and whatnot
+	$('div#output').append(port);	
+	toggleSettings();	
+	$('input#debug').prop('checked',debug);	
+	$('a#aim')[0].onclick=im; 
+ 	$('a#aex')[0].onclick=ex; 
+	$('a.settings')[0].onclick=toggleSettings;
+	$('input#debug')[0].onclick=function(){debugSwitch(this);};
+
+	if (debug) 
+		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute');
+												//TODO: make the code above run regardless of found DB record
+	$('div#output').append(tb);
+	unsorted=analyzeTags();
+	$('input#submit')[0].onclick=submit; 
+ 	$.each($('a.ignr'),function(i,v){v.onclick=function(){ignor3(this);};}); 
+	
+	xhr.open("get", document.location.href, true); 						//reget the image to attach it to downloadify button
+	xhr.send();  
+		
+	if (!unsorted)
+		cleanup(false);													//until the save button is clicked only remove aux databases if they're not needed
 };
 
 function isANSI(s) {													//some tags might be already in roman and do not require translation
 	is=true;
-    s=s.split('');
 	$.each(s,function(i,v){
 		is=is&&(/[\u0000-\u00ff]/.test(v));});
     return is;
-}
-
-function trimObj(obj){ 													//remove trailing whitespace in object keys and values,
-	for (var key in obj) {												// also convert keys to lower case for better matching
-		if (obj.hasOwnProperty(key)) { 									// also make sure that folder names have no illegal characters
-			rgxp=/\/|:|\||>|<|\?|"/g;
-			t=obj[key].trim();
-			k=key.trim().toLowerCase();
-			delete obj[key];
-			obj[k]=t;
-			if (rgxp.test(obj[k])) {
-				alert('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"');
-				throw new Error('Illegal character in database error');
-				return false;											//can't continue until the problem is fixed
-			};
-		};
-	};
-}; 
-
-function mutex(){														//checks readiness of plugin and database when they're loading simultaneously 
-	if (a && b && c)												//when everything is loaded, proceed further
-		main();
-};
-
-function main(){ 														//launch tag processing and handle afterwork
-  if (runonce){															//some parts of the script just keep executing several times instead of only one
-	$( "<style>"+style+"</style>" ).appendTo( "head" );
-	unsorted=analyzeTags();
-	$('div#down').after(port);										
-	$('div#downport').after(tb);	
-	toggleSettings();	
- 	$('a#im')[0].onclick=im; 
- 	$('a#ex')[0].onclick=ex; 
-	$('a.settings')[0].onclick=toggleSettings;
-	$('input#debug')[0].onclick=function(){debugSwitch(this);};
-	if (debug)	{
-		$('table#translations').css('top',$('div#downport').height());
-		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute').css('opacity','0.66');
-	} else 
-		$("div[id^='SwfStore_animage_']").css('top','-2000px').css('left','-2000px').css("position",'absolute');
-	$('input#debug').prop('checked',debug);
-	$('input#submit')[0].onclick=submit; 
- 	$.each($('a.ignr'),function(i,v){v.onclick=function(){ignor3(this);};}); 
-	xhr.open("get",document.location.href,  true); 						//reget the image to attach it to downloadify button
-	xhr.send(myValue);  														
- };	
- runonce=false;
 };
 
 function analyzeTags() {   												//this is where the tag matching magic occurs
 	filename=getFname(document.location.href, true);
- 	if (!myValue) return;												//if there are any tags, that is
+ 	if (!DBrec) return;													//if there are any tags, that is
 	folder='';
-    document.title=myValue;												//show raw DB record while the image is loading because why not
+
+    if (debug)
+		document.title=JSON.stringify(DBrec,null,' ')+' '				//show raw DB record 
+	else
+		document.title='';												
 	
-	tags=myValue.split(','); 	
-	tags.shift();														//first value in the list is "saved" flag, not tag
+	tags=DBrec.t.split(',');
  
 	fldrs=[];
 	nms=[];
@@ -417,24 +459,31 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	ansi={}
 	rest=[];
 	
-	tags=$.map(tags,function(v,i){										//some formatting is applied to taglist before processing
-		v=v.replace(/’/g,"\'");				
-		v=v.replace(/"/g,"''");		
-		v=v.toLowerCase();										
-		$.each(tags, function(ii,vv){
-			if (ii==i) return true;
-			sp=vv.split(' ');
-			if (vv.length>1) 
-				if (sp.join('')==v)
-					tags[ii]='';										//some bloggers put kanji tags both with and without spaces, remove duplicates with spaces
-		});
+	tags=$.map(tags,function(v,i){										//some formatting is applied to the taglist before processing
+		
+		sp=v.split(' ');	
+		if (sp.length>1) 
+			$.each(tags, function(ii,vv){
+				if (ii==i) return true;
+				if (sp.join('')==vv) 
+					return v=false;										//some bloggers put kanji tags both with and without spaces, remove duplicates with spaces
+				}
+			); 
+		
+		if (!v) 
+			return null;
+
+		v=v.replace(/’/g,"\'").replace(/"/g,"''");					
+		v=v.replace(/\\/g, '-');									
 		v=v.replace(/(ou$)|(ou )/gim,'o ').trim();						//eliminate variations in writing 'ō' as o/ou at the end of the name in favor of 'o'
 																		//I dunno if it should be done in the middle of the name as well
-		if ((ignore[v])||(!v)) return null								//remove ignored tag so that they don't affect tag amount
+																
+		if ((ignore[v])||(ignore[v.split(' ').reverse().join(' ')]))
+			return null													//remove ignored tags so that they don't affect the tag amount
 		else return v;
-	});
+	});		
 																		//1st sorting stage, no prior knowledge about found categories
-	$.each(tags, function(i,v){ 										//split the tags for the image into 5 categories
+	$.each(tags, function(i,v){ 										//divide tags for the image into 5 categories
 		if (folders[v]) 												//	the "has folder" category
 			fldrs.push(folders[v])
 		else if (names.get(v)) 											//	the "no folder name tag" category
@@ -446,152 +495,157 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 				nms.push(v)												//if it's the only tag it is most likely the name
 			else {														//	otherwise put it into the "ansi" category that does not require translation
 				splt=v.split(' ');
-				if (splt.length==2)										//some bloggers put tags for both name reading orders (name<->surname),
-					if (ansi[splt.reverse().join(' ')])					// thus creating duplicating tags, let's remove those
+				if (splt.length==2)	{									//some bloggers put tags for both name reading orders (name<->surname),
+					rvrs=splt.reverse().join(' ');
+					if (names.get(rvrs)) {								// thus creating duplicating tags
+						nms.push(names.get(rvrs))						//try to find database entry for reversed order first,
+						return true;									
+					}
+					else if (ansi[rvrs])								// then check for duplicates		
 						return true;
-				ansi[v]=true;
+				}
+				ansi[v]=true;											
 			};
-		}
+		}										//TODO: add checks for common mistakes in kanji names like 実/美 & 奈/菜
 		else
 			rest.push(v);												//	finally the "untranslated" category
 	});
 																		//2nd sorting stage, now we know how many tags of each category there are
 																		//it's time to filter the "ansi" category further
 	$.each(fldrs.concat(nms.concat(mt)), function(i,v){					//some bloggers put both kanji and translated names into tags
-		x=getFname(v).toLowerCase();									
-		if (x.indexOf('!')==0) x=x.replace('!','');
+		rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			//potential problem?
+		x=getFname(v).toLowerCase().replace(rx,'');
 		y=x.split(' ').reverse().join(' ');								//check if we already have a name translated to avoid duplicates
 		delete ansi[x];													//I have to again check for both orders even though I deleted one of them before
-		delete ansi[y];													// but at the time of deletion there is no way to know yet which one would match the kanji tag
-	});
-	
-	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);				//unsorted flag is set if there are tags outside of 3 main categories with databases
-//	if (unsorted) 
-		mt=mt.concat(Object.keys(ansi));
-		
+		delete ansi[y];													// but at the time of deletion there was no way to know yet which one would match the kanji tag
+	});																	//this also gets rid of reverse duplicates between recognized tags and ansi
+	fldrs=mkUniq(fldrs);	
 	fldrs2=[];						
-
 	fldrs=$.grep(fldrs,function(v,i){									//a trick to process folders for meta tags, having subfolders for names inside
-		if (getFname(v).indexOf('!')==0) {								//such folders must have "!" as the first symbol 
-			folders['!!solo']=v;										// replace solo folder with metatag folder, explained in 3rd sorting stage
-			if (true)//(fldrs.length==2)||(unsorted))  						//if there are two tags one might be the metafolder tag and the other name tag
-				mt.push(getFname(v).replace('!',''));					// in this case meta tag will be added to filename because the image goes into name folder,
-																		// not directly to meta
-																		////not sure, but I think it should add the meta tag into filename regardless of anything
-			if (fldrs.concat(nms).length==1)
-				folder+=v+'\\'											//in the very rare case when there are no name tags at all we still put the image to meta folder
+		fmeta=getFname(v);
+		if ((fmeta.indexOf(ms)==0)) {									//such folders must have the metasymbol as the first character
+			fldrs2.push(fmeta);
+			if (fldrs.concat(nms).length==1)							//in the rare case when there are no name tags at all we put the image to meta folder
+				folder+=v+'\\'											// no need to put meta tag into filename this way, since the image will be in the same folder
 			else
-				folders['!!group']=v;	 								//if there are more tags they all belong to the metatag folder, taking place of the "group" one,
-				return false;											// explained in 3rd  stage
+				mt.push(fmeta.replace(ms,''));	 						//usually it needs to be done though
+			return false;												//exclude processed meta tags from folder category
 			}
 		else
 			return true;												//return all the non-meta folder tags
 		}
 	);
-		
-	fn="";			
+	if (fldrs2.length==1) {												//make sure only one folder meta tag exists
+		folders['!!solo']=fldrs2[0];									//replace solo folder with metatag folder, so the image can go there if needed,
+		folders['!!group']=fldrs2[0];									// same for group folder (see 3rd sorting stage)
+	};		
 	fldrs2=$.map(fldrs,function(vl,ix){
 		return getFname(vl);											//extract names from folder paths
-	});					
+	});		
+	
+	mt=mt.concat(Object.keys(ansi));									//roman tags have to go somewhere until assigned a category manually	
 	filename=(mkUniq(fldrs2.concat(nms)).concat(['']).concat(mkUniq(mt)).join(',').replace(/\s/g,'_').replace(/\,/g,' ')+' '+filename).trim();																	
 																		//format the filename in a booru-compatible way, replacing spaces with underscores,
 																		// first come the names alphabetically sorted, then the meta sorted separately 
 																		// and lastly the original filename;		
 																		// any existing commas will be replaced with spaces as well	
 																		//this way the images are ready to be uploaded to boorus using the mass booru uploader script
-	document.title='';
-	tb.setAttribute("hidden","hidden");		
-																		//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
+																		
+	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);				//unsorted flag is set if there are tags outside of 3 main categories 
+	tb.setAttribute("hidden","hidden");				
+	fn='';																//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
+	nms=mkUniq(nms);
 	if (unsorted)  {													//if there are any untranslated tags, make a table with text fields to provide manual translation
-		tb.removeAttribute("hidden");									//build the table with manual translation inputs 
-		options='';
-		tbd=tb.appendChild(document.createElement('tbody'));
-		$.each(ansi, function(i,v){										//first process the roman tags
-			row1=tbd.insertRow(0);
-			cell1=row1.insertCell(0);  
-			cell1.id=i;
-			if (i.split(' ').length==2)									//for roman tags consisting of 2 words enable button for swapping their order
-				swp='<input type="button" value="swap" onclick="swap(this)" />'
-			else 														//script can't know which name/surname order is correct so the choice is left to user
-				swp='<input type="button" value="swap" disabled="disabled" />';
-				
-			cell1.innerHTML=tagcell+i+'</a><br>'+swp+'</td></tr></table>'; 
-			
-			$(cell1).attr('class','cell ansi');
-			$(cell1).find('input[type="radio"]').attr('name',i);			
-			options='<option value="'+i+'"></option>'+options;			//populate the drop-down selection lists with these tags
-																		//so they can be used for translating kanji tags if possible
-		}); 
-		$.each(rest, function(i,v){										//now come the untranslated kanji tags
-			fn+='['+v.replace(/\s/g,'_')+']'+' '; 						//such tags are enclosed in [ ]  in filename for better searchability on disk
-			row1=tbd.insertRow(0);
-			cell1=row1.insertCell(0); 
-			cell1.id=v;
-			cell1.innerHTML=tagcell+v+'</a><br><input list="translation" size=10 class="txt" onchange="selected(this)"/>\
-				<datalist id="translation">'+options+'</datalist></td></tr></table>'; 
-			$(cell1).attr('class','cell kanji');
-			$(cell1).find('input[type="radio"]').attr('name',v);
-		}); 															//in case the blogger provided both roman tag and kanji tag for names,
-																		// the user can simply select one of roman tags for every kanji tag as translation
-																		// to avoid typing them in manually				
+		buildTable(ansi, rest);
 		folder=folders["!!unsorted"]+'\\';   							//mark image as going to "unsorted" folder if it still has untranslated tags
-		filename=fn+ ' '+filename;
-		document.title='✗ ';											//no match ;_;
-	} else															
+		filename=fn+' '+filename;
+		document.title+='? ';											//no match ;_;
+	} else											//TODO: option to disable unsorted category if translation is not required by user
 	 if ((fldrs.length==1)&&(nms.length==0)){							//otherwise if there's only one tag and it's a folder tag, assign the image right there
 		folder=fldrs[0]+'\\';
 		filename=filename.split(' ');
 		filename.shift();												//remove the folder name from file name since the image goes into that folder anyway
 		filename=filename.join(' ').trim();
-		document.title='✓ '; 											//100% match, yay
+		document.title+='✓ '; 											//100% match, yay
 	} else
-	 if ((nms.length==1)&&(fldrs.length==0)){							//if there's only one name tag without a folder for it, goes into default "solo" folder
-		folder=folders['!!solo']+'\\'; 									// unless we had a !metafolder tag earlier, then the solo folder would have been 
+	 if ((fldrs.length==0)&&(nms.length==1)){							//if there's only one name tag without a folder for it, goes into default "solo" folder
+		folder=folders['!!solo']+'\\'; 									// unless we had a !meta folder tag earlier, then the solo folder would have been 
 																		// replaced with the appropriate !meta folder
 	} else 
-	 if (nms.length+fldrs.length>0)										//otherwise if there are several name tags, folder or not, move to the default "group" folder
+	 if (nms.length+fldrs.length>1)										//otherwise if there are several name tags, folder or not, move to the default "group" folder
 		folder=folders['!!group']+'\\';									// same as the above applies for meta
-	filename=filename.replace(/\/|\\|:|\||>|<|\?|"/g,'-').trim();		//make sure there are no forbidden characters in the resulting path
+	filename=filename.replace(exclrgxp, '-').replace(/\\/g, '-').trim();//make sure there are no forbidden characters in the resulting name 
 	document.title+=' \\'+folder+filename;
 	folder=root+folder;													//if no name or folder tags were found, folder will be set to root directory
-														
-	folder=folder.replace(/\/|\||>|<|\?|"/g,'-');
-
-	if (myValue.split(',')[0]=='1') document.title+=' - already saved';	//indicate if the image has been marked as saved already
+	
+	if (DBrec.s=='1') document.title+=' (already saved)';				//indicate if the image has been marked as saved before
 	return unsorted;
+};
+
+function buildTable(ansi, rest) {										//create table for untranslated tags for manual input
+
+	tb.removeAttribute("hidden");										//build the table with manual translation inputs 
+	options='';
+	tbd=tb.appendChild(document.createElement('tbody'));
+	$.each(ansi, function(i,v){											//first process the unassigned roman tags
+		row1=tbd.insertRow(0);
+		cell1=row1.insertCell(0);  
+		cell1.id=i;
+		swp='<input type="button" value="swap" onclick="swap(this)" id="swap" />'
+		cell1.innerHTML=tagcell+i+'</a><br>'+swp+'</td></tr></table>'; 
+		if (i.split(' ').length!=2)										//for roman tags consisting of 2 words enable button for swapping their order
+			$(cell1).find('input#swap').attr('disabled','disabled');	//script can't know which name/surname order is correct so the choice is left to user
+		$(cell1).attr('class','cell ansi');
+		$(cell1).find('input[type="radio"]').attr('name',i);			
+		options='<option value="'+i+'"></option>'+options;				//populate the drop-down selection lists with these tags
+	});																	//so they can be used for translating kanji tags if possible
+ 
+	$.each(rest, function(i,v){											//now come the untranslated kanji tags
+		fn+='['+v.replace(/\s/g,'_')+']'+' '; 							//such tags are enclosed in [ ]  in filename for better searchability on disk
+		row1=tbd.insertRow(0);
+		cell1=row1.insertCell(0); 
+		cell1.id=v;
+		cell1.innerHTML=tagcell+v+'</a><br><input list="translation" size=10 class="txt" onchange="selected(this)"/>\
+			<datalist id="translation">'+options+'</datalist></td></tr></table>'; 
+		$(cell1).attr('class','cell kanji');
+		$(cell1).find('input[type="radio"]').attr('name',v);			//in case the blogger provided both roman tag and kanji tag for names,
+	}); 																// the user can simply select one of roman tags for every kanji tag as translation
+																		// to avoid typing them in manually	
 };
 
 function ignor3(anc){													//remove clicked tag from results for current session (until page reload)
 	ignore[anc.innerText]=true;											//this way you don't have to fill in the "ignore" list, 
-																		// you'll still be able to control which tags will be counted
-	$(anc).parent().parent().parent().parent().parent().parent().attr('hidden','hidden');
-	$(anc).parent().parent().parent().parent().parent().parent().attr('ignore','ignore');
-																		//a long way up from tag link to tag cell table
-	$.each($('datalist').find('option'), function(i,v){					//hide these tags from drop-down lists of translations too
-		if (v.value==anc.innerText)
-			v.parentNode.removeChild(v);
-		}
-	);																	//if you hid the wrong tags, just reload the page to restore them
+																		// while still being able to control which tags will be counted
+	tdc=$(anc).parent().parent().parent().parent().parent().parent();	//a long way up from tag link to tag cell table					
+	tdc.attr('hidden','hidden');
+	tdc.attr('ignore','ignore');	
+
+	$.each($('datalist').find('option'), function(i,v){					//hide these tags from the drop-down lists of translations too
+		if (v.value==anc.innerText)										 
+			v.parentNode.removeChild(v);								 
+		}																 
+	);	 																//if you hid the wrong tags, just reload the page to restore them
 };
 
 function swap(txt){														//swap roman tags consisting of 2 words
-	data=$('datalist');													//these are most likely the names so can have different writing orders
+																		
+	data=$('datalist');													//these are most likely the names so they can have different writing orders
 	set=[];
+	theTag=$(txt).prev().prev()[0];
 	$.each(data.find('option'), function(i,v){
-		if (v.value==$(txt).prev().prev()[0].innerText)
-			set.push(v);
+		if (v.value==theTag.innerText)
+			set.push(v);												//collect all options from drop-down lists containing the tag to be swapped
 		}
 	);
-	text=$(txt).prev().prev()[0].innerText.split(' ');
-	if (text.length==2){
-		text=text.reverse();
-		$(txt).prev().prev()[0].innerText=text.join(' ');
-		$(txt).parent().parent().parent().parent().parent()[0].id=text.join(' ');
-		$.each(set,function(i,v){
-			v.value=text.join(' ');
-			}
-		);
-	};
+	swapped=theTag.innerText.split(' ').reverse().join(' ');
+
+	theTag.innerText=swapped;
+	tdc=$(txt).parent().parent().parent().parent().parent();			//change ids of tag cells as well
+	tdc.prop('swap',!tdc.prop('swap'));									//mark node as swapped
+	$.each(set,function(i,v){
+		v.value=swapped;												//apply changes to quick selection lists too
+		}
+	);
 };
 
 function selected(inp){													//hide the corresponding roman tag from results when it has been selected 
@@ -600,16 +654,16 @@ function selected(inp){													//hide the corresponding roman tag from resu
 	knj={};
 	$.each(kanji,function(i,v){
 		knj[v.value]=true;
-		$.each(ansi,function(ix,vl){ 
+		$.each(ansi,function(ix,vl){ 									//have to show a previously hidden tag if another was selected
 			if (vl.innerText.trim()==v.value.trim())
 				$(vl).parent().attr('hidden','hidden');
 			}
 		);
 		}
 	);
-	$.each(ansi,function(ix,vl){
+	$.each(ansi,function(ix,vl){										//I don't even remember how and why this works
 			if ((!knj[vl.innerText.trim()])&&(!$(vl).parent().attr('ignore')))
-				$(vl).parent().removeAttr('hidden');
+				$(vl).parent().removeAttr('hidden');					//but it does
 			}
 		);
 };
@@ -617,143 +671,136 @@ function selected(inp){													//hide the corresponding roman tag from resu
 function mkUniq(arr){													//sorts an array and ensures uniqueness of its elements
 	to={};
 	$.each(arr, function(i,v){
-		to[v]=true;}); //.toLowerCase()?
-	arr2=[];
-	$.each(to, function(ii,vv){
-		if (to.hasOwnProperty(ii))
-			arr2.push(ii);
-		}
-	);
+		to[v.toLowerCase()]=true;});
+	arr2=Object.keys(to);
 	return arr2.sort();													//I thought key names are already sorted in an object but for some reason they're not
 };
 
 function getFname(fullName, full){										//source URL processing for filename
 	full=full || false;
-	if (fullName.indexOf('?')!=-1)										//first remove url parameters 
-		fullName=fullName.substring(0,fullName.indexOf('?'));
-	fullName=fullName.replace(/\#/g,'');
+	fullName=fullName.replace(/(#|\?).*$/gim,'');						//first remove url parameters
 	if (fullName.indexOf('xuite')!=-1) {								//this blog names their images as "(digit).jpg" causing filename collisions
 		i=fullName.lastIndexOf('/');
 		fullName=fullName.substr(0,i)+'-'+fullName.substr(i+1);			//add parent catalog name to the filename to ensure uniqueness
 	}
 	else if ((fullName.indexOf('amazonaws')!=-1)&&(!full))  			//older tumblr images are weirdly linked via some encrypted redirect to amazon services, where
 		fullName=fullName.substring(0,fullName.lastIndexOf('_')-2);		// links only have a part of the filename without a few last symbols and extension,
-																		// have to match it here as well
-	fullName=fullName.replace(/\\/g,'/');								//however we need full filename to provide it for downloadify, thus the parameter
-	return fullName.substring(fullName.lastIndexOf('/')+1 ); 			//function is used both for URLs and folder paths which have opposite slashes
+																		// have to match it here as well, but we need full filename for downloadify, thus the param
+	if ((fullName.indexOf('tumblr_')!=-1)&&!full) 
+		fullName=fullName.replace(/(tumblr_)|(_\d{2}\d{0,2})(?=\.)/gim,'');
+	fullName=fullName.replace(/\\/g,'/');								//function is used both for URLs and folder paths which have opposite slashes
+	return fullName.split('/').pop();
 };
 
-function dl(glob){														//make downloadify button with base64 encoded image file as parameter
+function dl(base64data){												//make downloadify button with base64 encoded image file as parameter
 																		//which will both cause save file dialog with custom filename and copy save path to clipboard
 	Downloadify.create( 'down'  ,{
-		filename: function(){return filename ;}, 
-		data: glob,
-		dataType:'base64',
-		downloadImage: 'https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.png',
-		onError: function(){ alert('Downloadify error'); },
+		filename: function(){ return filename;}, 						//is this called "stateless"?
+		data: base64data, 
+		dataType: 'base64',
+		downloadImage: '//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.png',
+		onError: function(){ throw new Error('Downloadify error');},
 		onComplete: onCmplt,
-		swf:  'https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.swf',
+		swf:  downloadifySwf,
 		width: 100,
 		height: 30,
 		transparent: true,
 		append: true,
-		textcopy: function(){if (myValue) {return folder+filename ;} else return '';}	
+		textcopy: function(){ if (DBrec) {return folder+filename;} else return '';}	
 	});																	//if no database record is found, don't change the clipboard
-
-	if ((!debug)&&(!unsorted)) 
-		cleanup(false);													//until the button is clicked only remove names and meta-related stuff if it is not needed
 };
 
 function onCmplt(){														//mark image as saved in the tag database
-	if (myValue)	{													//it is used to mark saved images on tumblr pages
-		myValue=myValue.split(','); 									
-		myValue.shift();
-		myValue.unshift('1');								
-		myValue=myValue.join(',');							
-		tagsDB.set( getFname(document.location.href) ,myValue);
-		myValue=tagsDB.get(getFname(document.location.href));
-		if (myValue.split(',')[0]=='1') document.title+=' - saved now';}
-	if (!debug)
-		cleanup(true);													//remove all the flashes, including the button itself
+	if (DBrec)	{														//it is used to mark saved images on tumblr pages
+		DBrec.s='1';							
+		tagsDB.set(getFname(document.location.href), JSON.stringify(DBrec));
+		document.title+=' (saved now)';
+	}
+	cleanup(true);														//remove all the flashes, including the button itself
 }
 
-function submit(){														//collect entered translations for missing tags
-	tgs=$('td.cell');													//save them to databases and relaunch tag analysis with new data
+function submit(){														//collects entered translations for missing tags
+	tgs=$('td.cell');													//saves them to databases and relaunches tag analysis with new data
 	missing=false;
 	$.each(tgs,function(i,v){
-		if ($(v).parent().attr('hidden')) {
+		if ($(v).parent().attr('ignore')) {
 			ignore[v.id]=true;											//mark hidden tags as ignored
 			return true;
 		};
-		t=$(v).find('input.txt');
-		if (t.length)
-			t=t[0].value.trim();										//found translation tag
-		else
-			t=v.innerText.trim(); 										//found roman tag
-		cat=$(v).find('input.category');
-		if (t.length){
-			if (cat[1].checked) 										//meta category was selected for this tag
-				meta.set(v.innerText.trim().toLowerCase(),t)		
-			else if (cat[0].checked)									//name category was selected
-				names.set(v.innerText.trim().toLowerCase(),t)
-			else 														//no category was selected, indicate lack of input
-				$(cat[0].parentNode.parentNode ).css("background-color","rgb(255,128,128)");
-			}
+		tg=$(v).find('input.txt');
+		if (tg.length)
+			tg=tg[0].value.trim();										//found translation tag
 		else {
-			$(v).find('input.txt').css("background-color","rgb(255,128,128)");
-			missing=true;												//no translation was provided, indicate lack of input
+			tg=v.innerText.trim(); 										//found roman tag
+			if ($(v).prop('swap')) {
+				t=DBrec.t.replace(tg.split(' ').reverse().join(' '),tg);
+				DBrec.t=t;												//apply swap changes to the current taglist
+			};
+		}											//TODO: add checks for existing entries in another DB
+		cat=$(v).find('input.category');
+		if (tg.length){
+			if (!isANSI(tg)&&!allowUnicode) {
+				$(v).find('input.txt').css("background-color","#ffC080");
+				missing=true;											//indicate unicode characters in user input
+			} 
+			else if (cat[0].checked) 									//name category was selected for this tag
+				names.set(v.innerText.trim().toLowerCase(),tg.replace(exclrgxp,'-'))		
+			else if (cat[1].checked)									//meta category was selected
+				meta.set(v.innerText.trim().toLowerCase(), tg.replace(exclrgxp,'-'))
+			else { 														//no category was selected, indicate missing input
+				$(cat[0].parentNode.parentNode ).css("background-color","#ff8080");
+				missing=true;
+			}
+		}
+		else {
+			$(v).find('input.txt').css("background-color","#ff8080");
+			missing=true;												//no translation was provided, indicate missing input
 			return true;
 			}
-		}																 
+		}
 	);						
 	tbd=$('#translations > tbody')[0];
-	to=missing?1000:0;													//if there was missing input, delay before applying changes to show that
+	to=missing?1000:10;													//if there was missing input, delay before applying changes to show that
 	setTimeout(function(){
 		tbd.parentNode.removeChild(tbd);
 		analyzeTags();
 	}, to);
 };
 
-function ex(){															//export auxiliary tag databases as text file
-$('#ex').after('<div style="width:98px;" id="ex1"> </div>'); 
-$('a#ex')[0].innerText=''; 
-	Downloadify.create( 'ex1'  ,{
+function ex(){															//export auxiliary tag databases as a text file
+	Downloadify.create('ex' ,{
 		filename: 'names&meta tags DB.txt', 
 		data: function(){
 			xport={names:names.getAll(), meta:meta.getAll()};
-			return JSON.stringify(xport,null,'\t');
+			return JSON.stringify(xport, null, '\t');
 		},
 		dataType:'string',
-		downloadImage: 'https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify2.png',
-		onError: function(){ alert('Downloadify2 error'); },
-		swf:  'https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.swf',
+		downloadImage: '//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify2.png',
+		onError: function(){  throw new Error('Downloadify2 error');},
+		swf:  downloadifySwf,
 		width: 100,
 		height: 30,
 		transparent: true,
 		append: false,
 		textcopy: ''	
 	});	
-	
-	$('#port td').css('padding','0');
+	$('a.exim')[0].removeAttribute('onclick');
+	$('a#aex')[0].innerText=''; 
 };	
 
 function im(){															//import auxiliary tag databases as text file
-
-	$('#im').after('<input type="file" id="files" style="width:97px;"   />'); 
-	
- 	$('input#files')[0].onchange=handleFileSelect; 
-	$('a#im')[0].innerText=''; 
-	$('#port td').css('padding','0');
+	$('#im').append('<input type="file" id="files" style="width:97px;"/>'); 
+	$('input#files')[0].onchange=handleFileSelect; 
+	$('a.exim')[1].removeAttribute('onclick');	
+	$('a#aim')[0].innerText=''; 
 };
 
-function handleFileSelect(evt) {										//fill databases with data from imported file
-
-	alert();return;
+function handleFileSelect(evt) {										//fill in databases with data from imported file
     var file = evt.files[0]; 
 	var reader = new FileReader();
 	reader.onloadend = function(e) {
-	  try{	
 		clear=confirm('Would you like to clear existing databases before importing?');
+	  try {	
 		o=JSON.parse(e.target.result);
 	  } catch(err){
 		alert('Error: '+err.message);
@@ -781,14 +828,27 @@ function handleFileSelect(evt) {										//fill databases with data from import
     reader.readAsText(file);
 };
 
-function cleanup(full){			return;										//remove variables and flash objects from memory
-	if (full) delete tagsDB;											//non-full removal leaves tag database and downloadify button in place
-	delete names;														//without removal there would be a noticeable lag upon tab closing in Opera
+function cleanup(full){													//remove variables and flash objects from memory
+	if (true) return;
+	if (full) {															//non-full removal leaves tag database and downloadify button in place
+		delete tagsDB;													//without removal there would be a noticeable lag upon tab closing in Opera
+		$('div#output').remove();
+		$("object[id^='SwfStore_animage_']").remove();
+	};			
+	delete names;														
 	delete meta;
-	x=$('object');
-	$.each(x,function(i,v){
-		if ((i==2)&&(!full)) 
-			return false
-		else
-			v.parentNode.removeChild(v)});					
-};
+
+	exim=document.getElementsByClassName('exim');						//this part might execute before jQuery load
+	if (exim.length) {
+		exim[0].parentNode.removeChild(exim[0]);							
+		exim[0].parentNode.removeChild(exim[0]);						//meh
+	}
+	x=document.querySelectorAll("object[id^='SwfStore_meta_']")[0];		
+	if (x) {
+		x.parentNode.removeChild(x); 									//eww
+		x=document.querySelectorAll("object[id^='SwfStore_names_']")[0];
+		x.parentNode.removeChild(x); 
+	};
+}
+//TODO: add save button activation via keyboard
+//TODO: improve the button: open assigned folder directly, use modern open dialog
