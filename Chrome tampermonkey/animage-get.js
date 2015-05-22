@@ -152,8 +152,9 @@ var style={																	//in an object so you can fold it in editor, if you 
 	table#port {						\
 		top: 30px;						\
 		position: fixed;				\
+		background-color: 				\
+			rgba(192,192,192,0.85);		\
 		border-bottom: 1px solid black;	\
-		background: lightgray;			\
 		z-index: 97;					\
 		width: 101px;					\
 		border-collapse: collapse;		\
@@ -161,6 +162,8 @@ var style={																	//in an object so you can fold it in editor, if you 
 	table#translations {				\
 		border-spacing: 5px;			\
 		position: absolute;				\
+		background-color:				\
+			rgba(255,255,255,0.8);		\
 		top: 52px;						\
 		overflow: scroll;				\
 		font-size: 90%;					\
@@ -189,7 +192,8 @@ var style={																	//in an object so you can fold it in editor, if you 
 		overflow:	hidden;				\
 	}									\
 	table.cell {						\
-		background: white;				\
+		background-color: 				\
+			rgba(255,255,255,0.75);		\
 		width: 100%; 					\
 		border-collapse: collapse;		\
 	}									\
@@ -215,7 +219,7 @@ tb=document.createElement('table');											//table for entering manual transl
 	tagcell='<table class="cell"><tr>														\
 		<td class="radio"><input type="radio" class="category"  value="name"/></td>			\
 		<td class="radio"><input type="radio" class="category"  value="meta"/></td>			\
-		</tr><tr><td colspan="2"><a href="#" title="Click to ignore this tag for now" onclick=ignor3(this)>';
+		</tr><tr><td colspan="2"><a href="#" title="Click to ignore this tag for now" class="ignr">';
 																			//each cell has the following in it:
 																			//	two radiobuttons to choose a category for the tag - name or meta
 																			//	the tag itself, either in roman or in kanji
@@ -240,7 +244,7 @@ port=document.createElement('table');										//subtable for settings and im/ex
 	cell.setAttribute('class','settings');
 	cell.innerHTML=' <a href="##" onclick=toggleSettings() class="settings">- settings -</a> ';	
 	row0=port.insertRow(1);
-	row0.insertCell(0).innerHTML='<input type="checkbox" id="debug"  onchange="debugSwitch(this)" /> debug';	
+	row0.insertCell(0).innerHTML='<input type="checkbox" id="debug"/> debug';	
 	row1=port.insertRow(2);
 	row1.insertCell(0).innerHTML=' <a href="###" onclick=ex() id="aex" class="exim">export db</a>';
 	row2=port.insertRow(3);	
@@ -253,7 +257,7 @@ port=document.createElement('table');										//subtable for settings and im/ex
 
 trimObj(folders, useFolderNames);											//run checks on user-input content and format it
 trimObj(ignore);	
-
+document.title='start';
 window.onerror = function(msg, url, line, col, error) {						//general error handler
    var extra = !col ? '' : '\ncolumn: ' + col;
    extra += !error ? '' : '\nerror: ' + error;								//shows '✗' for errors and also alerts a message if in debug mode
@@ -339,6 +343,7 @@ function debugSwitch(checkbox){											//toggling debug mode requires page re
 document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
 
 function onDOMcontentLoaded(){ 											//load plugins and databases
+document.title='DOM';
 	if (window.top != window.self)  									//don't run on frames or iframes
 		return;
 	href=document.location.href;
@@ -385,7 +390,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 			document.title='tagsdb error';
 			throw new Error('tagsDB failed to load');
 		}
-	});
+	});										//TODO: delay aux DB loading until & if they're actually needed? 
 };
 
 function getTags(retry){												//manages tags acquisition for current image file name from db
@@ -420,13 +425,12 @@ function main(){ 														//launch tag processing and handle afterwork
 	$('input#debug')[0].onclick=function(){debugSwitch(this);};
 
 	if (debug) 
-		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute');
+		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute').css('opacity','0.66');
 												//TODO: make the code above run regardless of found DB record
 	$('div#output').append(tb);
 	unsorted=analyzeTags();
 	$('input#submit')[0].onclick=submit; 
- 	$.each($('a.ignr'),function(i,v){v.onclick=function(){ignor3(this);};}); 
-	
+	$('input.txt').on('change',selected);
 	xhr.open("get", document.location.href, true); 						//reget the image to attach it to downloadify button
 	xhr.send();  
 		
@@ -436,6 +440,7 @@ function main(){ 														//launch tag processing and handle afterwork
 
 function isANSI(s) {													//some tags might be already in roman and do not require translation
 	is=true;
+	s=s.split('');
 	$.each(s,function(i,v){
 		is=is&&(/[\u0000-\u00ff]/.test(v));});
     return is;
@@ -605,12 +610,13 @@ function buildTable(ansi, rest) {										//create table for untranslated tags 
 		row1=tbd.insertRow(0);
 		cell1=row1.insertCell(0); 
 		cell1.id=v;
-		cell1.innerHTML=tagcell+v+'</a><br><input list="translation" size=10 class="txt" onchange="selected(this)"/>\
+		cell1.innerHTML=tagcell+v+'</a><br><input list="translation" size=10 class="txt"/>\
 			<datalist id="translation">'+options+'</datalist></td></tr></table>'; 
 		$(cell1).attr('class','cell kanji');
 		$(cell1).find('input[type="radio"]').attr('name',v);			//in case the blogger provided both roman tag and kanji tag for names,
 	}); 																// the user can simply select one of roman tags for every kanji tag as translation
-																		// to avoid typing them in manually	
+																		// to avoid typing them in manually		
+ 	$.each($('a.ignr'),function(i,v){v.onclick=function(){ignor3(this);};}); 
 };
 
 function ignor3(anc){													//remove clicked tag from results for current session (until page reload)
