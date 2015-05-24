@@ -17,7 +17,7 @@
 // @require 	https://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.min.js 
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.min.js
-// @run-at 		document-start 
+// @run-at 		document-body 
 // ==/UserScript==
 													
 // ==Settings=====================================================
@@ -128,9 +128,10 @@
 																			// and save button even if no tags were found
 // ==/Settings=========================================================
 																			//Communication between functions here is mostly done via global variables
-var  tagsDB=null;
-var  names=null ;
-var  meta=null ; 															
+
+   tagsDB=null;
+   names=null ;
+   meta=null ; 															
 var filename;															
 var folder = ''; 
 var DBrec='';																//raw DB record, stringified object with fields for saved flag and tag list
@@ -257,7 +258,6 @@ port=document.createElement('table');										//subtable for settings and im/ex
 
 trimObj(folders, useFolderNames);											//run checks on user-input content and format it
 trimObj(ignore);	
-document.title='start';
 window.onerror = function(msg, url, line, col, error) {						//general error handler
    var extra = !col ? '' : '\ncolumn: ' + col;
    extra += !error ? '' : '\nerror: ' + error;								//shows '✗' for errors and also alerts a message if in debug mode
@@ -340,14 +340,13 @@ function debugSwitch(checkbox){											//toggling debug mode requires page re
 	location.reload();
 };
 
-document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
-
+//document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
+onDOMcontentLoaded();
 function onDOMcontentLoaded(){ 											//load plugins and databases
-document.title='DOM';
 	if (window.top != window.self)  									//don't run on frames or iframes
 		return;
 	href=document.location.href;
-	if (href.indexOf('tumblr')!=-1) 									//if not on tumblr
+	if (href.indexOf('tumblr')==-1) 									//if not on tumblr
 		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))		//check if this is actually an image link
 			return;
 	$('img').wrap("<center></center>");
@@ -858,3 +857,4 @@ function cleanup(full){													//remove variables and flash objects from me
 }
 //TODO: add save button activation via keyboard
 //TODO: improve the button: open assigned folder directly, use modern open dialog
+//TODO: check settings width

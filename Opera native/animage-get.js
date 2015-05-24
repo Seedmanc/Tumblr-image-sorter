@@ -338,7 +338,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 	if (window.top != window.self)  									//don't run on frames or iframes
 		return;
 	href=document.location.href;
-	if (href.indexOf('tumblr')!=-1) 									//if not on tumblr
+	if (href.indexOf('tumblr')==-1) 									//if not on tumblr
 		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))		//check if this is actually an image link
 			return;
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){

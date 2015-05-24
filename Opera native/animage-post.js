@@ -45,6 +45,7 @@ var namae=document.location.host;
 var isImage=(document.location.href.indexOf('/image/')!=-1);					//processing for image pages is different from regular posts
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(namae.indexOf('www.')==0);											//processing for non-blog pages of tumblr like dashboard is different too
+var asked=false;
 
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
@@ -92,6 +93,10 @@ function getID(lnk){															//extract numerical post ID from self-link
 };
 
 function main(){																//search for post IDs on page and call API to get info about them
+	if (debug) 
+		jQuery("div[id^='SwfStore_animage_']").css('top','0').css('left','0').css("position",'absolute')
+	else																		//bring the flash window in or out of the view depending on the debug mode
+		jQuery("div[id^='SwfStore_animage_']").css('top','-2000px').css('left','-2000px').css("position",'absolute');
 	if (isDash)
 		posts=jQuery('ol.posts').find('div.post').not('.new_post')				//getting posts on dashboard is straightforward with its constant design,
 	else {																		// but outside of it are all kinds of faulty designs, so we have to experiment
@@ -288,10 +293,23 @@ function process(res, v) {														//process information obtained from API 
 		else
 			url=img.eq(j).parent().attr('href');
 		tst=tagsDB.get(getFname(url));											//check if there's already a record in database for this image	
-		if (((!tst)||(debug))&&(tags.length))  									//if there isn't, make one, putting the flag and tags there
+		if (((!tst)||(debug))&&(tags.length)) {									//if there isn't, make one, putting the flag and tags there
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
-														//TODO: make tags cumulative, adding up upon visiting different posts of same image?
-														//TODO: add tags retrieval from reblog source if no tags were found here
+			if (tagsDB.get(getFname(url))!=JSON.stringify(DBrec))				//immediately check whether the write was successful
+				if (!debug && !asked)											//if not and no debug mode enabled, prompt to enable it
+					if (confirm('Failed writing to DB. Flashcookies size limit might have been hit.\n Would you like to enable debug mode to get a possibility to fix that? (Will reload the page)')) {
+						tagsDB.set(':debug:','true');
+						location.reload();
+						asked=true;												//avoid asking multiple times for every post
+					} else
+						throw new Error('Failed to write to DB')
+				else if (!asked){												//if already in debug, try to bring the flash window into view
+					alert('Failed writing to DB. Flashcookies size limit might have been hit. If you see a flash dialog window at the top-left corner, try raising the limit.');
+					window.scrollTo(0, 0);
+					asked=true;
+					
+				};										//TODO: make tags cumulative, adding up upon visiting different posts of same image?
+		};												//TODO: add tags retrieval from reblog source if no tags were found here
 		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 						//otherwise if there is a record and it says the image has been saved
 			img.eq(j).css('outline','3px solid invert').css('outline-offset','-3px');	
 																				//add a border of highlight color around the image to indicate that
@@ -300,3 +318,4 @@ function process(res, v) {														//process information obtained from API 
 };
 
 //TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage)
+//TODO: implement some kind of feedback from flash to script about space request success
