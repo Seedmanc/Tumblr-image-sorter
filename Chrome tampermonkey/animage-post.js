@@ -283,6 +283,7 @@ function process(postData) {														//process information obtained from AP
 				img=v.find("div[id^='photoset'] img")
 			else 
 				img=img.find('img');
+			img=img.not('img[src*="tumblr_inline_"]');
 		} else {
 			link_url+=res.response.posts[0].link_url;								//for a single photo post, link url might have the highest-quality image version,
 			ext=link_url.split('.').pop();											// unaffected by tumblr compression
@@ -309,13 +310,21 @@ function process(postData) {														//process information obtained from AP
 	tags=res.response.posts[0].tags;												//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
 	for (j=0; j<photos+inlimg.length; j++) {
-		if (j<photos)																//first come the images in photo posts if exist
-			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
+		if (j<photos) {																//first come the images in photo posts if exist
+			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;
+			if (photos>1) {
+				y=img.eq(j).parent();
+				y=y.is('a')?y:y.parent().find('a').eq(0);							//Look for a link either directly above the image or around it
+				if (y.is('a'))
+					removeEvents(y[0]);												//get rid of that annoying photoview feature
+			};
+		}
 		else																		//then the inline ones
 			url=img.eq(j).parent().attr('href');
 		tst=tagsDB.get(getFname(url));												//check if there's already a record in database for this image	
 		if (((!tst)||(debug))&&(tags.length))  {									//if there isn't or we're in debug mode, make one, putting the flag and tags there
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
+			
 			if (tagsDB.get(getFname(url))!=JSON.stringify(DBrec))					//immediately check whether the write was successful
 				if (!debug && !asked)												//if not and no debug mode enabled, prompt to enable it
 					if (confirm('Failed writing to DB. Flashcookies size limit might have been hit.\n Would you like to enable debug mode to get a possibility to fix that? (Will reload the page)')) {
