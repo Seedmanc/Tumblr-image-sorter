@@ -17,7 +17,7 @@
 // @require 	https://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.min.js 
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.min.js
-// @run-at 		document-body 
+// @run-at 		document-start 
 // ==/UserScript==
 													
 // ==Settings=====================================================
@@ -157,7 +157,7 @@ var style={																	//in an object so you can fold it in editor, if you 
 			rgba(192,192,192,0.85);		\
 		border-bottom: 1px solid black;	\
 		z-index: 97;					\
-		width: 101px;					\
+		width: 100px;					\
 		border-collapse: collapse;		\
 	}									\
 	table#translations {				\
@@ -595,13 +595,14 @@ function buildTable(ansi, rest) {										//create table for untranslated tags 
 		row1=tbd.insertRow(0);
 		cell1=row1.insertCell(0);  
 		cell1.id=i;
-		swp='<input type="button" value="swap" onclick="swap(this)" id="swap" />'
+		swp='<input type="button" value="swap"  id="swap" />'
 		cell1.innerHTML=tagcell+i+'</a><br>'+swp+'</td></tr></table>'; 
 		if (i.split(' ').length!=2)										//for roman tags consisting of 2 words enable button for swapping their order
 			$(cell1).find('input#swap').attr('disabled','disabled');	//script can't know which name/surname order is correct so the choice is left to user
 		$(cell1).attr('class','cell ansi');
 		$(cell1).find('input[type="radio"]').attr('name',i);			
 		options='<option value="'+i+'"></option>'+options;				//populate the drop-down selection lists with these tags
+		$(cell1).find('input').on('click',function(){swap(this);});
 	});																	//so they can be used for translating kanji tags if possible
  
 	$.each(rest, function(i,v){											//now come the untranslated kanji tags
