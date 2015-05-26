@@ -3,6 +3,8 @@
 // @description	Store tags for images and indicate saved state
 // @version		1.0
 // @author		Seedmanc
+// @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
+
 // @include		http://*.tumblr.com/post/*
 // @include		http://*.tumblr.com/page/*
 // @include		http://*.tumblr.com/tagged/*
@@ -14,9 +16,10 @@
 // @exclude		http*://*.media.tumblr.com/*
 
 // @grant 		none
-// @run-at 		document-start
+// @run-at 		document-body
 // @require  	https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js 
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.min.js 
+// @noframes
 // ==/UserScript==
 
 // ==Settings=====================================================
@@ -28,10 +31,7 @@
 																					// which is wrong, images open in photoset viewer instead of a new tab as required for the script
 																					// this option will 'fix' this by removing the view in photoset feature altogether
 																					// alternatively you'll have to right-click open in a new tab instead
-																				
-	var debug=			false;														//Initial debug value, gets changed to settings value after DB creation
-																					// enabling debug makes DB entries for images updated every time post is visited
-																					// also it enables error notifications
+	
 	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
 																					//Flash databases are bound to the URL, must be same as in the other script
 																				
@@ -40,32 +40,33 @@
 	var linkify= 		true;														//Make every image (even inline images in non-photo posts) to be processed
 																					// and linked to either itself, it's larger version or its reverse image search
 																					// might break themes like PixelUnion Fluid
+																					
+	var debug=			false;														//Initial debug value, gets changed to settings value after DB creation
 // ==/Settings====================================================
 
  tagsDB=null;
 var J=T=P=false;
 var namae=document.location.host; 				
-var isImage=(document.location.href.indexOf('/image/')!=-1);						//processing for image pages is different from regular posts
+var isImage=(document.location.href.indexOf('/image/')!=-1); 
 var isPost=(document.location.href.indexOf('/post/')!=-1);
-var isDash=(namae.indexOf('www.')==0);												//processing for non-blog pages of tumblr like dashboard is different too
+var isDash=(namae.indexOf('www.')==0); 
 var asked=false;
-document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 
-window.onerror = function(msg, url, line, col, error) {								//general error handles
+window.onerror = function(msg, url, line, col, error) {								//General error handler
    var extra = !col ? '' : '\ncolumn: ' + col;
-   extra += !error ? '' : '\nerror: ' + error;										//shows '✗' for errors in title and also alerts a message if debug is on
+   extra += !error ? '' : '\nerror: ' + error;										//Shows '✗' for errors in title and also alerts a message if debug is on
    if (msg.search('Script error')!=-1)
-	  return true;																	//except for irrelevant errors
+	  return true;																	// except for irrelevant errors
    document.title+='✗';
    var suppressErrorAlert = true;
    return suppressErrorAlert;
 };
 
-function getFname(fullName){														//extract filename from image URL and format it
+function getFname(fullName){														//Extract filename from image URL and format it
 	fullName=fullName||'';													
-	fullName=fullName.replace(/(\?).*$/gim,'');										//first remove url parameters 
+	fullName=fullName.replace(/(\?).*$/gim,'');										//First remove url parameters 
 	if (fullName.indexOf('tumblr_')!=-1) 
-		fullName=fullName.replace(/(tumblr_)|(_\d{2}\d{0,2})(?=\.)/gim,'')			//prefix and postfix of tumblr image names can be omitted without info loss
+		fullName=fullName.replace(/(tumblr_)|(_\d{2}\d{0,2})(?=\.)/gim,'')			//Prefix and postfix of tumblr image names can be omitted without info loss
 	else if (fullName.indexOf('xuite')!=-1) {										//this hosting names their images as "(digit).jpg" causing filename collisions
 		i=fullName.lastIndexOf('/');
 		fullName=fullName.substr(0,i)+'-'+fullName.substr(i+1);						//add parent catalog name to the filename to ensure uniqueness
@@ -73,9 +74,9 @@ function getFname(fullName){														//extract filename from image URL and 
 	return fullName.split('/').pop(); 					
 };  
 
-function getID(lnk){																//extract numerical post ID from self-link
+function getID(lnk){																//Extract numerical post ID from self-link
 	if (lnk.search(/[^0-9]/g)==-1)
-		return lnk;																	//sometimes the argument is the ID itself that needs checking
+		return lnk;																	//Sometimes the argument is the ID itself that needs checking
 	Result=lnk.substring(lnk.indexOf('/post/')+7+lnk.indexOf('image/'));			//one of those will be -1, another the actual offset	
 	Result=Result.replace(/(#).*$/gim,'');											//remove url postfix 
 	i=Result.lastIndexOf('/');
@@ -89,21 +90,21 @@ function getID(lnk){																//extract numerical post ID from self-link
 
 function identifyPost(v){															//Find the ID of post in question and request info via API for it
 	if (isDash) {
-		self=jQuery(v).find('a.post_permalink')[0];									//again everything is simple when on dashboard
+		self=jQuery(v).find('a.post_permalink')[0]; 
 		namae=self.hostname;														//On dashboard every post might have a different author
 		id=getID(self.href);
 	} else if (isPost)
-		id=getID(document.location.href)											//even simpler on the post page
-	else {																			//but it gets tricky in the wild
+		id=getID(document.location.href)											//Even simpler on the post page
+	else {																			// but it gets tricky in the wild
 		id='';
-		h=jQuery(v).find("a[href*='"+namae+"/post/']");								//several attempts to find selflink
+		h=jQuery(v).find("a[href*='"+namae+"/post/']");								//Several attempts to find selflink
 		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");			//workaround for Optica theme that doesn't have selflinks within .post elements
 		h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");				//IDs can be found both in links to post and to image page
 		if (h.length) 
 			id=getID(h[h.length-1].href);														
-		if (id == '') {																//if no link was found, try to find ID in attributes of nodes
-			phtst=jQuery(v).find("div[id^='photoset']");							//photosets have IDs inside, well, id attributes starting with photoset_
-			pht=jQuery(v).attr('id');												//single photos might have ID inside same attribute
+		if (id == '') {																//If no link was found, try to find ID in attributes of nodes
+			phtst=jQuery(v).find("div[id^='photoset']");							// photosets have IDs inside, well, id attributes starting with photoset_
+			pht=jQuery(v).attr('id');												// single photos might have ID inside same attribute
 			if (phtst.length) 
 				id=phtst.attr('id').split('_')[1]
 			else if (pht)
@@ -123,7 +124,7 @@ function identifyPost(v){															//Find the ID of post in question and re
 				api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
 				id: id
 			}
-		}).done(function(result) {resolve({r:result, v:v});})						//have to return two values at once, data and pointer to post on page
+		}).done(function(result) {resolve({r:result, v:v});})						//Have to return two values at once, data and pointer to post on page
 		  .fail(function(jqXHR, textStatus, errorThrown) {reject(Error(textStatus));});
     });	
 };
@@ -138,22 +139,22 @@ function loadAndExecute(url, callback){												//Load specified js library a
 	document.head.appendChild(scriptNode);
 };
 
-function main(){																	//search for post IDs on page and call API to get info about them
+function main(){																	//Search for post IDs on page and call API to get info about them
 	if (debug) 
 		jQuery("div[id^='SwfStore_animage_']").css('top','0').css('left','0').css("position",'absolute').css('opacity','0.8');
-	else																		//bring the flash window in or out of the view depending on the debug mode
+	else																			//Bring the flash window in or out of the view depending on the debug mode
 		jQuery("div[id^='SwfStore_animage_']").css('top','-2000px').css('left','-2000px').css("position",'absolute');
 	if (isDash)
-		posts=jQuery('ol.posts').find('div.post').not('.new_post')					//getting posts on dashboard is straightforward with its constant design,
+		posts=jQuery('ol.posts').find('div.post').not('.new_post')					//Getting posts on dashboard is straightforward with its constant design,
 	else {																			// but outside of it are all kinds of faulty designs, so we have to experiment
-		posts=jQuery('article.entry > div.post').not('.n').parent();				//some really stupid plain theme have to be checked before everything
-		posts=(posts.length)?posts:jQuery('.post');									//general way to obtain posts that are inside containers with class='post'
+		posts=jQuery('article.entry > div.post').not('.n').parent();				//Some really stupid plain theme have to be checked before everything
+		posts=(posts.length)?posts:jQuery('.post');									//General way to obtain posts that are inside containers with class='post'
 		if (isImage) 
 			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
-				document.location.href=jQuery('img#content-image')[0].src			//proceed directly to the image if it already has a DB record with tags	
+				document.location.href=jQuery('img#content-image')[0].src			//Proceed directly to the image if it already has a DB record with tags	
 			else
 				posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
-																					//make it work also on image pages, since we can get post id from url
+																					//Make it work also on image pages, since we can get post id from url
 		posts=posts.length?posts:jQuery('.column').eq(2).find('.bottompanel').parent();
 																					//for "Catching elephant" theme
 		posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0	
@@ -161,41 +162,39 @@ function main(){																	//search for post IDs on page and call API to g
 		posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
 		posts=posts.length?posts:jQuery("div.posts");								//some redux theme, beats me
 		if (posts.length==0){
-			document.title+=' [No posts found]';									//give up
+			document.title+=' [No posts found]';									//Give up
 			return;
 		};
 	};
-
-	document.title="Rdy:[";															//Because chrome sucks it has no window title area
-																					//We're limited to tab title which is very small
+																					//Because chrome sucks it has no window title area
+	document.title="Rdy:[";															// we're limited to tab title which is very small
 																					//A "progressbar" will be displayed in page title,
-	if (!isImage)	{																//indicating that the page is ready for interaction
+	if (!isImage)	{																// indicating that the page is ready for interaction
 		hc=posts.find('.hc.nest');
 		if (hc.length) {
-			hc.css('position','relative');											//fix broken themes with image links being under a large div		
-			posts=hc.parent();														//because sharing is caring
+			hc.css('position','relative');											//Fix 'broken' themes with image links being under a large div		
+			posts=hc.parent();														// because sharing is caring
 		};
 	};
 	
 	promisePosts(posts.toArray()).then(function() {									//the what
- 		if (isImage)																//redirect to actual image from image page after we got the ID
+ 		if (isImage)																//Redirect to actual image from image page after we got the ID
  			document.location.href=jQuery('img#content-image')[0].src;						
- 		document.title+=']100%';													//at the end of processing indicate it's finished
+ 		document.title+=']100%';													//At the end of processing indicate it's finished
 	}).catch(function(err) {														//catch any error that happened along the way
 		throw err;
 	}); 	
 };
 
-function mutex(){																	//check readiness of libraries being loaded simultaneously
+function mutex(){																	//Check readiness of libraries being loaded simultaneously
 	if (J&&T&&P){		
 		J=T=P=false;																											
 		main();																		//when everything is loaded, proceed further
 	}
 };
+onDOMContentLoaded();
+function onDOMContentLoaded(){														//Load plugins 
 
-function onDOMContentLoaded(){														//load plugins 
-	if (window.top != window.self)  												//don't run on (i)frames
-		return;
 	if (isDash && !enableOnDashboard)												//don't run on dashboard unless enabled
 		return;
 			
@@ -203,7 +202,7 @@ function onDOMContentLoaded(){														//load plugins
 		loadAndExecute('//dl.dropboxusercontent.com/u/74005421/js%20requisites/es6-promise.min.js', function(){ 
 			P=true;																	// with it's own bullshit on dashboard via index.js that doesn't work
 			mutex();
-		})																			//therefore I have to fix that by overwriting it back by a polyfill
+		})																			// therefore I have to fix that by overwriting it back by a polyfill
 	else
 		P=true;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site
@@ -216,24 +215,24 @@ function onDOMContentLoaded(){														//load plugins
 	else 
 		J=true; 
 
-	tagsDB = new SwfStore({															//main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
+	tagsDB = new SwfStore({															//Main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
 		namespace: "animage",
 		swf_url: storeUrl, 
 		debug: debug,
 		onready: function(){
-			debug=(tagsDB.get(':debug:')=='true');									//update initial debug value with the one saved in DB
+			debug=(tagsDB.get(':debug:')=='true');									//Update initial debug value with the one saved in DB
 			tagsDB.config.debug=debug;			
 			T=true;
 			mutex();
 		},
 		onerror: function() {			
-			document.title="tagsDB error";	
+			document.title="✗ tagsDB error";	
 			throw new Error('tagsDB failed to load');												
 		}
 	}); 
 };
 
-function process(postData) {														//process information obtained from API by post ID
+function process(postData) {														//Process information obtained from API by post ID
 	v=jQuery(postData.v);															//pointer to post on page
 	res=postData.r;																	//API response
 	var link_url='';
@@ -246,51 +245,51 @@ function process(postData) {														//process information obtained from AP
 		throw  new Error('API error: '+res.meta.msg);
 		return;
 	};
-	if (linkify) {																	//find inline images
+	if (linkify) {																	//Find inline images
 		inlimg=v.find('img[src*="tumblr_inline_"]');
 		inlimg=jQuery.grep(inlimg, function(vl,ix) {
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
-				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');			//if there is an HD version, link it
+				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');			//If there is an HD version, link it
 				r=true;
 				bar=inlimg.length;
 			}
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
-				r=false;															//otherwise link to google reverse image search 
+				r=false;															// otherwise link to google reverse image search 
 			};
 			a='<a href="'+href+'" style=""></a>';
 			i=jQuery(vl);
-			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;		//i dunno either
-			if (x.parent().is('a')) 												//basically either direct parent or grandparent of the image can be a link already
-				x.unwrap();															//in which case we need to remove it before creating our own
+			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;		//I dunno either
+			if (x.parent().is('a')) 												// basically either direct parent or grandparent of the image can be a link already
+				x.unwrap();															// in which case we need to remove it before creating our own
 			i.wrap(a);
 			if (typeof pxuDemoURL !== 'undefined' && pxuDemoURL=="fluid-theme.pixelunion.net")
-				i.parent().css('position','relative');								//fix for PixelUnion Fluid which otherwise gets rekt if you insert a link
+				i.parent().css('position','relative');								//Fix for PixelUnion Fluid which otherwise gets rekt if you insert a link
 			return r;
 		});
 	};
-	if (!isPhoto) {																	//early termination if there are no images at all
-		if ((!linkify)||(inlimg.length==0)) {										//or if processing is disabled
+	if (!isPhoto) {																	//Early termination if there are no images at all
+		if ((!linkify)||(inlimg.length==0)) {										// or if processing is disabled
 			document.title+=' ';
 			return;				
 		};
 	} else {
-		photos=res.response.posts[0].photos.length;									//find whether this is a single photo post or a photoset
+		photos=res.response.posts[0].photos.length;									//Find whether this is a single photo post or a photoset
 		if (photos>1) {
 			img=v.find('iframe.photoset').contents();
 			img=img.length?img:v.find('figure.photoset');
-			if (img.length==0)														//some photosets are in iframes, some aren't
+			if (img.length==0)														//Some photosets are in iframes, some aren't
 				img=v.find("div[id^='photoset'] img")
 			else 
 				img=img.find('img');
 			img=img.not('img[src*="tumblr_inline_"]');
 		} else {
-			link_url+=res.response.posts[0].link_url;								//for a single photo post, link url might have the highest-quality image version,
+			link_url+=res.response.posts[0].link_url;								//For a single photo post, link url might have the highest-quality image version,
 			ext=link_url.split('.').pop();											// unaffected by tumblr compression
-			r=/(jpe*g|bmp|png|gif)/gi;												//check if this is actually an image link
+			r=/(jpe*g|bmp|png|gif)/gi;												// check if this is actually an image link
 			link_url=(r.test(ext))?link_url:''; 
 
-			img=v.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//find image in the post to linkify it
+			img=v.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//Find image in the post to linkify it
 			if (img.length && linkify) {
 				p=img.parent().wrap('<p/>');										//Parent might be either the link itself or contain it as a child,
 				lnk=p.parent().find('a[href*="/image/"]');							// depends on particular theme
@@ -300,53 +299,55 @@ function process(postData) {														//process information obtained from AP
 					lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
 				else if (typeof pxuDemoURL == 'undefined')																	
 					img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
-				p.unwrap();															//^ this might not work in themes like Fluid by PU
+				p.unwrap();															//^ this might break themes like Fluid by PU
 			};
 		};
-		bar=String.fromCharCode(10111+photos);										//piece of progressbar, (№) for amount of photos in a post
+		bar=String.fromCharCode(10111+photos);										//Piece of progressbar, (№) for amount of photos in a post
 																					// empty space for non-photo posts, ✗ for errors
 	};
-	img=jQuery(img.toArray().concat(inlimg));										//make sure the resulting list of images is in order
+	img=jQuery(img.toArray().concat(inlimg));										//Make sure the resulting list of images is in order
 	tags=res.response.posts[0].tags;												//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
 	for (j=0; j<photos+inlimg.length; j++) {
-		if (j<photos) {																//first come the images in photo posts if exist
+		if (j<photos) {																//First come the images in photo posts if exist
 			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;
 			if (photos>1) {
 				y=img.eq(j).parent();
 				y=y.is('a')?y:y.parent().find('a').eq(0);							//Look for a link either directly above the image or around it
-				if (y.is('a'))
+				if (y.is('a')) {
+					y.attr('target','_blank');
 					removeEvents(y[0]);												//get rid of that annoying photoview feature
+				};
 			};
 		}
-		else																		//then the inline ones
+		else																		// then the inline ones
 			url=img.eq(j).parent().attr('href');
-		tst=tagsDB.get(getFname(url));												//check if there's already a record in database for this image	
-		if (((!tst)||(debug))&&(tags.length))  {									//if there isn't or we're in debug mode, make one, putting the flag and tags there
+		tst=tagsDB.get(getFname(url));												//Check if there's already a record in database for this image	
+		if (((!tst)||(debug))&&(tags.length))  {									// if there isn't or we're in debug mode, make one, putting the flag and tags there
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
 			
-			if (tagsDB.get(getFname(url))!=JSON.stringify(DBrec))					//immediately check whether the write was successful
-				if (!debug && !asked)												//if not and no debug mode enabled, prompt to enable it
+			if (tagsDB.get(getFname(url))!=JSON.stringify(DBrec))					//Immediately check whether the write was successful
+				if (!debug && !asked)												// if not and no debug mode enabled, prompt to enable it
 					if (confirm('Failed writing to DB. Flashcookies size limit might have been hit.\n Would you like to enable debug mode to get a possibility to fix that? (Will reload the page)')) {
 						tagsDB.set(':debug:','true');
 						location.reload();
 						asked=true;													//avoid asking multiple times for every post
 					} else
 						throw new Error('Failed to write to DB')
-				else if (!asked){													//if already in debug, try to bring the flash window into view
+				else if (!asked){													// if already in debug, try to bring the flash window into view
 					alert('Failed writing to DB. Flashcookies size limit might have been hit. If you see a flash dialog window at the top-left corner, try raising the limit.');
 					window.scrollTo(0, 0);
 					asked=true;
 				};										//TODO: make tags cumulative, adding up upon visiting different posts of same image?
 		};												//TODO: add tags retrieval from reblog source if no tags were found here
-		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 							//otherwise if there is a record and it says the image has been saved 
+		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 							//Otherwise if there is a record and it says the image has been saved 
 			img.eq(j).css('outline','3px solid '+highlightColor).css('outline-offset','-3px');	
-																					//add a border of highlight color around the image to indicate that
+																					//Add a border of highlight color around the image to indicate that
 	};	
 	document.title+=(tags.length)?bar:'-';											//dash indicates no found tags for the post
 };
 
-function promisePosts(posts){														//Because chrome sucks I have write a bunch of nonsensical code just to make sure it behaves
+function promisePosts(posts){														//because chrome sucks I have write a bunch of nonsensical code just to make sure it behaves
 																					// and processes posts in their order instead of randomly. 		
  	return posts.map(identifyPost).reduce(function(sequence, chapterPromise) {		// Opera did everything properly right away without tinkering
  		return sequence.then(function() {
@@ -357,7 +358,7 @@ function promisePosts(posts){														//Because chrome sucks I have write a
 	}, Promise.resolve());
 };
 
-function removeEvents(node){														//remove event listeners such as onclick, because in chrome they mess with middlebutton new tab opening
+function removeEvents(node){														//Remove event listeners such as onclick, because in chrome they mess with middlebutton new tab opening
 	if (fixMiddleClick) {
 		elClone = node.cloneNode(true);											
 		node.parentNode.replaceChild(elClone, node);		 
