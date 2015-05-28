@@ -58,7 +58,8 @@ window.onerror = function(msg, url, line, col, error) {								//General error h
  	if (msg.search('Script error')!=-1)
  		return true;																	// except for irrelevant errors
  	document.title+='✗';
-	alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+	if (debug)
+		alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
  	var suppressErrorAlert = true;
  	return suppressErrorAlert;
 };
@@ -310,15 +311,8 @@ function process(postData) {														//Process information obtained from AP
 	tags=res.response.posts[0].tags;												//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
 	for (j=0; j<photos+inlimg.length; j++) {
-		if (j<photos) {																//First come the images in photo posts if exist
-			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url;
-			if (photos>1) {
-				y=img.eq(j).parent();
-				y=y.is('a')?y:y.parent().find('a').eq(0);							//Look for a link either directly above the image or around it
-				if (y.is('a'))  
-					removeEvents(y[0]);												//get rid of that annoying photoview feature
-			};
-		}
+		if (j<photos) 																//First come the images in photo posts if exist
+			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
 		else																		// then the inline ones
 			url=img.eq(j).parent().attr('href');
 		tst=tagsDB.get(getFname(url));												//Check if there's already a record in database for this image	
@@ -342,6 +336,12 @@ function process(postData) {														//Process information obtained from AP
 		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 							//Otherwise if there is a record and it says the image has been saved 
 			img.eq(j).css('outline','3px solid '+highlightColor).css('outline-offset','-3px');	
 																					//Add a border of highlight color around the image to indicate that
+		if ((photos>1)&&(j<photos)) {
+			y=img.eq(j).parent();
+			y=y.is('a')?y:y.parent().find('a').eq(0);								//Look for a link either directly above the image or around it
+			if (y.is('a'))  
+				removeEvents(y[0]);													//get rid of that annoying photoview feature
+		};
 	};	
 	document.title+=(tags.length)?bar:'-';											//dash indicates no found tags for the post
 };
@@ -357,7 +357,7 @@ function promisePosts(posts){														//because chrome sucks I have write a
 	}, Promise.resolve());
 };
 
-function removeEvents(node){														//Remove event listeners such as onclick, because in chrome they mess with middlebutton new tab opening
+function removeEvents(node){	 													//Remove event listeners such as onclick, because in chrome they mess with middlebutton new tab opening
 	if (fixMiddleClick) {
 		jQuery(node).attr('target','_blank');
 		elClone = node.cloneNode(true);											

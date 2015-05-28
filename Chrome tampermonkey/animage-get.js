@@ -264,7 +264,8 @@ window.onerror = function(msg, url, line, col, error) {						//General error han
    if (msg.search('this.swf')!=-1) 
 	 return true;															//Except for irrelevant errors
    document.title+='✗';
-   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+   if (debug)
+   	 alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
    var suppressErrorAlert = true;
    return suppressErrorAlert;
 };
@@ -432,8 +433,14 @@ function main(){ 															//Launch tag processing and handle afterwork
 	unsorted=analyzeTags();
 	$('input#submit')[0].onclick=submit; 
 	$('input.txt').on('change',selected);
-	xhr.open("get", document.location.href, true); 							//Reget the image to attach it to downloadify button
-	xhr.send();  
+	if ((document.readyState=='complete')||(document.readyState=='interactive')) {
+		xhr.open("get", document.location.href, true); 						//Reget the image to attach it to downloadify button
+		xhr.send();
+	} else
+		$(window).load(function(){
+			xhr.open("get", document.location.href, true); 					//Not ever sure here, but apparently requesting the image during its loading into page 
+			xhr.send();  													// misses the cache and causes it to load twice the time
+		});																	// ensure that we only request the image for the button after it was cached 
 };
 
 function isANSI(s) {														//Some tags might be already in roman and do not require translation
@@ -720,8 +727,8 @@ function onCmplt(){															//Mark image as saved in the tag database
 	if (DBrec)	{															// it is used to mark saved images on tumblr pages
 		DBrec.s='1';							
 		tagsDB.set(getFname(document.location.href), JSON.stringify(DBrec));
-		document.title='♥ '+document.title;
-	};
+		document.title='♥ '+document.title;									//Actually I wanted to put a diskette symbol there,
+	};																		// but because chromse sucks it does not support extended unicode in title
 }
 
 function submit(){															//Collects entered translations for missing tags
@@ -746,7 +753,7 @@ function submit(){															//Collects entered translations for missing tag
 		if (tg.length){
 			if (!isANSI(tg)&&!allowUnicode) {
 				$(v).find('input.txt').css("background-color","#ffC080");
-				missing=true;												//indicate unicode characters in user input
+				missing=true;												//Indicate unicode characters in user input
 			} 
 			else if (cat[0].checked) 										//name category was selected for this tag
 				names.set(v.innerText.trim().toLowerCase(),tg.replace(exclrgxp,'-'))		
@@ -801,7 +808,7 @@ function im(){																//Import auxiliary tag databases as text file
 };
 
 function handleFileSelect(evt) {											//Fill in databases with data from imported file
-    var file = evt.target.files[0]; 
+    var file = evt.target.files[0];  
 	var reader = new FileReader();
 	reader.onloadend = function(e) {
 		clear=confirm('Would you like to clear existing databases before importing?');
