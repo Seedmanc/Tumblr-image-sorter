@@ -328,10 +328,14 @@ function toggleSettings(){													//Show drop-down menu with settings
 	$('table#port td').not('.settings').toggle();
 	$('table#translations').css('top',($('table#port').height()+30)+'px');
 	sign=$('a.settings')[0];
-	if (sign.innerText.search(/\+/,'-')!=-1)
-		sign.innerText=sign.innerText.replace(/\+/gi,'-')
-	else
+	if (sign.innerText.search(/\+/,'-')!=-1) {
+		sign.innerText=sign.innerText.replace(/\+/gi,'-');
+		$('td.settings').css('border-bottom','');
+	}
+	else {
 		sign.innerText=sign.innerText.replace(/\-/gi,'+');
+		$('td.settings').css('border-bottom','1px solid black');
+	}
 };
 
 function debugSwitch(checkbox){												//Toggling debug mode requires page reload
@@ -354,7 +358,7 @@ function onDOMcontentLoaded(){ 												//Load plugins and databases
 		namespace: "names",
 		swf_url: storeUrl,  
 		onready: function(){
-			document.title+=' N ';
+			document.title+=(debug)?' NM ':'';
 			N=true;
 			mutex();
 		},
@@ -377,7 +381,7 @@ function onDOMcontentLoaded(){ 												//Load plugins and databases
 		namespace: "animage",
 		swf_url: storeUrl,   
 		onready: function(){ 
-			document.title+=' T ';
+			document.title+=(debug)?' T ':'';
 			debug =(tagsDB.get(':debug:')=='true');							//Override initial debug state with the one stored in DB
 			tagsDB.config.debug=debug;
 			getTags();
@@ -428,7 +432,6 @@ function main(){ 															//Launch tag processing and handle afterwork
 	unsorted=analyzeTags();
 	$('input#submit')[0].onclick=submit; 
 	$('input.txt').on('change',selected);
-	
 	xhr.open("get", document.location.href, true); 							//Reget the image to attach it to downloadify button
 	xhr.send();  
 };
@@ -579,7 +582,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	document.title+=' \\'+folder+filename;
 	folder=root+folder;														//If no name or folder tags were found, folder will be set to root directory
 	
-	if (DBrec.s=='1') document.title+=' (already saved)';					//Indicate if the image has been marked as saved before
+	if (DBrec.s=='1') document.title='♥ '+document.title;					//Indicate if the image has been marked as saved before
 	return unsorted;
 };
 
@@ -717,7 +720,7 @@ function onCmplt(){															//Mark image as saved in the tag database
 	if (DBrec)	{															// it is used to mark saved images on tumblr pages
 		DBrec.s='1';							
 		tagsDB.set(getFname(document.location.href), JSON.stringify(DBrec));
-		document.title+=' (saved now)';
+		document.title='♥ '+document.title;
 	};
 }
 

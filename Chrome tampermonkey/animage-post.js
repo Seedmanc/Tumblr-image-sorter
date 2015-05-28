@@ -53,13 +53,14 @@ var isDash=(namae.indexOf('www.')==0);
 var asked=false;
 
 window.onerror = function(msg, url, line, col, error) {								//General error handler
-   var extra = !col ? '' : '\ncolumn: ' + col;
-   extra += !error ? '' : '\nerror: ' + error;										//Shows '✗' for errors in title and also alerts a message if debug is on
-   if (msg.search('Script error')!=-1)
-	  return true;																	// except for irrelevant errors
-   document.title+='✗';
-   var suppressErrorAlert = true;
-   return suppressErrorAlert;
+ 	var extra = !col ? '' : '\ncolumn: ' + col;
+ 	extra += !error ? '' : '\nerror: ' + error;										//Shows '✗' for errors in title and also alerts a message if debug is on
+ 	if (msg.search('Script error')!=-1)
+ 		return true;																	// except for irrelevant errors
+ 	document.title+='✗';
+	alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+ 	var suppressErrorAlert = true;
+ 	return suppressErrorAlert;
 };
 
 function getFname(fullName){														//Extract filename from image URL and format it
@@ -314,10 +315,8 @@ function process(postData) {														//Process information obtained from AP
 			if (photos>1) {
 				y=img.eq(j).parent();
 				y=y.is('a')?y:y.parent().find('a').eq(0);							//Look for a link either directly above the image or around it
-				if (y.is('a')) {
-					y.attr('target','_blank');
+				if (y.is('a'))  
 					removeEvents(y[0]);												//get rid of that annoying photoview feature
-				};
 			};
 		}
 		else																		// then the inline ones
@@ -360,6 +359,7 @@ function promisePosts(posts){														//because chrome sucks I have write a
 
 function removeEvents(node){														//Remove event listeners such as onclick, because in chrome they mess with middlebutton new tab opening
 	if (fixMiddleClick) {
+		jQuery(node).attr('target','_blank');
 		elClone = node.cloneNode(true);											
 		node.parentNode.replaceChild(elClone, node);		 
 	};
