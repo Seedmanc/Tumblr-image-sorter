@@ -162,9 +162,9 @@ Note that since I'm using the Opera version myself it will be the only version t
 
 I still have yet to find a way for a userscript to load information from a file on HDD automatically.
 
-* Implement cumulative tag storage, adding up different tags for same post across encountered reblogs and/or try to add traversal of reblog tree back to origin in search for tags if no tags were found initially.
+* Implement traversal of reblog tree back to the origin in search for tags if no tags were found initially.
 
-Should help when finding reblogs without any tags, as well as solve the problem of overwriting tag entries.
+Should help when finding reblogs without any tags.
 
 * Add support for infinite scroll
 
