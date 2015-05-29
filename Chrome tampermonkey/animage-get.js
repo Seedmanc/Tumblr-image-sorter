@@ -129,7 +129,8 @@
 
    tagsDB=null;																//Makes sure databases are accessible from console for debugging
    names=null ;
-   meta=null ; 															
+   meta=null ; 		
+var title;
 var filename;															
 var folder = ''; 
 var DBrec='';																//Raw DB record, stringified object with fields for saved flag and tag list
@@ -345,7 +346,6 @@ function debugSwitch(checkbox){												//Toggling debug mode requires page r
 	location.reload();
 };
 
-//document.addEventListener('DOMContentLoaded', onDOMcontentLoaded, false);  
 onDOMcontentLoaded();
 function onDOMcontentLoaded(){ 												//Load plugins and databases
 	href=document.location.href;
@@ -433,14 +433,11 @@ function main(){ 															//Launch tag processing and handle afterwork
 	unsorted=analyzeTags();
 	$('input#submit')[0].onclick=submit; 
 	$('input.txt').on('change',selected);
-	if ((document.readyState=='complete')||(document.readyState=='interactive')) {
-		xhr.open("get", document.location.href, true); 						//Reget the image to attach it to downloadify button
-		xhr.send();
-	} else
-		$(window).load(function(){
-			xhr.open("get", document.location.href, true); 					//Not ever sure here, but apparently requesting the image during its loading into page 
-			xhr.send();  													// misses the cache and causes it to load twice the time
-		});																	// ensure that we only request the image for the button after it was cached 
+
+	xhr.open("get", document.location.href, true); 							//Reget the image to attach it to downloadify button
+	xhr.send();
+	
+	$(window).load(function(){document.title=title;});
 };
 
 function isANSI(s) {														//Some tags might be already in roman and do not require translation
@@ -590,6 +587,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	folder=root+folder;														//If no name or folder tags were found, folder will be set to root directory
 	
 	if (DBrec.s=='1') document.title='♥ '+document.title;					//Indicate if the image has been marked as saved before
+	title=document.title;
 	return unsorted;
 };
 
@@ -808,7 +806,7 @@ function im(){																//Import auxiliary tag databases as text file
 };
 
 function handleFileSelect(evt) {											//Fill in databases with data from imported file
-    var file = evt.target.files[0];  
+    var file = evt.target.files[0]; 
 	var reader = new FileReader();
 	reader.onloadend = function(e) {
 		clear=confirm('Would you like to clear existing databases before importing?');

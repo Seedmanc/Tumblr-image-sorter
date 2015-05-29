@@ -188,6 +188,14 @@ function main(){																	//Search for post IDs on page and call API to g
 	}); 	
 };
 
+function mkUniq(arr){																//Sorts an array and ensures uniqueness of its elements
+	to={};
+	$.each(arr, function(i,v){
+		to[v.toLowerCase()]=true;});
+	arr2=Object.keys(to);
+	return arr2;
+};
+
 function mutex(){																	//Check readiness of libraries being loaded simultaneously
 	if (J&&T&&P){		
 		J=T=P=false;																											
@@ -262,8 +270,9 @@ function process(postData) {														//Process information obtained from AP
 			a='<a href="'+href+'" style=""></a>';
 			i=jQuery(vl);
 			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;		//I dunno either
-			if (x.parent().is('a')) 												// basically either direct parent or grandparent of the image can be a link already
-				x.unwrap();															// in which case we need to remove it before creating our own
+			if ((x.parent().is('a'))||(i.width()<128)) 								// basically either direct parent or grandparent of the image can be a link already
+				return false;														// in which case we need to skip processing to avoid problems
+																					// as well as if the image was in fact a button and not a part of the post
 			i.wrap(a);
 			if (typeof pxuDemoURL !== 'undefined' && pxuDemoURL=="fluid-theme.pixelunion.net")
 				i.parent().css('position','relative');								//Fix for PixelUnion Fluid which otherwise gets rekt if you insert a link
@@ -310,13 +319,21 @@ function process(postData) {														//Process information obtained from AP
 	img=jQuery(img.toArray().concat(inlimg));										//Make sure the resulting list of images is in order
 	tags=res.response.posts[0].tags;												//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
+	
 	for (j=0; j<photos+inlimg.length; j++) {
 		if (j<photos) 																//First come the images in photo posts if exist
 			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
 		else																		// then the inline ones
 			url=img.eq(j).parent().attr('href');
 		tst=tagsDB.get(getFname(url));												//Check if there's already a record in database for this image	
-		if (((!tst)||(debug))&&(tags.length))  {									// if there isn't or we're in debug mode, make one, putting the flag and tags there
+		if (tags.length)  {
+			if (tst) {																// if there is we need to merge existing tags with newfound ones
+				oldtags=JSON.parse(tst).t.split(',');
+				newtags=mkUniq(oldtags.concat(tags));
+				DBrec.t=newtags.toString().toLowerCase();
+				DBrec.s=parseInt(JSON.parse(tst).s);
+			} else
+				DBrec.s=0;
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
 			
 			if (tagsDB.get(getFname(url))!=JSON.stringify(DBrec))					//Immediately check whether the write was successful
@@ -331,7 +348,7 @@ function process(postData) {														//Process information obtained from AP
 					alert('Failed writing to DB. Flashcookies size limit might have been hit. If you see a flash dialog window at the top-left corner, try raising the limit.');
 					window.scrollTo(0, 0);
 					asked=true;
-				};										//TODO: make tags cumulative, adding up upon visiting different posts of same image?
+				};				
 		};												//TODO: add tags retrieval from reblog source if no tags were found here
 		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 							//Otherwise if there is a record and it says the image has been saved 
 			img.eq(j).css('outline','3px solid '+highlightColor).css('outline-offset','-3px');	

@@ -240,8 +240,8 @@ function process(res, v) {														//process information obtained from API 
 			a='<a href="'+href+'" style=""></a>';
 			i=jQuery(vl);
 			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;	//i dunno either
-			if (x.parent().is('a')) 											//basically either direct parent or grandparent of the image can be a link already
-				x.unwrap();														//in which case we need to remove it before creating our own
+			if ((x.parent().is('a'))||(i.width()<128)) 							//basically either direct parent or grandparent of the image can be a link already
+				return false;													//in which case we need to skip processing
 			i.wrap(a);
 			if (typeof pxuDemoURL!== 'undefined' && pxuDemoURL=="fluid-theme.pixelunion.net")
 				i.parent().css('position','relative');							//fix for PixelUnion Fluid
@@ -287,14 +287,23 @@ function process(res, v) {														//process information obtained from API 
 	img=jQuery(img.toArray().concat(inlimg));									//make sure the resulting list of images is in order
 	tags=res.response.posts[0].tags;											//get tags associated with the post
 	DBrec={s:0, t:tags.toString().toLowerCase()};								//create an object for database record
+	
 	for (j=0; j<photos+inlimg.length; j++) {
 		if (j<photos)
 			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
 		else
 			url=img.eq(j).parent().attr('href');
-		tst=tagsDB.get(getFname(url));											//check if there's already a record in database for this image	
-		if (((!tst)||(debug))&&(tags.length)) {									//if there isn't, make one, putting the flag and tags there
+		tst=tagsDB.get(getFname(url));											//Check if there's already a record in database for this image	
+		if (tags.length)  {
+			if (tst) {															// if there is we need to merge existing tags with newfound ones
+				oldtags=JSON.parse(tst).t.split(',');
+				newtags=mkUniq(oldtags.concat(tags));
+				DBrec.t=newtags.toString().toLowerCase();
+				DBrec.s=parseInt(JSON.parse(tst).s);
+			} else
+				DBrec.s=0;			
 			tagsDB.set(getFname(url), JSON.stringify(DBrec));	
+			
 			if (tagsDB.get(getFname(url))!=JSON.stringify(DBrec))				//immediately check whether the write was successful
 				if (!debug && !asked)											//if not and no debug mode enabled, prompt to enable it
 					if (confirm('Failed writing to DB. Flashcookies size limit might have been hit.\n Would you like to enable debug mode to get a possibility to fix that? (Will reload the page)')) {
