@@ -55,7 +55,10 @@ window.onerror = function(msg, url, line, col, error) {							//general error ha
    if ((msg.search('this.swf')!=-1)||(msg.search('Script error')!=-1)) 
 	 return true;																//except for irrelevant errors
    document.title+='✗';
-   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+   if (debug)
+	alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra)
+   else
+	throw error;
    var suppressErrorAlert = true;
    return suppressErrorAlert;
 };
@@ -87,7 +90,7 @@ function getID(lnk){															//extract numerical post ID from self-link
 	if (i!=-1)
 		Result=Result.substring(0,i);
 	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) 
-		throw new Error('IDentification error')
+		throw new Error('IDentification error: '+Result)
 	else
 		return Result;
 };
@@ -101,7 +104,7 @@ function main(){																//search for post IDs on page and call API to ge
 		posts=jQuery('ol.posts').find('div.post').not('.new_post')				//getting posts on dashboard is straightforward with its constant design,
 	else {																		// but outside of it are all kinds of faulty designs, so we have to experiment
 		posts=jQuery('article.entry > div.post').not('.n').parent();			//some really stupid plain theme
-		posts=(posts.length)?posts:jQuery('.post');								//general way to obtain posts that are inside containers with class='post'
+		posts=(posts.length)?posts:jQuery('.post').not('#description');			//general way to obtain posts that are inside containers with class='post'
 		if (isImage) 
 			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
 				document.location.href=jQuery('img#content-image')[0].src		//proceed directly to the image if it already has a DB record with tags	
@@ -113,7 +116,7 @@ function main(){																//search for post IDs on page and call API to ge
 		posts=posts.length?posts:jQuery('[id="post"]');							//for "Cinereoism" that uses IDs instead of Classes /0	
 		posts=posts.length?posts:jQuery('[id="designline"]');					//The Minimalist, not tested though and saved indication probably won't work
 		posts=posts.length?posts:jQuery('[id="posts"]');						//Tincture pls why are you doing this
-		posts=posts.length?posts:jQuery("div.posts");							//some redux theme, beats me
+		posts=posts.length?posts:jQuery("div.posts").not('#allposts');			//some redux theme, beats me
 		if (posts.length==0){
 			document.title+=' [No posts found]';								//give up
 			return;
@@ -173,6 +176,14 @@ function main(){																//search for post IDs on page and call API to ge
 				};
 			});
 	});	
+};
+
+function mkUniq(arr){																//Sorts an array and ensures uniqueness of its elements
+	to={};
+	$.each(arr, function(i,v){
+		to[v.toLowerCase()]=true;});
+	arr2=Object.keys(to);
+	return arr2;
 };
 
 function mutex(){																//check readiness of libraries being loaded simultaneously

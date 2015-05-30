@@ -56,10 +56,12 @@ window.onerror = function(msg, url, line, col, error) {								//General error h
  	var extra = !col ? '' : '\ncolumn: ' + col;
  	extra += !error ? '' : '\nerror: ' + error;										//Shows '✗' for errors in title and also alerts a message if debug is on
  	if (msg.search('Script error')!=-1)
- 		return true;																	// except for irrelevant errors
+ 		return true;																// except for irrelevant errors
  	document.title+='✗';
 	if (debug)
-		alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+		alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra)
+	else 
+		throw error;
  	var suppressErrorAlert = true;
  	return suppressErrorAlert;
 };
@@ -150,7 +152,7 @@ function main(){																	//Search for post IDs on page and call API to g
 		posts=jQuery('ol.posts').find('div.post').not('.new_post')					//Getting posts on dashboard is straightforward with its constant design,
 	else {																			// but outside of it are all kinds of faulty designs, so we have to experiment
 		posts=jQuery('article.entry > div.post').not('.n').parent();				//Some really stupid plain theme have to be checked before everything
-		posts=(posts.length)?posts:jQuery('.post');									//General way to obtain posts that are inside containers with class='post'
+		posts=(posts.length)?posts:jQuery('.post').not('#description');				//General way to obtain posts that are inside containers with class='post'
 		if (isImage) 
 			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
 				document.location.href=jQuery('img#content-image')[0].src			//Proceed directly to the image if it already has a DB record with tags	
@@ -162,14 +164,14 @@ function main(){																	//Search for post IDs on page and call API to g
 		posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0	
 		posts=posts.length?posts:jQuery('[id="designline"]');						//The Minimalist, not tested though and saved indication probably won't work
 		posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
-		posts=posts.length?posts:jQuery("div.posts");								//some redux theme, beats me
+		posts=posts.length?posts:jQuery("div.posts").not('#allposts');				//some redux theme, beats me
 		if (posts.length==0){
 			document.title+=' [No posts found]';									//Give up
 			return;
 		};
 	};
 																					//Because chrome sucks it has no window title area
-	document.title="Rdy:[";															// we're limited to tab title which is very small
+	document.title="▶[";															// we're limited to tab title which is very small
 																					//A "progressbar" will be displayed in page title,
 	if (!isImage)	{																// indicating that the page is ready for interaction
 		hc=posts.find('.hc.nest');
@@ -182,7 +184,7 @@ function main(){																	//Search for post IDs on page and call API to g
 	promisePosts(posts.toArray()).then(function() {									//the what
  		if (isImage)																//Redirect to actual image from image page after we got the ID
  			document.location.href=jQuery('img#content-image')[0].src;						
- 		document.title+=']100%';													//At the end of processing indicate it's finished
+ 		document.title+=']■';														//At the end of processing indicate it's finished
 	}).catch(function(err) {														//catch any error that happened along the way
 		throw err;
 	}); 	
@@ -202,7 +204,14 @@ function mutex(){																	//Check readiness of libraries being loaded si
 		main();																		//when everything is loaded, proceed further
 	}
 };
-onDOMContentLoaded();
+
+if (typeof masonite != 'undefined')
+	jQuery(window).load(function(){													//some themes require waiting till their own functions finish
+		onDOMContentLoaded();
+	})
+else
+	onDOMContentLoaded();
+	
 function onDOMContentLoaded(){														//Load plugins 
 
 	if (isDash && !enableOnDashboard)												//don't run on dashboard unless enabled
@@ -216,11 +225,11 @@ function onDOMContentLoaded(){														//Load plugins
 	else
 		P=true;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site
-			loadAndExecute('//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js', function(){ 
-				$.noConflict();														// but existing version might be older than required (1.5)
-				J=true;
-				mutex();															// force load the newer jQuery if that's the case
-			});			
+		loadAndExecute('//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js', function(){ 
+			$.noConflict();														// but existing version might be older than required (1.5)
+			J=true;
+			mutex();															// force load the newer jQuery if that's the case
+		});			
 	}
 	else 
 		J=true; 
@@ -348,7 +357,7 @@ function process(postData) {														//Process information obtained from AP
 					alert('Failed writing to DB. Flashcookies size limit might have been hit. If you see a flash dialog window at the top-left corner, try raising the limit.');
 					window.scrollTo(0, 0);
 					asked=true;
-				};				
+				};	
 		};												//TODO: add tags retrieval from reblog source if no tags were found here
 		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 							//Otherwise if there is a record and it says the image has been saved 
 			img.eq(j).css('outline','3px solid '+highlightColor).css('outline-offset','-3px');	
