@@ -83,7 +83,7 @@ Basically, every theme that has post containers with `'class="post"'` and contai
 |Catching Elephant|	http://www.tumblr.com/theme/7285 	|90|
 |Effector|	http://www.tumblr.com/theme/17403 	|90|
 |ER2|	http://cubicle17.com 	|100|
-|Masonite|	http://hellodirty.com 	|95|
+|Masonite|	http://hellodirty.com 	|85|
 |Minimal by Artur Kim|	http://arturkim.com 	|100|
 |o by inky|	http://www.tumblr.com/theme/1386 	|90|
 |Optica|	http://www.tumblr.com/theme/37310 	|100|
