@@ -129,8 +129,7 @@ The settings area can be found in the beginning of each script, right after the 
 
  The debug mode has the following effects on the scripts' behaviour:
 
- `-` enables error notifications via alert message, including errors from other scripts of the page. Without debug mode errors are redirected back to console, user will only see an `✗` mark in the title upon encountering an error.
-
+ `-` enables error notifications via alert message, including errors from other scripts of the page. Without debug mode errors are redirected back to console, user will only see an `✗` mark in the title upon encountering an error.  
  `-` brings the FlashDB window into view (top-left corner). This way if a size limit has been hit the user will see a flash notification about that and have the ability to change settings from there.
 
 * storeUrl - address of the flash object controlling the databases. Must be the same in both scripts.
@@ -143,36 +142,34 @@ The settings area can be found in the beginning of each script, right after the 
 
 1. animage-post:
 
- * enableOnDashboard - applies the script's processing to posts on dashboard the same way it works on individual blogs' posts. 
-
+ * enableOnDashboard - applies the script's processing to posts on dashboard the same way it works on individual blogs' posts.  
   Convenient if there's no support yet for a particular tumblr theme; the dashboard design is constant and straightforward, ensuring compatibility.
 
- * linkify - enables converting of all found images to links if they don't have links yet. 
+ * linkify - enables converting of all found images to links if they don't have links yet.  
+  Most pictures' links are already changed by the script to point directly to images (skipping the /image/ page). However tumblr does not put links over small images that don't have hi-res versions, or inline images. This option fixes that, making that every image link to either itself (small images in photo posts), its larger version (inline images with HD) or its reverse image search on Google (inline images without HD).
 
-  Since the GET script requires the images to be opened in a new tab, most pictures' links are already changed by the script to point directly to images (skipping the /image/ page). However tumblr does not put links over small images that don't have hi-res versions, neither it links inline images inside posts, despite them having HD versions. This option fixes that, ensuring that every image links to either itself (small images in photo posts), its larger version (inline images that have HD) or its reverse image search on Google (inline images without HD).
-
-  This feature is still in testing and might probably break themes like Pixel Union Fluid.
+   This feature is still in testing and might probably break themes like Pixel Union Fluid.
 
 2. animage-get:
 
- * root  - path to the base folder, containing all other folder in your photo collection. 
- 
+ * root  - path to the base folder, containing all other folder in your photo collection.  
   Use double backslashes instead of single ones, must end with them too.
- * ms - metasymbol, a character that differentiates meta folders, containing name folders from name folders themselves.
 
+ * ms - metasymbol, a character that differentiates meta folders, containing name folders from name folders themselves.  
   Must be present in the names of meta folders as their first symbol. Equals to an exclamation mark by default.
+
  * Folders - database of tags and matching folders for saving the corresponding images to.  
  * ignore - list of tags skipped from processing, each tag pairs with 'true' for enabled ignoring or 'false' for disabled.
- * allowUnicode - do not block the user from entering translations of unknown tags in unicode.
 
+ * allowUnicode - do not block the user from entering translations of unknown tags in unicode.  
   Disabled by default, because the idea of the script is to produce file names in a booru-compatible way without fancy characters, use at your own risk.
 
- * useFolderNames - automatically expands the Folder database to match also every folder name as a tag in addition to tags provided by the user.
- 
+ * useFolderNames - automatically expands the Folder database to match also every folder name as a tag in addition to tags provided by the user.  
   Assuming that the database consists of foreign tags paired with translated folder names this will allow for entering only one entry per tag while being able to recognize both versions of it.
  * downloadifySwf - address of the flash button used to downloading the image and copying the prepared save path to clipboard.
+  
 
-Yet other settings are version-specific, see the readme inside the version folder of your choice for that.
+Yet other settings are version-specific, see the readme inside the version folder of your choice for them.
 
 #### Everyday usage
 The workflow is as follows: make sure the page with posts you're navigating has at least initiated the processing by the POST script (`Ready: [` has appeared in the page title), then open the images in a new tab (usually with middle click). During or after the image loading the GET script will indicate whether it has succeeded in recognizing all the tags for the image by changing image tab's title. In case there was a direct hit (only one person on the photo and there's a dedicated folder) it'll show `✓` followed by the path to needed folder. If there were some unrecognized tags detected, it'll show `?` and the tags. Finally, if that particular image had no tags at all, the GET script will not be activated, unless the debug mode was enabled. 
