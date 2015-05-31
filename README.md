@@ -146,8 +146,7 @@ The settings area can be found in the beginning of each script, right after the 
   Convenient if there's no support yet for a particular tumblr theme; the dashboard design is constant and straightforward, ensuring compatibility.
 
  * linkify - enables converting of all found images to links if they don't have links yet.  
-  Most pictures' links are already changed by the script to point directly to images (skipping the /image/ page). However tumblr does not put links over small images that don't have hi-res versions, or inline images. This option fixes that, making that every image link to either itself (small images in photo posts), its larger version (inline images with HD) or its reverse image search on Google (inline images without HD).
-
+  Tumblr does not put links over small photos that don't have hi-res versions, or inline images. This option fixes that, making that every image link to either itself (small images in photo posts), its larger version (inline images with HD) or its reverse image search on Google (inline images without HD).  
    This feature is still in testing and might probably break themes like Pixel Union Fluid.
 
 2. animage-get:
