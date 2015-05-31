@@ -13,3 +13,9 @@ This version is designed to make use of Opera's native userscript support and mu
 For the rest of configuration, head over to the [main readme section](https://github.com/Seedmanc/Tumblr-image-sorter#usage).
 
 I also recommend installing the [No Click to Activate](https://addons.opera.com/en/extensions/details/no-click-to-activate/) addon, because having to click the flash button twice every time might be annoying.
+
+## Version-specific settings
+
+* debug - in Opera Native version of the userscript debug also disables the inbuilt cleanup feature.
+
+  This feature is specific to Opera Native version as well. What it does is removal of flash DB-related variables and actual flash content from memory after they're no longer needed (the processing was finished in POST script or the image was successfully saved in GET script). This is done to minimize the lag introduced by the userscript, that happens upon tab closing in Opera. Enabling debug turns off cleanup which allows for flashDB access at any time while the tab is still open.
