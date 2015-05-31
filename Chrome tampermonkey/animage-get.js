@@ -112,19 +112,18 @@
 		"	ゆかな		"	:	"	 Yukana	"
 	};
 
-	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};			 //These tags will not count towards any category and won't be included into filename
+	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};			//These tags will not count towards any category and won't be included into filename
 																			// to disable an entry without removing it use false as value
 
 	var allowUnicode=	false;												//Whether to allow unicode characters in manual translation input, not tested
 	
-	var useFolderNames=	true;												//In addition to tags listed in keys of the folders object, recognize also folder names themselves as tags
+	var useFolderNames=	true;												//In addition to tags listed in keys of the folders object, recognize also folder names themselves
 																			// this way you won't have to provide both roman and kanji spellings for names as separate tags
-
-	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
-																			//Flash databases are bound to the URL, must be same as in the other script
 
 	var debug=			false;												//Initial debug state, affects creation of flashDBs. Value saved in the DB overrides it after DB init.
 	
+	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
+																			//Flash databases are bound to the URL, must be same as in the other script
 // ==/Settings=========================================================
 
    tagsDB=null;																//Makes sure databases are accessible from console for debugging

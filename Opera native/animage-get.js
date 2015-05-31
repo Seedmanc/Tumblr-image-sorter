@@ -105,21 +105,21 @@
 	};
 
 	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};		//These tags will not count towards any category and won't be included into filename
-																		//e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
-																		//to disable an entry without removing it use "false" as the value
+																		// e.g. you can get rid of tags unrelated to picture, that some bloggers tend to add
+																		// to disable an entry without removing it use false as the value
 
 	var allowUnicode=	false;											//Whether to allow unicode characters for manual translation input, not tested
-	
+
 	var useFolderNames=	true;											//In addition to tags listed in folders object, use also folder names themselves as tags
-																		//This way you won't have to provide both roman and kanji spellings for names as separate tags
-	
+																		// this way you won't have to provide both roman and kanji spellings for names as separate tags
+
+	var debug=			false;											//Initial debug value, affects creation of flashDBs, can be changed via GUI
+																		// debug enables error notification, shows im/export controls for aux dbs 
+																		// and save button even if no tags were found, also disables cleanup (lag on tab close)	
 	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
-																		//flash databases are bound to the URL, must be same as in the other script
+																		//Flash databases are bound to the URL, must be same as in the other script
 	var	downloadifySwf=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.swf';			
-																		//flash button URL
-	var debug=			false;											//initial debug value, affects creation of flashDBs, can be changed via GUI
-																		//debug enables error notification, shows im/export controls for aux dbs 
-																		//and save button even if no tags were found, also disables cleanup (lag on tab close)
+																		//Flash button URL
 // ==/Settings=====================================================
 												//TODO add support for no subfolders configuration
 

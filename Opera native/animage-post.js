@@ -16,17 +16,17 @@
 
 // ==Settings=====================================================
 
-	var debug=		false;														//initial debug value, get changed to settings value after DB creation
-																				// enabling debug makes DB entries for images updated every time post is visited
-																				// also it enables error notifications and disables cleanup (causes lag on tab close)
-	var storeUrl=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
-																				//flash databases are bound to the URL, must be same as in the other script
-																				
-	var enableOnDashboard= true;												//will try to collect post info from dashboard posts too
+	var enableOnDashboard=	true;												//will try to process posts on dashboard too
 																				// might be slow and/or glitchy so made optional
-	var linkify= true;															//Make every image (even inline images in non-photo posts) to be processed
+
+	var linkify= 			true;												//make every image (even inline images in non-photo posts) to be processed
 																				// and linked to either itself, it's larger version or its reverse image search
 																				// might break themes like PixelUnion Fluid
+
+	var debug=				false;												//initial debug value, gets changed to settings value after DB creation
+																				// enables error notifications and disables cleanup (causes lag on tab close)
+	var storeUrl=	'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
+																				//flash databases are bound to the URL, must be same as in the other script			
 // ==/Settings====================================================
 
 function loadAndExecute(url, callback){											//Load specified js library and launch a function after that
@@ -339,3 +339,4 @@ function process(res, v) {														//process information obtained from API 
 
 //TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage)
 //TODO: implement some kind of feedback from flash to script about space request success
+//TODO: output FlashDB messages to flash window instead of console on debug.

@@ -24,24 +24,25 @@
 
 // ==Settings=====================================================
 
-	var highlightColor=	'black';													//Because chrome sucks it does not support outline-color invert which ensured visibility
+	var highlightColor=		'black';												//Because chrome sucks it does not support outline-color invert which ensured visibility
 																					// you'll have to specify a color to mark saved images and hope it won't blend with bg
 
-	var fixMiddleClick=	true;														//Because chrome sucks, it launches left onClick events for middle click as well,
-																					// which is wrong, images open in photoset viewer instead of a new tab as required for the script
+	var fixMiddleClick=		true;													//Because chrome sucks, it launches left onClick events for middle click as well,
+																					// images open in photoset viewer instead of a new tab as required for the script
 																					// this option will 'fix' this by removing the view in photoset feature altogether
 																					// alternatively you'll have to right-click open in a new tab instead
 	
-	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
-																					//Flash databases are bound to the URL, must be same as in the other script
-																				
-	var enableOnDashboard= true;													//Will try to collect post info from dashboard posts too
+	var enableOnDashboard=	true;													//Will try to collect post info from dashboard posts too
 																					// might be slow and/or glitchy so made optional
-	var linkify= 		true;														//Make every image (even inline images in non-photo posts) to be processed
+
+	var linkify= 			true;													//Make every image (even inline images in non-photo posts) to be processed
 																					// and linked to either itself, it's larger version or its reverse image search
 																					// might break themes like PixelUnion Fluid
 																					
-	var debug=			false;														//Initial debug value, gets changed to settings value after DB creation
+	var debug=				false;													//Initial debug value, gets changed to settings value after DB creation
+	
+	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
+																					//Flash databases are bound to the URL, must be same as in the other script
 // ==/Settings====================================================
 
  tagsDB=null;
@@ -392,3 +393,4 @@ function removeEvents(node){	 													//Remove event listeners such as oncl
 };
 //TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage). Also will make it possible to have a backlink from image page
 //TODO: implement some kind of feedback from flash to script about space request success
+//TODO: output FlashDB messages to flash window instead of console on debug.
