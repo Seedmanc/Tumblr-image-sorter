@@ -11,6 +11,7 @@ A userscript for image file name and save path formatting based on tags.
 6. [Additional features](#additional-features)
 7. [Usage](#usage)
  * [First-time configuration](#first-time-configuration)
+ * [Settings](#settings)
  * [Everyday usage](#everyday-usage)
  * [Managing unrecognized tags](#managing-unrecognized-tags)
 8. [Project info](#project-info)
@@ -114,11 +115,30 @@ By default the DB has the configuration that I'm using myself, around 80 japanes
 
 Note that if there are duplicating tag entries among these 3 DBs, the following hierarchy takes place: **Folders > names > meta**.
 
-Also take a look at the Settings part inside both scripts. Default values must be fine for usage right away. You can rehost the two flash objects somewhere else if you want, but keep in mind that every time you change the `storeUrl` variable the databases (except inbuilt Folders one) are created from scratch. Previous versions are not deleted, so you can return to them by changing the url back.
+Another thing to note, there are limits on the amount of data stored in flash cookies. I believe the default value is 100kb per database. While every record for an image takes relatively little space (about 80 bytes per image), the data is continuously added as you navigate tumblr and encounter new posts. Eventually you'll hit the limit and will (hopefully) be notified about that by the POST script. You might want to set the limit to at least 1 megabyte since very beginning. Head over to http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager07.html look for your `storeUrl` host in the list (`dl.dropboxusercontent.com` by default) and change the value as you see fit.
+
+#### Settings
+
+In the current version most of the settings are changed via editing the values inside the scripts, no centralized GUI so far.
+
+The settings area can be found in the beginning of each script, right after the userscript header. Default values should be fine for usage right away.
+
+Some settings are common for both scripts:
+
+* debug - Initial debug mode state, which is in effect until the flash DB is loaded, then it gets replaced by the value stored inside of it (which is controlled via GUI in the GET script).
+The debug mode has the following effects on the scripts' work:
+
+Enables error notifications via alert message, including errors from other scripts of the page. Without debug mode errors are redirected back to console, user will only see an `✗` mark in the title upon encountering an error.
+
+Brings the FlashDB window into view (top-left corner). This way if a size limit has been hit the user will see a flash notification about that and have the ability to change settings from there.
+
+* storeUrl - Address of the flash object controlling the databases. Must be the same in both scripts
+
+ You can rehost the flash objects somewhere else if you want, but keep in mind that every time you change the `storeUrl` variable the databases (except the inbuilt ones like Folders & ignore) are created from scratch. Previous versions are not deleted, so you can return to them by changing the url back.
 
 Just to make it clear: the data is not stored somewhere online by the storeUrl, it is stored on your machine locally. But the database is bound to the url, think of it as of a long name for the DB.
 
-Another thing to note, there are limits on the amount of data stored in flash cookies. I believe the default value is 100kb per database. While every record for an image takes relatively little space (about 80 bytes per image), the data is continuously added as you navigate tumblr and encounter new posts. Eventually you'll hit the limit and will (hopefully) be notified about that by the POST script. I recommend setting the limit to at least 1 megabyte since very beginning. Head over to http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager07.html look for your `storeUrl` host in the list (`dl.dropboxusercontent.com` by default) and change the value as you see fit.
+Other settings are script-specific:
 
 #### Everyday usage
 The workflow is as follows: make sure the page with posts you're navigating has at least initiated the processing by the POST script (`Ready: [` has appeared in the page title), then open the images in a new tab (usually with middle click). During or after the image loading the GET script will indicate whether it has succeeded in recognizing all the tags for the image by changing image tab's title. In case there was a direct hit (only one person on the photo and there's a dedicated folder) it'll show `✓` followed by the path to needed folder. If there were some unrecognized tags detected, it'll show `?` and the tags. Finally, if that particular image had no tags at all, the GET script will not be activated, unless the debug mode was enabled. 
