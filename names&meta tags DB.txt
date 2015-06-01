@@ -1,4 +1,4 @@
-{
+﻿{
 	"names": {
 		"中村繪里子": "Nakamura Eriko",
 		"皆川純子": "Minagawa Junko",
@@ -17,7 +17,6 @@
 		"大橋彩香": "Ohashi Ayaka",
 		"尾崎真実": "Ozaki Mami",
 		"片岡あづさ": "Kataoka Azusa",
-		"雨宮天": "Amamiya Sora",
 		"高垣彩陽": "Takagaki Ayahi",
 		"津田美波": "Tsuda Minami",
 		"渕上舞": "Fuchigami Mai",

@@ -243,7 +243,7 @@ function process(res, v) {														//process information obtained from API 
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
 				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');		//if there is an HD version, link it
 				r=true;
-				bar=inlimg.length+'|';
+				bar=inlimg.length+'.';
 			}
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);

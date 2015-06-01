@@ -58,6 +58,7 @@
 		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",					//not the other way, however, having keys repeating will only count the last occurrence
 		"	堀江由衣	"	:	"	!Yamato Nadeshiko\\Horie Yui",
 		"	田村ゆかり	"	:	"	!Yamato Nadeshiko\\Tamura Yukari	",
+		"	雨宮天	"	:	" 	Amamiya Sora	",
 		"	千葉紗子	"	:	"	Chiba Saeko	",
 		"	渕上舞	"	:	"	Fuchigami Mai	",
 		"	藤田咲	"	:	"	Fujita Saki	",
@@ -530,6 +531,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		delete ansi[y];													// but at the time of deletion there was no way to know yet which one would match the kanji tag
 	});																	//this also gets rid of reverse duplicates between recognized tags and ansi
 	fldrs=mkUniq(fldrs);	
+	nms=$(nms).not(fldrs).get();										//subtract fldrs from nms if they happen to have repeating elements
 	fldrs2=[];						
 	fldrs=$.grep(fldrs,function(v,i){									//a trick to process folders for meta tags, having subfolders for names inside
 		fmeta=getFname(v);
