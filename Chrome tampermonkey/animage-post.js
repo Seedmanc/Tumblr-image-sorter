@@ -13,6 +13,7 @@
 // @include		http://*.tumblr.com/search/*
 // @include		http*://www.tumblr.com/dashboard*
 
+//you can turn off the script for certain blogs by putting '// @exclude http://name.tumlbr.com/*' at a new line
 // @exclude		http*://*.media.tumblr.com/*
 
 // @grant 		none
@@ -28,7 +29,7 @@
 																					// you'll have to specify a color to mark saved images and hope it won't blend with bg
 
 	var fixMiddleClick=		true;													//Because chrome sucks, it launches left onClick events for middle click as well,
-																					// images open in photoset viewer instead of a new tab as required for the script
+																					// images open in the photoset viewer instead of a new tab as required for the script
 																					// this option will 'fix' this by removing the view in photoset feature altogether
 																					// alternatively you'll have to right-click open in a new tab instead
 	
@@ -41,7 +42,7 @@
 																					
 	var debug=				false;													//Initial debug value, gets changed to settings value after DB creation
 	
-	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
+	var storeUrl=			'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';
 																					//Flash databases are bound to the URL, must be same as in the other script
 // ==/Settings====================================================
 
@@ -166,6 +167,7 @@ function main(){																	//Search for post IDs on page and call API to g
 		posts=posts.length?posts:jQuery('[id="designline"]');						//The Minimalist, not tested though and saved indication probably won't work
 		posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
 		posts=posts.length?posts:jQuery("div.posts").not('#allposts');				//some redux theme, beats me
+		posts=posts.length?posts:jQuery("article[class^='post-photo']");			//no idea what theme, uccm uses it
 		if (posts.length==0){
 			document.title+=' [No posts found]';									//Give up
 			return;
@@ -193,7 +195,7 @@ function main(){																	//Search for post IDs on page and call API to g
 
 function mkUniq(arr){																//Sorts an array and ensures uniqueness of its elements
 	to={};
-	$.each(arr, function(i,v){
+	jQuery.each(arr, function(i,v){
 		to[v.toLowerCase()]=true;});
 	arr2=Object.keys(to);
 	return arr2;
@@ -227,16 +229,29 @@ function onDOMContentLoaded(){														//Load plugins
 		P=true;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site
 		loadAndExecute('//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js', function(){ 
-			$.noConflict();														// but existing version might be older than required (1.5)
+			$.noConflict();															// but existing version might be older than required (1.5)
 			J=true;
-			mutex();															// force load the newer jQuery if that's the case
+			mutex();																// force load the newer jQuery if that's the case
 		});			
 	}
 	else 
 		J=true; 
+	try{
+		loadTagsDB('animage'); 														//This is some weird shit
+	} catch(err) {																	//Apparently launching the script at document-body sometimes can be too early
+		delete tagsDB;																//so flashDB fails to attach itself to the page for the lack of body (thanks chrome)
+		jQuery("object[id^='SwfStore_animage_']").remove();							//schedule a second attempt to window.load to be sure
+		delete window.SwfStore['animage'];											//get rid of failed remains
+		jQuery(window).load(function(){	
+			loadTagsDB('animage');
+	 	});
+	};
+};
 
-	tagsDB = new SwfStore({															//Main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
-		namespace: "animage",
+function loadTagsDB(nmspc){															//Main tag database, holds pairs "filename	{s:is_saved?1:0,t:'tag1,tag2,...,tagN'}"
+
+	tagsDB = new SwfStore({															
+		namespace: nmspc,
 		swf_url: storeUrl, 
 		debug: debug,
 		onready: function(){
@@ -249,7 +264,7 @@ function onDOMContentLoaded(){														//Load plugins
 			document.title="✗ tagsDB error";	
 			throw new Error('tagsDB failed to load');												
 		}
-	}); 
+	});
 };
 
 function process(postData) {														//Process information obtained from API by post ID
@@ -271,7 +286,7 @@ function process(postData) {														//Process information obtained from AP
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
 				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');			//If there is an HD version, link it
 				r=true;
-				bar=inlimg.length;
+				bar=inlimg.length+'|';
 			}
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);

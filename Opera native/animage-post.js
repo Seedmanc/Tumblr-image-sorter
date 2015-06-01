@@ -117,13 +117,14 @@ function main(){																//search for post IDs on page and call API to ge
 		posts=posts.length?posts:jQuery('[id="designline"]');					//The Minimalist, not tested though and saved indication probably won't work
 		posts=posts.length?posts:jQuery('[id="posts"]');						//Tincture pls why are you doing this
 		posts=posts.length?posts:jQuery("div.posts").not('#allposts');			//some redux theme, beats me
+		posts=posts.length?posts:jQuery("article[class^='post-photo']");		//no idea what theme, uccm uses it		
 		if (posts.length==0){
 			document.title+=' [No posts found]';								//give up
 			return;
 		};
 	};
 
-	document.title+=" Ready: [";												//a "progressbar" will be displayed in page title,
+	document.title+=" ▶[";												//a "progressbar" will be displayed in page title,
 																				// indicating that the page is ready for interaction
 	if (!isImage)	{
 		hc=posts.find('.hc.nest');
@@ -171,7 +172,7 @@ function main(){																//search for post IDs on page and call API to ge
 				if (isImage)													//redirect to actual image from image page after we got the ID
 					document.location.href=jQuery('img#content-image')[0].src;
 				if (i==posts.length-1) {										//at the end of processing indicate it's finished and cleanup flash
-					document.title+='] 100%'; 
+					document.title+=']■'; 
 					cleanUp();
 				};
 			});
@@ -180,7 +181,7 @@ function main(){																//search for post IDs on page and call API to ge
 
 function mkUniq(arr){																//Sorts an array and ensures uniqueness of its elements
 	to={};
-	$.each(arr, function(i,v){
+	jQuery.each(arr, function(i,v){
 		to[v.toLowerCase()]=true;});
 	arr2=Object.keys(to);
 	return arr2;
@@ -242,7 +243,7 @@ function process(res, v) {														//process information obtained from API 
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
 				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');		//if there is an HD version, link it
 				r=true;
-				bar=inlimg.length;
+				bar=inlimg.length+'|';
 			}
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
