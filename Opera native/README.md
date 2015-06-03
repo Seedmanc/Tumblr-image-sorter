@@ -16,6 +16,6 @@ I also recommend installing the [No Click to Activate](https://addons.opera.com/
 
 ## Version-specific settings
 
-* debug - in Opera Native version of the userscript debug also disables the inbuilt cleanup feature.
+* **debug** - in Opera Native version of the userscript debug also disables the inbuilt cleanup feature.
 
   This feature is specific to Opera Native version as well. What it does is removal of flash DB-related variables and actual flash content from memory after they're no longer needed (the processing was finished in POST script or the image was successfully saved in GET script). This is done to minimize the lag introduced by the userscript, that happens upon tab closing in Opera. Enabling debug turns off cleanup which allows for flashDB access at any time while the tab is still open.
