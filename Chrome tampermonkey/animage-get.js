@@ -18,7 +18,7 @@
 // @require 	https://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.min.js 
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.min.js
-// @run-at 		document-start 
+// @run-at 		document-start
 // @noframes
 // ==/UserScript==
 													
@@ -204,6 +204,7 @@ var style={																	//In an object so you can fold it in any decent edit
 	}									\
 	th {								\
 		border: 0;						\
+		color:black;		\
 	}									\
 	input#submit {						\
 		width:  98%;					\
@@ -329,13 +330,13 @@ function trimObj(obj, ufn){													//Remove trailing whitespace in object k
 function toggleSettings(){													//Show drop-down menu with settings
 	$('table#port td').not('.settings').toggle();
 	$('table#translations').css('top',($('table#port').height()+30)+'px');
-	sign=$('a.settings')[0];
-	if (sign.innerText.search(/\+/,'-')!=-1) {
-		sign.innerText=sign.innerText.replace(/\+/gi,'-');
+	sign=$('a.settings').eq(0);
+	if (sign.text().search(/\+/,'-')!=-1) {
+		sign.text(sign.text().replace(/\+/gi,'-'));
 		$('td.settings').css('border-bottom','');
 	}
 	else {
-		sign.innerText=sign.innerText.replace(/\-/gi,'+');
+		sign.text(sign.text().replace(/\-/gi,'+'));
 		$('td.settings').css('border-bottom','1px solid black');
 	}
 };
@@ -454,7 +455,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	folder='';
 
     if (debug)
-		document.title=JSON.stringify(DBrec,null,' ')+' '					//Show raw DB record 
+		document.title=JSON.stringify(DBrec,null,' ')+' '					//Show raw DB record 
 	else
 		document.title='';												
 	
@@ -626,14 +627,14 @@ function buildTable(ansi, rest) {											//Create table of untranslated tags 
 };
 
 function ignor3(anc){														//Remove clicked tag from results for current session (until page reload)
-	ignore[anc.innerText]=true;												// this way you don't have to fill in the "ignore" list, 
+	ignore[anc.textContent]=true;												// this way you don't have to fill in the "ignore" list, 
 																			// while still being able to control which tags will be counted
 	tdc=$(anc).parent().parent().parent().parent().parent().parent();		//a long way up from tag link to tag cell table					
 	tdc.attr('hidden','hidden');
 	tdc.attr('ignore','ignore');	
 
 	$.each($('datalist').find('option'), function(i,v){						//Hide these tags from the drop-down lists of translations too
-		if (v.value==anc.innerText)										 
+		if (v.value==anc.textContent)										 
 			v.parentNode.removeChild(v);								 
 		}																 
 	);
@@ -645,13 +646,13 @@ function swap(txt){															//Swap roman tags consisting of 2 words
 	set=[];
 	theTag=$(txt).prev().prev()[0];
 	$.each(data.find('option'), function(i,v){
-		if (v.value==theTag.innerText)
+		if (v.value==theTag.textContent)
 			set.push(v);													//Collect all options from drop-down lists containing the tag to be swapped
 		}
 	);
-	swapped=theTag.innerText.split(' ').reverse().join(' ');
+	swapped=theTag.textContent.split(' ').reverse().join(' ');
 
-	theTag.innerText=swapped;
+	theTag.textContent=swapped;
 	tdc=$(txt).parent().parent().parent().parent().parent();				//Change ids of tag cells as well
 	tdc.prop('swap',!tdc.prop('swap'));										//mark node as swapped
 	$.each(set,function(i,v){
@@ -667,14 +668,14 @@ function selected(inp){														//Hide the corresponding roman tag from res
 	$.each(kanji,function(i,v){
 		knj[v.value]=true;
 		$.each(ansi,function(ix,vl){ 										//Have to show a previously hidden tag if another was selected
-			if (vl.innerText.trim()==v.value.trim())
+			if (vl.textContent.trim()==v.value.trim())
 				$(vl).parent().attr('hidden','hidden');
 			}
 		);
 		}
 	);
 	$.each(ansi,function(ix,vl){											//I don't even remember how and why this works
-			if ((!knj[vl.innerText.trim()])&&(!$(vl).parent().attr('ignore')))
+			if ((!knj[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
 				$(vl).parent().removeAttr('hidden');						// but it does
 			}
 		);
@@ -742,7 +743,7 @@ function submit(){															//Collects entered translations for missing tag
 		if (tg.length)
 			tg=tg[0].value.trim();											//found translation tag
 		else {
-			tg=v.innerText.trim(); 											//found roman tag
+			tg=v.textContent.trim(); 											//found roman tag
 			if ($(v).prop('swap')) {
 				t=DBrec.t.replace(tg.split(' ').reverse().join(' '),tg);
 				DBrec.t=t;													//Apply swap changes to the current taglist
@@ -755,9 +756,9 @@ function submit(){															//Collects entered translations for missing tag
 				missing=true;												//Indicate unicode characters in user input
 			} 
 			else if (cat[0].checked) 										//name category was selected for this tag
-				names.set(v.innerText.trim().toLowerCase(),tg.replace(exclrgxp,'-'))		
+				names.set(v.textContent.trim().toLowerCase(),tg.replace(exclrgxp,'-'))		
 			else if (cat[1].checked)										//meta category was selected
-				meta.set(v.innerText.trim().toLowerCase(), tg.replace(exclrgxp,'-'))
+				meta.set(v.textContent.trim().toLowerCase(), tg.replace(exclrgxp,'-'))
 			else { 															//no category was selected, indicate missing input
 				$(cat[0].parentNode.parentNode ).css("background-color","#ff8080");
 				missing=true;
@@ -796,14 +797,14 @@ function ex(){																//Export auxiliary tag databases as a text file
 		textcopy: ''	
 	});	
 	$('a.exim')[0].removeAttribute('onclick');
-	$('a#aex')[0].innerText=''; 
+	$('a#aex')[0].textContent=''; 
 };	
 
 function im(){																//Import auxiliary tag databases as text file
 	$('#im').append('<input type="file" id="files" style="width:97px;"/>'); 
 	$('input#files')[0].onchange=handleFileSelect; 
 	$('a.exim')[1].removeAttribute('onclick');	
-	$('a#aim')[0].innerText=''; 
+	$('a#aim')[0].textContent=''; 
 };
 
 function handleFileSelect(evt) {											//Fill in databases with data from imported file
