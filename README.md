@@ -197,10 +197,10 @@ By default the script is configured to use pre-hosted libraries and media linked
 
 ### Current status
 
-v1.0
+v[1.1](https://github.com/Seedmanc/Tumblr-image-sorter/releases)
 
 * [Opera Native](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Opera%20native) version - **released**
-* Chrome port - prerelease ready
+* [Chrome port](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Chrome%20tampermonkey) - prerelease ready
 * Firefox - planned? Use Chrome version so far.
 
 Note that since I'm using the Opera version myself it will be the only version thoroughly tested by everyday usage. Chrome will only be tested formally. Also, since non-native versions are pretty much scripts for Greasemonkey and its clones, perhaps Chrome version should be working for Firefox and other browsers too.
@@ -216,15 +216,22 @@ Should help with reblogs without any tags.
 
 * Add support for infinite scroll
 
-Will probably have to hook on the post retrieval even or something. Oh the glitches.
+Will probably have to hook on the post retrieval events or something. Oh the glitches.
 
 * Add ability to enter new tags in addition to editing existing, plus implement propagation of changes among images of same post. 
 
 This will help when a large photoset has no tags, rendering the script (and the post) useless. Dunno how to make that propagation live across tabs though.
 
+### Challenges
+
 * Make simplified generalized version without translation capabilities for use cases with English-only tags.
 
 Will have to think of a way to store folder lists more efficiently than in an object.
+
+* Make a no-flash version, depending entirely on HTML5 and *monkey API for its functionality
+
+Should ensure support for pages with inbuilt flash content, which currently prevents the script from working.
+
 
 ## Future possibilities
 * Add a third script which would create and show a statistics page about information collected over time. For example, it would track the amount of images collected to every folder as well as the most saved tags without a folder and make suggestions about creating a directory for that particular tag. Perhaps such a page would also be able to have a more functional GUI than the one the GET script has to offer.
