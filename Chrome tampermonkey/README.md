@@ -1,6 +1,7 @@
 # Chrome version for Tampermonkey
 
-This version is designed for use with the Tampermonkey userscript engine of Chrome.
+This version is designed for use with the Tampermonkey userscript engine of Chrome.  
+  It appears to be working in Greasemonkey for Firefox as well.
 
 ## Installation instructions
 
@@ -16,3 +17,7 @@ For the rest of configuration, head over to the [main readme section](https://gi
 
 * **highlightColor** - Since Chrome is incapable of supporting "invert" as a color, which ensured visibility of the saved state of an image in a post regardless of background color, you'll have to select a fixed color and hope it won't blend.
 * **fixMiddleClick** - Because Chrome is so *superior* it launches the tumblr photo viewer for photosets even on middle click, instead of opening image in a new tab, as required. This option disables any events bound to onClick event in photosets. That useless viewer never shows images in full size anyway.
+
+### Firefox notes
+  
+For Firefox users having non-standard system font scaling: since apparently Firefox is even more stupid than Chrome, it scales page contents along with GUI itself, resulting in broken design. You can mitigate that by going to about:config and setting `layout.css.devPixelsPerPx` to 1.0 or setting zoom in Theme Font Size Changer addon to 1.0. 
