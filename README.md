@@ -200,10 +200,10 @@ By default the script is configured to use pre-hosted libraries and media linked
 v1.0
 
 * [Opera Native](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Opera%20native) version - **released**
-* Chrome port - in development
-* Firefox - planned?
+* Chrome port - prerelease ready
+* Firefox - planned? Use Chrome version so far.
 
-Note that since I'm using the Opera version myself it will be the only version thoroughly tested by everyday usage. Chrome will only be tested formally. Also, since non-native versions are pretty much scripts for Greasemonkey and its clones, perhaps Chrome version should be working for Firefox and other browsers too. 
+Note that since I'm using the Opera version myself it will be the only version thoroughly tested by everyday usage. Chrome will only be tested formally. Also, since non-native versions are pretty much scripts for Greasemonkey and its clones, perhaps Chrome version should be working for Firefox and other browsers too.
 
 ### Major TODOs
 * Make the Folder database into a separate file instead of it being inside the script. If impossible, perhaps have it stored in a flashDB with a decent GUI for editing.
