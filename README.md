@@ -17,6 +17,7 @@ A userscript for image file name and save path formatting based on tags.
 8. [Project info](#project-info)
  * [Dependencies](#dependencies)
  * [Major TODOs](#major-todos)
+ * [Challenges](#challenges)
  * [Future possibilities](#future-possibilities)
 
 ## Introduction
@@ -230,7 +231,7 @@ Will have to think of a way to store folder lists more efficiently than in an ob
 
 * Make a no-flash version, depending entirely on HTML5 and *monkey API for its functionality
 
-Should ensure support for pages with inbuilt flash content, which currently prevents the script from working.
+Should ensure support for pages with inbuilt flash content, which currently prevents the script from functioning.
 
 
 ## Future possibilities
