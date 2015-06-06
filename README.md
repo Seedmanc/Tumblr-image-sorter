@@ -231,7 +231,8 @@ Will have to think of a way to store folder lists more efficiently than in an ob
 
 * Make a no-flash version, depending entirely on HTML5 and *monkey API for its functionality
 
-Should ensure support for pages with inbuilt flash content, which currently prevents the script from functioning.
+Should ensure support for pages with inbuilt flash content, which currently prevents the script from functioning.  
+  Although there's literally nothing wrong with using Flash in your app, there's still enough of flashephobes around refusing to install it (while being perfectly fine with using this piece of s..oftware called Chrome). Therefore I challenge you to prove your point and find me a solution just as elegant as I'm using here, allowing for crossdomain data storage, but without Flash.
 
 
 ## Future possibilities
