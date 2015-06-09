@@ -1,3 +1,4 @@
+[русскоязычная версия](readme.rus.md)
 # Tumblr-image-sorter
 A userscript for image file name and save path formatting based on tags.
 
@@ -213,7 +214,7 @@ I still have yet to find a way for a userscript to load information from a file 
 
 * Implement traversal of reblog tree back to the origin in search for tags if no tags were found initially.
 
-Should help with reblogs without any tags.
+Should help with lazy rebloggers never properly tagging anything.
 
 * Add support for infinite scroll
 

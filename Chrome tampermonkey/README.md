@@ -1,3 +1,4 @@
+[русскоязычная версия](readme.rus.md)
 # Chrome version for Tampermonkey
 
 This version is designed for use with the Tampermonkey userscript engine of Chrome.  
