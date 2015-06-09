@@ -1,4 +1,4 @@
-[русскоязычная версия](readme.rus.md)
+[русскоязычная версия](README.rus.md)
 # Opera native version
 
 This version is designed to make use of Opera's native userscript support and must be compatible with Opera versions up to 12.17. It doesn't require installation of Violentmonkey or a similar userscript engine.
