@@ -1,4 +1,4 @@
-[русскоязычная версия](readme.rus.md)
+[русскоязычная версия](README.rus.md)
 # Tumblr-image-sorter
 A userscript for image file name and save path formatting based on tags.
 
