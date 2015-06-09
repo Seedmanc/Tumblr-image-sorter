@@ -1,4 +1,4 @@
-[русскоязычная версия](readme.rus.md)
+[русскоязычная версия](README.rus.md)
 # Chrome version for Tampermonkey
 
 This version is designed for use with the Tampermonkey userscript engine of Chrome.  
