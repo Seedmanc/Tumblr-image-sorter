@@ -52,10 +52,8 @@
 		"	茅原実里	"	:	"	!SOS-dan\\Chihara Minori",
 		"	後藤邑子	"	:	"	!SOS-dan\\Goto Yuko	",
 		"	平野綾	"	:	"	!SOS-dan\\Hirano Aya	", 
-		"	スフィア	"	:	"	!Sphere	", 
-		"	戸松遥	"	:	"	!Sphere\\Tomatsu Haruka	",
-		"	tomatsu haruka":"	!Sphere\\Tomatsu Haruka	",				//multiple tags can point to one folder
-		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",					//not the other way, however, having keys repeating will only count the last occurrence
+		"	スフィア	"	:	"	!Sphere	",
+		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",
 		"	堀江由衣	"	:	"	!Yamato Nadeshiko\\Horie Yui",
 		"	田村ゆかり	"	:	"	!Yamato Nadeshiko\\Tamura Yukari	",
 		"	雨宮天	"	:	" 	Amamiya Sora	",
@@ -259,7 +257,19 @@ port=document.createElement('table');									//subtable for settings and im/exp
 	port.id='port';
 
 trimObj(folders, useFolderNames);										//run checks on user-input content and format it
-trimObj(ignore);																												
+trimObj(ignore);			 
+
+window.onerror = function(msg, url, line, col, error) {					//General error handler
+   var extra = !col ? '' : '\ncolumn: ' + col;
+   extra += !error ? '' : '\nerror: ' + error;							//Shows '✗' for errors in title and also alerts a message if in debug mode
+   if (msg.search('this.swf')!=-1) 
+	 return true;														//Except for irrelevant errors
+   document.title+='✗';
+   if (debug)
+   	 alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+   var suppressErrorAlert = true;
+   return suppressErrorAlert;
+};
 																		
 var xhr = new XMLHttpRequest();											//redownloads opened image as blob 
 	xhr.responseType="blob";											//so that it would be possible to get it via downloadify button
@@ -809,7 +819,11 @@ function im(){															//import auxiliary tag databases as text file
 };
 
 function handleFileSelect(evt) {										//fill in databases with data from imported file
-    var file = evt.files[0]; 
+    var file = evt.files[0];
+	if (file.type!='text/plain') {
+		alert('Wrong filetype: must be text');
+		return false;
+	};
 	var reader = new FileReader();
 	reader.onloadend = function(e) {
 		clear=confirm('Would you like to clear existing databases before importing?');

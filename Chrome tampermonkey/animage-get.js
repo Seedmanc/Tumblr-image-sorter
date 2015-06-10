@@ -62,9 +62,7 @@
 		"	後藤邑子	"	:	"	!SOS-dan\\Goto Yuko	",
 		"	平野綾		"	:	"	 !SOS-dan\\Hirano Aya	", 
 		"	スフィア	"	:	"	 !Sphere	", 
-		"	戸松遥		"	:	"	 !Sphere\\Tomatsu Haruka	",
-		"	tomatsu haruka":	"	!Sphere\\Tomatsu Haruka	",				//Multiple tags can point to one folder
-		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",					// not the other way, however, repeating keys would only count the last occurrence
+		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",
 		"	堀江由衣	"	:	"	!Yamato Nadeshiko\\Horie Yui",
 		"	田村ゆかり	"	:	"	!Yamato Nadeshiko\\Tamura Yukari",
 		"	雨宮天	"		:	" 	Amamiya Sora	",
@@ -808,7 +806,11 @@ function im(){																//Import auxiliary tag databases as text file
 };
 
 function handleFileSelect(evt) {											//Fill in databases with data from imported file
-    var file = evt.target.files[0]; 
+    var file = evt.target.files[0];
+	if (file.type!='text/plain') {
+		alert('Wrong filetype: must be text');
+		return false;
+	};
 	var reader = new FileReader();
 	reader.onloadend = function(e) {
 		clear=confirm('Would you like to clear existing databases before importing?');
