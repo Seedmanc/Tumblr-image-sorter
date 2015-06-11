@@ -341,3 +341,4 @@ function process(res, v) {														//process information obtained from API 
 //TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage)
 //TODO: implement some kind of feedback from flash to script about space request success
 //TODO: output FlashDB messages to flash window instead of console on debug.
+//TODO: add support for custom domains
