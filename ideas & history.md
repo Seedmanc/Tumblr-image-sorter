@@ -1,11 +1,11 @@
 # Name recognition
 
 It all started when I noticed that animage.tumblr.com hosts most of his images on 3rd party servers instead of the tumblr itself, and that those servers keep the original filenames intact.  
-  I found out that he often follows a certain pattern when naming the photos, like (digit)(shortened person name).jpg  
+  I found out that he often follows a certain pattern when naming the photos, like (digit)?(shortened person name).jpg  
   ![just a few images out of 22k I dumped from his blog](http://puu.sh/iovRp/449fc41bbe.jpg)
   
 This gave me an idea to create a script that would be able to match all the different ways a single name is being shortened (sometimes a nickname was used too) to the name itself.  
-  At first the database had multiple records of partial names pointing to a single full name. However probably only a third or a quarter of all images were following this structure, so the use was ratehr limited.
+  At first the database had multiple records of partial names pointing to a single full name. However probably only a third or a quarter of all images were following this structure, so the use was rather limited.
   
   It was at that time that I realized I could use the tags themselves to unambiguously define the names of people on the pictures and more. Fortunately animage was quite responsible in his approach to posting images and every picture he shared had all the required tags attached. Many bloggers have a lot to learn from his ways, I believe. Although at that time I didn't know about tumblr API yet so I was trying to collect the tags from the page itself. It was trivial when using only a single blog, but when I decided to make it universally applicable, detecting tags in all kinds of different tumblr themes became near impossible.
   
@@ -13,7 +13,7 @@ This gave me an idea to create a script that would be able to match all the diff
   
 ### API and DB usage
 
-The discovery of API and a way to easily store tags and other info across domains thanks to flash cookies allowed me to come up with a few other helper tools, that I found to be very useful since then. Some of them include a proper [two-tag search for tumblr](seedmanc.tumblr.com/2tagsearch), implementing the intersection of two sets of images found by each tag, and the [tumblr indexer](seedmanc.tumblr.com/tmblrDL), that is designed to assist in mass downloading of images from tumblr.  
+The discovery of API and a way to easily store tags and other info across domains thanks to flash cookies allowed me to come up with a few other helper tools, that I found to be very useful since then. Some of them include a proper [two-tag search for tumblr](http://seedmanc.tumblr.com/2tagsearch), implementing the intersection of two sets of images found by each tag, and the [tumblr indexer](http://seedmanc.tumblr.com/tmblrDL), that is designed to assist in mass downloading of images from tumblr.  
   Compared to existing (I couldn't really find a single decent solution, tbh) methods of dumping all images by a certain tag from a tumblr of choice, my script allows to both receive a complete list of direct links to found images (that you can feed to any download manager afterwards), optionally filtered by a blacklist of tags, and automatically populating the database with tags found for every processed image. This is how I already dumped the entire animage picture database along with tags attached to them, 22 thousands of images in just a half an hour of script work. 
   
   Speaking about filtering, I'm planning to capitalize on newly found possibilities and create a more powerful and customizable alternative to existing Tumblr Savior addon. Currently it only has the black and white lists, which limists decision making to searching for the presence of any single tag in a black list, unless there is at least one tag in a white list. This is not very effective, because having just one negative tag might lead to you missing an entire post of something otherwise desirable to be seen. Using the already implemented by me separation into primary (names in my use case) and secondary (non-name meta) tags feature it would become possible to refine filtering to a point where an image will only be skipped if all the relevant (primary) tags it has are blacklisted.  
