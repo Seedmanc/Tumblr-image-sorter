@@ -99,7 +99,8 @@ Basically, every theme that has post containers with `'class="post"'` and contai
 
 PixelUnion Fluid is very weird and I coudln't find enough blogs using it to test all features. The Minimalist theme might miss the saved indication feature.
 
-Themes with inbuilt flash content such as music players are not supported. It seems that flash presence makes flash cookies DB unable to load. There is a chance that it might not an issue of my script but rather of the flash cookies themselves. So far I have no idea how to fix this, but such themes are a minority anyway.
+Themes with inbuilt flash content such as music players are not supported. It seems that flash presence makes flash cookies DB unable to load. There is a chance that it might not an issue of my script but rather of the flash cookies themselves. So far I have no idea how to fix this, but such themes are a minority anyway.  
+  Blogs with password-only access aren't supported either due to API limitations.
 
 ## Additional features
 
