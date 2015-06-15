@@ -229,13 +229,13 @@ function process(res, v) {														//process information obtained from API 
 	var link_url='';
 	var img=jQuery([]);
 	var inlimg=[];
-	var isPhoto=res.response.posts[0].type=='photo';
 	var photos=0;
 	var bar='';
 	if (res.meta.status!='200') {
 		throw new Error('API error: '+res.meta.msg);
 		return;
 	};	
+	var isPhoto=res.response.posts[0].type=='photo';
 	v=jQuery(v);	
 	if (linkify) {																//find inline images
 		inlimg=v.find('img[src*="tumblr_inline_"]');

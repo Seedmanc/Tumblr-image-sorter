@@ -184,7 +184,7 @@ function main(){																	//Search for post IDs on page and call API to g
 		};
 	};
 	
-	promisePosts(posts.toArray()).then(function() {									//the what
+	promisePosts(jQuery(posts).toArray()).then(function() {									//the what
  		if (isImage)																//Redirect to actual image from image page after we got the ID
  			document.location.href=jQuery('img#content-image')[0].src;						
  		document.title+=']■';														//At the end of processing indicate it's finished
@@ -273,13 +273,13 @@ function process(postData) {														//Process information obtained from AP
 	var link_url='';
 	var img=jQuery([]);
 	var inlimg=[];
-	var isPhoto=res.response.posts[0].type=='photo';
 	var photos=0;
 	var bar='';
 	if (res.meta.status!='200') {													//I don't even know if this is reachable
 		throw  new Error('API error: '+res.meta.msg);
 		return;
 	};
+	var isPhoto=res.response.posts[0].type=='photo';
 	if (linkify) {																	//Find inline images
 		inlimg=v.find('img[src*="tumblr_inline_"]');
 		inlimg=jQuery.grep(inlimg, function(vl,ix) {
