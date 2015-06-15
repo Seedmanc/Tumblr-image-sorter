@@ -9,7 +9,7 @@ This version is designed for use with the Tampermonkey userscript engine of Chro
 1. Install [Tampermonkey](http://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
 2. From there create a new script and copy-paste contents of one of the two scripts from here, overwriting the existing header, then save.
 3. Repeat step 2 for the second script too.
-4. Go to any tumblr blog or your dashboard and see if the page title is being marked with "▶[ " after loading, this indicates that the POST script works.  
+4. Go to any tumblr blog or your dashboard with photo posts containing tags. See if the page title is being marked with "▶[ " followed by amounts of photos in every post on page, this indicates that the POST script works.  
   Then trying accessing any image from a photo post with tags and see if the download button appears on the image page, this would indicate that the GET script works as well.
 
 For the rest of configuration, head over to the [main readme section](https://github.com/Seedmanc/Tumblr-image-sorter#usage).
