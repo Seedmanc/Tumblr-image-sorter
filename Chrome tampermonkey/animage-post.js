@@ -285,6 +285,8 @@ function process(postData) {														//Process information obtained from AP
 		inlimg=jQuery.grep(inlimg, function(vl,ix) {
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
 				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');			//If there is an HD version, link it
+				if (vl.src.split('.').pop()=='gif')
+					href=vl.src;													//except for gifs
 				r=true;
 				bar=inlimg.length+'.';
 			}

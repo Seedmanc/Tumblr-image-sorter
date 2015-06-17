@@ -806,7 +806,7 @@ function im(){																//Import auxiliary tag databases as text file
 };
 
 function handleFileSelect(evt) {											//Fill in databases with data from imported file
-    var file = evt.target.files[0];
+    var file = evt.target.files[0]; 
 	if (file.type!='text/plain') {
 		alert('Wrong filetype: must be text');
 		return false;

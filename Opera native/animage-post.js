@@ -242,6 +242,8 @@ function process(res, v) {														//process information obtained from API 
 		inlimg=jQuery.grep(inlimg, function(vl,ix) {							//leave only those that have HD versions existing
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
 				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');		//if there is an HD version, link it
+				if (vl.src.split('.').pop()=='gif')
+					href=vl.src;												//except for gifs
 				r=true;
 				bar=inlimg.length+'.';
 			}
