@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name		Animage-get
 // @description	Format file name & save path for current image by its tags
-// @version	    1.0
+// @version	    1.1
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 

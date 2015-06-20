@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name		Animage-post
 // @description	Store tags for images and indicate saved state
-// @version		1.0
+// @version		1.1
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 

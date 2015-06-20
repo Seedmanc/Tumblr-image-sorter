@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name		Animage-get
 // @description	Prepare the path and file name for saving current image based on its tags.
-// @version	1.0
+// @version	1.1
 // @author		Seedmanc
 // @include	http*://*.amazonaws.com/data.tumblr.com/* 
 // @include	http*://*.media.tumblr.com/*
