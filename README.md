@@ -206,7 +206,7 @@ v[1.1](https://github.com/Seedmanc/Tumblr-image-sorter/releases)
 * [Chrome port](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Chrome%20tampermonkey) - prerelease ready
 * Firefox - planned? Use Chrome version so far.
 
-Note that since I'm using the Opera version myself it will be the only version thoroughly tested by everyday usage. Chrome will only be tested formally. Also, since non-native versions are pretty much scripts for Greasemonkey and its clones, perhaps Chrome version should be working for Firefox and other browsers too.
+Since non-native versions are pretty much scripts for Greasemonkey and its clones, perhaps Chrome version should be working for Firefox and other browsers too.
 
 ### Major TODOs
 * Make the Folder database into a separate file instead of it being inside the script. If impossible, perhaps have it stored in a flashDB with a decent GUI for editing.
@@ -244,3 +244,11 @@ Should ensure support for pages with inbuilt flash content, which currently prev
 
 #### License
 Blah-blah MIT blah, you know the stuff. Just don't claim authorship and it'll be fine.
+ is there just for legacy and tribute reasons, because I started development of this project when I was only using http://animage.tumblr.com.
+* animage-**post** runs on tumblr pages that have posts - including /search/, /tagged/, /dashboard and pretty much every page within a personal tumblr blog except for /archive so far. This script collects tag data for every post and *posts* it to the tag DB (thus the name) for later use. The script usually does not require user interaction; it shows a progressbar in page title that gets filled with numbers representing amount of images in every found photo post on page or empty space if no tags or photos are found. 
+* animage-**get** runs on the directly-linked images opened in separate tabs. It gets the tag data from the DB for the currently opened image, prepares filename and path and allows you to *get* the image and this information required to save it. The file name is formed with Downloadify flash button, the path is copied to system clipboard upon clicking it. 
+The GET script provides a GUI, allowing the user to fill in missing tags and their translations if required. GUI also can be used to toggle debug mode and export or import auxiliary tag databases.
+
+## Data required for the script
+In order to make proper decisions, the script needs to consult several databases of tags, namely, the folder, name and meta databases.
+* **Folder** database must be prepared by the user to describe directory structure in their root folder. Consists of pairs 
