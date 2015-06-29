@@ -888,3 +888,4 @@ function cleanup(full){													//remove variables and flash objects from me
 }
 //TODO: add save button activation via keyboard
 //TODO: improve the button: open assigned folder directly, use modern open dialog
+//TODO: try to set last used directory in flash save dialog so as to avoid clipboard usage

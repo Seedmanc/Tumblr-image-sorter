@@ -17,7 +17,7 @@
 // @exclude		http*://*.media.tumblr.com/*
 
 // @grant 		none
-// @run-at 		document-body
+// @run-at 		document-start
 // @require  	https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js 
 // @require 	https://dl.dropboxusercontent.com/u/74005421/js%20requisites/swfstore.min.js 
 // @noframes
@@ -67,7 +67,7 @@ window.onerror = function(msg, url, line, col, error) {								//General error h
  	var suppressErrorAlert = true;
  	return suppressErrorAlert;
 };
-
+document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
 function getFname(fullName){														//Extract filename from image URL and format it
 	fullName=fullName||'';													
 	fullName=fullName.replace(/(\?).*$/gim,'');										//First remove url parameters 
@@ -208,12 +208,12 @@ function mutex(){																	//Check readiness of libraries being loaded si
 	}
 };
 
-if (typeof masonite != 'undefined')
+/*if (typeof masonite != 'undefined')
 	jQuery(window).load(function(){													//some themes require waiting till their own functions finish
 		onDOMContentLoaded();
 	})
 else
-	onDOMContentLoaded();
+	onDOMContentLoaded();*/
 	
 function onDOMContentLoaded(){														//Load plugins 
 
@@ -412,3 +412,4 @@ function removeEvents(node){	 													//Remove event listeners such as oncl
 //TODO: implement some kind of feedback from flash to script about space request success
 //TODO: output FlashDB messages to flash window instead of console on debug.
 //TODO: add support for custom domains
+//TODO: check if the actual width of an image to be linked is within limits of the _ postfix, because tumblr lies
