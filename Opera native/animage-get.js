@@ -814,7 +814,7 @@ function ex(){															//export auxiliary tag databases as a text file
 };	
 
 function im(){															//import auxiliary tag databases as text file
-	$('#im').append('<input type="file" id="files" style="width:97px;" onchange="handleFileSelect(this)"/>'); 
+	$('#im').append('<input type="file" id="files" style="width:97px;" onchange="handleFileSelect(this)" accept="text/plain"/>'); 
 	$('a.exim')[1].removeAttribute('onclick');
 };
 
