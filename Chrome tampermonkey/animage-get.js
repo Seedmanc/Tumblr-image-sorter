@@ -7,7 +7,7 @@
 
 // @include		http*://*.amazonaws.com/data.tumblr.com/* 
 // @include		http*://*.media.tumblr.com/*
-//these sites are used by animage.tumblr.com to host original images
+//these sites were used by animage.tumblr.com (RIP) to host original images
 // @include		http://scenario.myweb.hinet.net/*										
 // @include		http*://mywareroom.files.wordpress.com/*
 // @include		http://e.blog.xuite.net/* 
@@ -843,4 +843,4 @@ function handleFileSelect(evt) {											//Fill in databases with data from im
 };
 //TODO: add save button activation via keyboard
 //TODO: improve the button: open assigned folder directly, use modern dialog
-//TODO: try to set last used directory in flash save dialog so as to avoid clipboard usage
+//TODO: ^ try to set last used directory in flash save dialog so as to avoid clipboard usage

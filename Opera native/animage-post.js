@@ -115,9 +115,11 @@ function main(){																//search for post IDs on page and call API to ge
 																				//for "Catching elephant" theme
 		posts=posts.length?posts:jQuery('[id="post"]');							//for "Cinereoism" that uses IDs instead of Classes /0	
 		posts=posts.length?posts:jQuery('[id="designline"]');					//The Minimalist, not tested though and saved indication probably won't work
+		posts=posts.length?posts:jQuery("article[class^='photo']");				//alva theme for ge
 		posts=posts.length?posts:jQuery('[id="posts"]');						//Tincture pls why are you doing this
 		posts=posts.length?posts:jQuery("div.posts").not('#allposts');			//some redux theme, beats me
 		posts=posts.length?posts:jQuery("article[class^='post-photo']");		//no idea what theme, uccm uses it		
+		posts=posts.length?posts:jQuery('div[id="entry"]');							//seigaku by sakurane, dem ids again
 		if (posts.length==0){
 			document.title+=' [No posts found]';								//give up
 			return;
@@ -143,7 +145,7 @@ function main(){																//search for post IDs on page and call API to ge
 		else {																	//but in the wild it gets tricky
 			id='';
 			h=jQuery(v).find("a[href*='"+namae+"/post/']");						//several attempts to find selflink
-			h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");	//workaround for Optica theme that doesn't have selflinks within .post elements
+			h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");	//workaround for Optica & seigaku themes that don't have selflinks within post elements
 			h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");
 			if (h.length) 
 				id=getID(h[h.length-1].href);									//for every post on page find the self-link inside of post, containing post ID

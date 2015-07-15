@@ -68,6 +68,7 @@ window.onerror = function(msg, url, line, col, error) {								//General error h
  	return suppressErrorAlert;
 };
 document.addEventListener('DOMContentLoaded', onDOMContentLoaded, false);
+
 function getFname(fullName){														//Extract filename from image URL and format it
 	fullName=fullName||'';													
 	fullName=fullName.replace(/(\?).*$/gim,'');										//First remove url parameters 
@@ -104,7 +105,7 @@ function identifyPost(v){															//Find the ID of post in question and re
 	else {																			// but it gets tricky in the wild
 		id='';
 		h=jQuery(v).find("a[href*='"+namae+"/post/']");								//Several attempts to find selflink
-		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");			//workaround for Optica theme that doesn't have selflinks within .post elements
+		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");			//workaround for Optica and seigaku themes that don't have selflinks within post elements
 		h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");				//IDs can be found both in links to post and to image page
 		if (h.length) 
 			id=getID(h[h.length-1].href);														
@@ -145,7 +146,7 @@ function loadAndExecute(url, callback){												//Load specified js library a
 	document.head.appendChild(scriptNode);
 };
 
-function main(){																	//Search for post IDs on page and call API to get info about them
+function main(){																	//Search for post IDs on page and call API to get info about them 
 	if (debug) 
 		jQuery("div[id^='SwfStore_animage_']").css('top','0').css('left','0').css("position",'absolute').css('opacity','0.8');
 	else																			//Bring the flash window in or out of the view depending on the debug mode
@@ -153,7 +154,7 @@ function main(){																	//Search for post IDs on page and call API to g
 	if (isDash)
 		posts=jQuery('ol.posts').find('div.post').not('.new_post')					//Getting posts on dashboard is straightforward with its constant design,
 	else {																			// but outside of it are all kinds of faulty designs, so we have to experiment
-		posts=jQuery('article.entry > div.post').not('.n').parent();				//Some really stupid plain theme have to be checked before everything
+		posts=jQuery('article.entry > div.post').not('.n').parent();				//Some really stupid plain theme has to be checked before everything
 		posts=(posts.length)?posts:jQuery('.post').not('#description');				//General way to obtain posts that are inside containers with class='post'
 		if (isImage) 
 			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
@@ -164,10 +165,13 @@ function main(){																	//Search for post IDs on page and call API to g
 		posts=posts.length?posts:jQuery('.column').eq(2).find('.bottompanel').parent();
 																					//for "Catching elephant" theme
 		posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0	
-		posts=posts.length?posts:jQuery('[id="designline"]');						//The Minimalist, not tested though and saved indication probably won't work
-		posts=posts.length?posts:jQuery('[id="posts"]');							//Tincture pls why are you doing this
+		posts=posts.length?posts:jQuery('[id="designline"]');						//the Minimalist, not tested though and saved indication probably won't work
+		posts=posts.length?posts:jQuery("article[class^='photo']");					//alva theme for ge
+		posts=posts.length?posts:jQuery('[id="posts"]');							//tincture pls why are you doing this
 		posts=posts.length?posts:jQuery("div.posts").not('#allposts');				//some redux theme, beats me
 		posts=posts.length?posts:jQuery("article[class^='post-photo']");			//no idea what theme, uccm uses it
+		posts=posts.length?posts:jQuery('div[id="entry"]');							//seigaku by sakurane, dem ids again
+		
 		if (posts.length==0){
 			document.title+=' [No posts found]';									//Give up
 			return;
@@ -408,8 +412,9 @@ function removeEvents(node){	 													//Remove event listeners such as oncl
 		node.parentNode.replaceChild(elClone, node);		 
 	};
 };
-//TODO: store post ID and blog name for images? Might help with images whose link_url follows to 3rd party hosting with expiration (animage). Also will make it possible to have a backlink from image page
-//TODO: implement some kind of feedback from flash to script about space request success
-//TODO: output FlashDB messages to flash window instead of console on debug.
+
 //TODO: add support for custom domains
+//TODO: output FlashDB messages to flash window instead of console on debug.
+//TODO: implement some kind of feedback from flash to script about space request success
 //TODO: check if the actual width of an image to be linked is within limits of the _ postfix, because tumblr lies
+//TODO: store post ID and blog name for images? Will make it possible to have a backlink from image page
