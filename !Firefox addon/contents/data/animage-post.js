@@ -42,7 +42,7 @@ var blogName=document.location.host;
 var isImage=(document.location.href.indexOf('/image/')!=-1); 
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(blogName.indexOf('www.')==0);  
-var posts, progress=[];
+var posts, img, progress=[];
 /*
 window.onerror = function(msg, url, line, col, error) {								//General error handler
  	var extra = !col ? '' : '\ncolumn: ' + col;
@@ -108,7 +108,13 @@ function identifyPost(i){															//Find the ID of post in question and re
 
 function main(){																	//Search for posts on page and call API to get info about them 
 	self.port.on("saved", function(response){
-		console.log(response);
+		if (response!==true) {
+			if (response) {
+				alert('Storage is over quota');
+			} else
+				alert('Storage write error');
+			return;
+		};
 		if (isImage)																//Redirect to actual image from image page after we got the ID
 			document.location.href=$('img#content-image')[0].src;	
 	});
@@ -245,45 +251,35 @@ function process(postData) {														//Process information obtained from AP
 	};
 	img=$(img.toArray().concat(inlimg));											//Make sure inline images go after the usual ones
 	tags=res.response.posts[0].tags;												//get tags associated with the post
-	DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
+	//DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
 	
 	for (j=0; j<photos+inlimg.length; j++) {
 		if (j<photos) 																//First come the images in photo posts if exist
 			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
 		else																		// then the inline ones
 			url=img.eq(j).parent().attr('href');
-		tst=false;																	//Check if there's already a record in database for this image	
-		if (tags.length)  {
-			if (tst) {																// if there is we need to merge existing tags with newfound ones
-				oldtags=JSON.parse(tst).t.split(',');
-				newtags=mkUniq(oldtags.concat(tags),false);
-				DBrec.t=newtags.toString().toLowerCase();
-				DBrec.s=parseInt(JSON.parse(tst).s);
-			} else
-				DBrec.s=0;
-			saveData(getFileName(url), JSON.stringify(DBrec));	
+			
+		self.port.emit("checkSaved",{fname:getFileName(url), i:j});
 		
-			 //check write success here //
-		};												
-		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 							//Otherwise if there is a record and it says the image has been saved 
-			img.eq(j).css({'outline':'3px solid '+highlightColor,'outline-offset':'-3px'});	
-																					//Add a border of highlight color around the image to indicate that
+		if (tags.length)
+			self.port.emit("saveData", {fname:getFileName(url), tags:tags});		
+
 	};	
 	progressBar((tags.length)?bar:'-', postData.i);									//dash indicates no found tags for the post
-
 };
+
+self.port.on('isSaved', function(i){			
+	if (!isImage) 														 			//Add a border of highlight color around the image to indicate saved image
+		img.eq(i).css({'outline':'3px solid '+highlightColor,'outline-offset':'-3px'});	
+});
 
 function progressBar(bar, i){														//Outputs a piece of progress bar at a correct place in title
 	progress[i]=bar;
 	document.title='▶['+progress.join('');
 	if (progress.length==posts.length)
 		document.title+=']■';
-}
+};
 
-function saveData(filename, DBrecord){
-	self.port.emit("saveData", [filename, DBrecord]);
-
-}
 
 //TODO: add support for custom domains
 //TODO: add tags retrieval from reblog source if no tags were found here  
