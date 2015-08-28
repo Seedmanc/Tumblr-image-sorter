@@ -10,6 +10,7 @@
 // @include	http://*.tumblr.com/image/*
 // @include	http://*.tumblr.com/search/*
 // @include	http*://www.tumblr.com/dashboard*
+// @include	http*://www.tumblr.com/tagged/*
 
 // @exclude	http*://*.media.tumblr.com/*
 // ==/UserScript==
