@@ -18,7 +18,6 @@
 
 // @grant 		none
 // @run-at 		document-body
-//  require  	https://ajax.googleapis.com/ajax/libs/$/1.11.2/$.min.js  
 // @noframes
 // ==/UserScript==
 
@@ -42,7 +41,8 @@ var blogName=document.location.host;
 var isImage=(document.location.href.indexOf('/image/')!=-1); 
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(blogName.indexOf('www.')==0);  
-var posts, img, progress=[];
+var posts=$([]);
+var img=progress=[];
 /*
 window.onerror = function(msg, url, line, col, error) {								//General error handler
  	var extra = !col ? '' : '\ncolumn: ' + col;
@@ -59,7 +59,7 @@ window.onerror = function(msg, url, line, col, error) {								//General error h
 }; 
 */
 
-self.port.on('start',main);
+main();
  
 function getID(lnk){																//Extract numerical post ID from self-link
 	if (lnk.search(/[^0-9]/g)==-1)
@@ -115,26 +115,23 @@ function main(){																	//Search for posts on page and call API to get 
 				alert('Storage write error');
 			return;
 		};
-		if (isImage)																//Redirect to actual image from image page after we got the ID
+		if (isImage)																//Redirect to actual image from image page after we stored the info  
 			document.location.href=$('img#content-image')[0].src;	
 	});
-	 if (isDash) {
+	
+	if (isDash) {
 		if (!enableOnDashboard)														//don't run on dashboard unless enabled
 			return;
-		posts=$('ol.posts').find('div.post').not('.new_post');
-	}																				//Getting posts on dashboard is straightforward with its constant design,
-	else {																			// but outside of it are all kinds of faulty designs, so we have to experiment
+		posts=$('ol.posts').find('div.post').not('.new_post');						//Getting posts on dashboard is straightforward with its constant design,
+	}																				// but outside of it are all kinds of faulty designs, so we have to experiment
+	else if (isImage) 
+		posts=$('<div><a href="'+document.location.href+'" >a</a></div>')		//Make it work also on image pages, since we can get post id from url
+	else {																			
 																					//iterate through possible ways of finding posts in various themes
 																					
 		posts= $('article.entry > div.post').not('.n').parent();					//Some really stupid plain theme has to be checked before everything
-		posts=(posts.length)?posts: $('.post').not('#description');					//General way to obtain posts that are inside containers with class='post'
+		posts=(posts.length)?posts:$('.post').not('#description');					//General way to obtain posts that are inside containers with class='post'
 		
-		if (isImage) 
-			/*if (tagsDB.get(getFname( $('img#content-image')[0].src)))
-				document.location.href= $('img#content-image')[0].src				//Proceed directly to the image if it already has a DB record with tags	
-			else*/
-				posts=[$('<div><a href="'+document.location.href+'" >a</a></div>')];//Make it work also on image pages, since we can get post id from url
-
 		posts=posts.length?posts: $('.column').eq(2).find('.bottompanel').parent();	//for "Catching elephant" theme
 		posts=posts.length?posts: $("[id='post']");									//for "Cinereoism" that uses IDs instead of Classes /0	
 		posts=posts.length?posts: $("[id='designline']");							//the Minimalist, not tested though and saved indication probably won't work
@@ -148,16 +145,13 @@ function main(){																	//Search for posts on page and call API to get 
 			document.title+=' [No posts found]';									//Give up
 			return;
 		};
-	};
 
-	if (!isImage)	{																
 		hc=posts.find('.hc.nest');
 		if (hc.length) {
 			hc.css('position','relative');											//Fix 'broken' themes with image links being under a large div		
 			posts=hc.parent();														// this should be generalized somehow
 		};
-	};
-	
+	};	
 	self.port.on("APIresponse", process);
 	self.port.on("APIfailure", function(resp){
 		console.log('API failure: '+resp.r, resp.i);
@@ -165,12 +159,11 @@ function main(){																	//Search for posts on page and call API to get 
 	});
 	
 	$.each(posts, function(i,v){
-		identifyPost(i);															//send post index instead of post itself, because posts can't be serialized
+		identifyPost(i);															//Send post index instead of post itself, because posts can't be serialized
 	});
  		
 };
 
-   
 function process(postData) {														//Process information obtained from API by post ID
 	post=posts.eq(postData.i);														//pointer to post on page
 	res=JSON.parse(postData.r);														//API response
@@ -250,8 +243,9 @@ function process(postData) {														//Process information obtained from AP
 																					
 	};
 	img=$(img.toArray().concat(inlimg));											//Make sure inline images go after the usual ones
-	tags=res.response.posts[0].tags;												//get tags associated with the post
-	//DBrec={s:0, t:tags.toString().toLowerCase()};									//create an object for database record
+	tags=$.map(res.response.posts[0].tags, function(v,i){
+		return v.toLowerCase();
+	});																				//get tags associated with the post
 	
 	for (j=0; j<photos+inlimg.length; j++) {
 		if (j<photos) 																//First come the images in photo posts if exist
@@ -262,7 +256,7 @@ function process(postData) {														//Process information obtained from AP
 		self.port.emit("checkSaved",{fname:getFileName(url), i:j});
 		
 		if (tags.length)
-			self.port.emit("saveData", {fname:getFileName(url), tags:tags});		
+			self.port.emit("saveData", {fname:getFileName(url), tags:tags, merge:true});		
 
 	};	
 	progressBar((tags.length)?bar:'-', postData.i);									//dash indicates no found tags for the post

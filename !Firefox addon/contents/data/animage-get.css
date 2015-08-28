@@ -1,0 +1,69 @@
+﻿div#output {						
+	position: absolute;				
+	left: 0;		top: 0;			
+	width: 100px;	height: 30px;	
+}									
+div#down {							
+	position: fixed;				
+	z-index: 98;					
+}									
+table#port {						
+	top: 30px;						
+	position: fixed;				
+	background-color: 				
+		rgba(192,192,192,0.85);		
+	border-bottom: 1px solid black;	
+	z-index: 97;					
+	width: 100px;					
+	border-collapse: collapse;		
+}									
+table#translations {				
+	border-spacing: 5px;			
+	position: absolute;				
+	background-color:				
+		rgba(255,255,255,0.8);		
+	top: 52px;						
+	overflow: scroll;				
+	font-size: 90%;					
+	margin-left: -5px;				
+	width: 110px;					
+	table-layout: fixed;			
+}									
+td.settings {						
+	border-left:  1px solid black;	
+	border-right: 1px solid black;	
+}									
+a.settings {						
+	text-decoration: none;			
+}									
+table, tr {							
+	text-align: center;				
+}									
+td#ex {								
+	padding: 0;						
+}									
+input.txt {							
+	width: 95%;						
+}									
+td.cell, td.radio{					
+	border: 1px solid black;		
+	overflow:	hidden;				
+}									
+table.cell {						
+	background-color: 				
+		rgba(255,255,255,0.75);		
+	width: 100%; 					
+	border-collapse: collapse;		
+}									
+a {									
+	font-family: Arial;				
+	font-size:   small;				
+}									
+th {								
+	border: 0;						
+	color:black;		
+}									
+input#submit {						
+	width:  98%;					
+	height: 29px;					
+}									
