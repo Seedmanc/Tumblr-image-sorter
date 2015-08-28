@@ -12,6 +12,7 @@
 // @include		http://*.tumblr.com/image/*
 // @include		http://*.tumblr.com/search/*
 // @include		http*://www.tumblr.com/dashboard*
+// @include		http*://www.tumblr.com/tagged/*
 
 //you can turn off the script for certain blogs by putting '// @exclude http://name.tumlbr.com/*' at a new line
 // @exclude		http*://*.media.tumblr.com/*
