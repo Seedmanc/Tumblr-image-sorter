@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name		Animage-get
 // @description	Format file name & save path for current image by its tags
-// @version	    1.1
+// @version	    1.2
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 
@@ -10,7 +10,7 @@
 
 
 // @grant 		none 
-// require 	https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js
+// @require 	https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js
 
 // @run-at 		document-body
 // @noframes
@@ -117,22 +117,19 @@
  
 // ==/Settings=========================================================
 
-   names={} ;
-   meta={} ; 		
+var names={} ;
+var meta={} ; 		
 var title;
 var filename;															
 var folder = ''; 
-var DBrec='';																//Raw DB record,   object with fields for saved flag and tag list
-var N=M=T=false;															//Flags indicating readiness of plugins loaded simultaneously
+var DBrec='';																//Raw DB record,   object with fields for saved flag and tag list 
 var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to be used in filepaths
 		
-out = document.createElement('div');										//Main layer that holds the GUI
-	out.id = "output" ; 
-	out.innerHTML="<div id='down'> </div>";									//Sublayer for download button
+out = $('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI
  
 tb=document.createElement('table');											//Table for entering manual translation of unknown tags
 	tb.id='translations';
-	tagcell='<table class="cell"><tr>														\
+var	tagcell='<table class="cell"><tr>														\
 		<td class="radio"><input type="radio" class="category"  value="name"/></td>			\
 		<td class="radio"><input type="radio" class="category"  value="meta"/></td>			\
 		</tr><tr><td colspan="2"><a href="#" title="Click to ignore this tag for now" class="ignr">';
@@ -209,23 +206,20 @@ self.port.emit('getImageData', getFileName(document.location.href));
 	
 function main(record){ 															//Launch tag processing and handle afterwork
 	DBrec=record;
-	$('body')[0].appendChild(out);
+	$('body').append(out);
 	$('div#output').append(tb);
 	
-	analyzeTags( );
-	$(window).load(function(){document.title=title;});
+	analyzeTags();
 	
-	$('input#submit')[0].onclick=submit; 
-	$('input.txt').on('change', selected);	
-	
-	dlLink='<a href="'+document.location.href+'" download="'+function(){return filename;}+'" id="dlLink"></a>';
-	$('div#down').wrap(dlLink).on('click',function(){
-		if (DBrec)
-			self.port.emit('setClipboard', folder+filename);
+	$(window).load(function(){													//Apparently DOM changes reset the title back to default
+		document.title=title;		
 	});
+	
+	dlLink='<a href="'+document.location.href+'" download="'+(function(){return filename;})()+'" id="dlLink"></a>';
+	$('div#down').wrap(dlLink).on('click', onDload);
 };
 
-function isANSI(s) {														//Some tags might be already in roman and do not require translation
+function isANSI(s) {															//Some tags might be already in roman and do not require translation
 	is=true;
 	s=s.split('');
 	$.each(s,function(i,v){
@@ -370,9 +364,9 @@ function analyzeTags( ) {   													//This is where the tag matching magic 
 	document.title+=' \\'+folder+filename;
 	folder=root+folder;														//If no name or folder tags were found, folder will be set to root directory
 	
-	if (DBrec.s==1) document.title='💾 '+document.title;						//Indicate if the image has been marked as saved before
+	if (DBrec.s==1) 
+		document.title='💾 '+document.title;									//Indicate if the image has been marked as saved before
 	title=document.title;
-	return unsorted;
 };
 
 function buildTable(ansi, rest) {											//Create table of untranslated tags for manual translation input
@@ -405,7 +399,14 @@ function buildTable(ansi, rest) {											//Create table of untranslated tags 
 		$(cell1).find('input[type="radio"]').attr('name',v);				//In case the blogger provided both roman tag and unicode tag for names,
 	}); 																	// the user can simply select one of roman tags for every unicode tag as translation
 																			// to avoid typing them in manually. Ain't that cool?		
- 	$.each($('a.ignr'),function(i,v){v.onclick=function(){ignoreTag(this);};}); 
+ 	$.each($('a.ignr'),function(i,v){
+		v.onclick=function(){
+			ignoreTag(this);
+		};
+	}); 
+			
+	$('input#submit')[0].onclick=submit; 
+	$('input.txt').on('change', selected);		
 };
 
 function ignoreTag(anc){													//Remove clicked tag from results for current session (until page reload)
@@ -464,19 +465,20 @@ function selected(inp){														//Hide the corresponding roman tag from res
 };
  
 
-function onCmplt(){															//Mark image as saved in the tag database
+function onDload(){															//Mark image as saved in the tag database
 	if (DBrec)	{															// it is used to mark saved images on tumblr pages
 		DBrec.s=1;							
-		self.port.emit('saveData',{fname:getFileName(document.location.href), s:1, tags:tags});
-									
+		self.port.emit('setClipboard', folder+filename);
+		self.port.emit('saveData',{fname:getFileName(document.location.href), s:1, tags:tags});									
 	};																		
 }
 
 self.port.on('saved', function(really){
 	if (really) {
-		document.title='💾 '+document.title;	
+		document.title=('💾 '+document.title).replace('💾 💾','💾');	
 		$('div#output').remove();
-	};  //else report error here
+	} else
+		alert('Failed to store changes');
 });		
 
 function submit(){															//Collects entered translations for missing tags

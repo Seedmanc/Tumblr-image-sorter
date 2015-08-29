@@ -114,7 +114,8 @@ function getPostInfo(post, worker){
 
 function getImageData(fname, worker){
 	DBrec=db.files[fname];
-	worker.port.emit('getImageData', DBrec);
+	if ((DBrec)&&(DBrec.t.length>0))
+		worker.port.emit('getImageData', DBrec);
 };
 
 function attachListeners(worker){ 
