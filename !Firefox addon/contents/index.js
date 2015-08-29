@@ -5,6 +5,7 @@ var self = require("sdk/self");
 var pageMod = require("sdk/page-mod");
 var Request = require("sdk/request").Request;
 var ss = require("sdk/simple-storage");
+var clipboard = require("sdk/clipboard");
 var common = require("./data/common-functions.js");
 var db;
 
@@ -46,7 +47,7 @@ function handleHide() {
 }
 
 pageMod.PageMod({
-	include: [	/http[^s].*tumblr\.com\/?$/,											//match all personal blog pages containing posts
+	include: [	/http[^s].*tumblr\.com\/?$/,										//match all personal blog pages containing posts
 				/http[^s].*tumblr\.com\/post\/.*/,									// hope tumblr won't make https everywhere
 				/http[^s].*tumblr\.com\/image\/.*/,
 				/http[^s].*tumblr\.com\/page\/.*/,
@@ -71,7 +72,7 @@ pageMod.PageMod({
 	onAttach: attachListeners
 });
 
-function checkSaved(image, worker){
+function isSaved(image, worker){
 	if ((db.files[image.fname])&&(db.files[image.fname].s==1))
 		worker.port.emit("isSaved",image.i);
 };
@@ -81,7 +82,7 @@ function saveData(data, worker){													//Add/modify database record for a 
 	DBrec={s:0, t:data.tags};
 
 	if ((oldRec)&&(data.merge)) {													// if there is we need to merge existing tags with the new ones 
-		oldtags=oldRec.t.split(','); 
+		oldtags=oldRec.t; 
 		newtags=common.mkUniq(oldtags.concat(data.tags), false);
 		DBrec.t=newtags;
 		DBrec.s=oldRec.s;
@@ -106,9 +107,14 @@ function getPostInfo(post, worker){
 			if ((!response.text)||(response.status!=200))
 				worker.port.emit("APIfailure",  {r:response.statusText, i:post.i})
 			else
-				worker.port.emit("APIresponse", {r:response.text, i:post.i});
+				worker.port.emit("APIresponse", {r:response.json, i:post.i});
 		}
 	}).get();
+};
+
+function getImageData(fname, worker){
+	DBrec=db.files[fname];
+	worker.port.emit('getImageData', DBrec);
 };
 
 function attachListeners(worker){ 
@@ -119,10 +125,16 @@ function attachListeners(worker){
 	worker.port.on("saveData", function(data){
 		saveData(data, worker);
 	});
-	worker.port.on("checkSaved", function(arg){
-		checkSaved(arg, worker);
+	worker.port.on("isSaved", function(arg){
+		isSaved(arg, worker);
 	});
 	worker.port.on("getPostInfo", function(post){		
 		getPostInfo(post, worker);
+	});
+	worker.port.on("getImageData", function(fname){		
+		getImageData(fname, worker);
+	});
+	worker.port.on("setClipboard", function(text){		
+		clipboard.set(text);
 	});
 };

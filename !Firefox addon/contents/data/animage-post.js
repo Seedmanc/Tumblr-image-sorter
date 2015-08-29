@@ -166,7 +166,7 @@ function main(){																	//Search for posts on page and call API to get 
 
 function process(postData) {														//Process information obtained from API by post ID
 	post=posts.eq(postData.i);														//pointer to post on page
-	res=JSON.parse(postData.r);														//API response
+	res=postData.r;																	//API response
 	var link_url='';
 	var img=$([]);
 	var inlimg=[];
@@ -253,7 +253,7 @@ function process(postData) {														//Process information obtained from AP
 		else																		// then the inline ones
 			url=img.eq(j).parent().attr('href');
 			
-		self.port.emit("checkSaved",{fname:getFileName(url), i:j});
+		self.port.emit("isSaved",{fname:getFileName(url), i:j});
 		
 		if (tags.length)
 			self.port.emit("saveData", {fname:getFileName(url), tags:tags, merge:true});		

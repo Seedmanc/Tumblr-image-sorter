@@ -145,11 +145,13 @@ var style={																	//In an object so you can fold it in any decent edit
 		width: 100px;	height: 30px;	\
 	}									\
 	div#down {							\
+		left: 1px;						\
 		position: fixed;				\
 		z-index: 98;					\
 	}									\
 	table#port {						\
 		top: 30px;						\
+		left: 1px;						\
 		position: fixed;				\
 		background-color: 				\
 			rgba(192,192,192,0.85);		\
@@ -159,15 +161,14 @@ var style={																	//In an object so you can fold it in any decent edit
 		border-collapse: collapse;		\
 	}									\
 	table#translations {				\
-		border-spacing: 5px;			\
 		position: absolute;				\
 		background-color:				\
 			rgba(255,255,255,0.8);		\
-		top: 52px;						\
+		top: 48px;						\
 		overflow: scroll;				\
 		font-size: 90%;					\
-		margin-left: -5px;				\
-		width: 110px;					\
+		margin-left: -1px;				\
+		width: 103px;					\
 		table-layout: fixed;			\
 	}									\
 	td.settings {						\
@@ -429,7 +430,7 @@ function main(){ 															//Launch tag processing and handle afterwork
 		$("div[id^='SwfStore_animage_']").css('top','0').css('left','101px').css("position",'absolute').css('opacity','0.7');
 											//TODO: make the code above run regardless of found DB record
 	$('div#output').append(tb);
-	unsorted=analyzeTags();
+	analyzeTags();
 	$('input#submit')[0].onclick=submit; 
 	$('input.txt').on('change',selected);
 

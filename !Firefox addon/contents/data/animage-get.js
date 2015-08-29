@@ -114,14 +114,11 @@
 																			// this way you won't have to provide both roman and unicode spellings for names as separate tags
 
 	var debug=			false;												//Initial debug state, affects creation of flashDBs. Value saved in the DB overrides it after DB init.
-	
-	var storeUrl=		'//dl.dropboxusercontent.com/u/74005421/js%20requisites/storage.swf';	
-																			//Flash databases are bound to the URL, must be same as in the other script
+ 
 // ==/Settings=========================================================
 
-   tagsDB=null;																//Makes sure databases are accessible from console for debugging
-   names=null ;
-   meta=null ; 		
+   names={} ;
+   meta={} ; 		
 var title;
 var filename;															
 var folder = ''; 
@@ -155,25 +152,7 @@ tb=document.createElement('table');											//Table for entering manual transl
 	row.insertCell(0).innerHTML='<table class="cell" style="font-width:95%; font-size:small;">\
 		<tr class="cell" ><th class="cell">name</th><th class="cell">meta</th></tr></table>';	
 	tb.hidden="hidden";
-	
-port=document.createElement('table');										//Subtable for settings and im/export of tag databases
-	st2=port.style;
-	row= port.insertRow(0);
-	cell=row.insertCell(0);
-	cell.setAttribute('class','settings');
-	cell.innerHTML=' <a href="##" onclick=toggleSettings() class="settings">- settings -</a> ';	
-	row0=port.insertRow(1);
-	row0.insertCell(0).innerHTML='<input type="checkbox" id="debug"/> debug';	
-	row1=port.insertRow(2);
-	row1.insertCell(0).innerHTML=' <a href="###" onclick=ex() id="aex" class="exim">export db</a>';
-	row2=port.insertRow(3);	
-	row2.insertCell(0).id='ex';
-	row3=port.insertRow(4);
-	row3.insertCell(0).innerHTML=' <a href="####" onclick=im() id="aim" class="exim">import db</a> ';	
-	row4=port.insertRow(5);
-	row4.insertCell(0).id='im';
-	port.id='port';
-
+ 
 trimObj(folders);											//Run checks on user-input content and format it
 trimObj(ignore);	
 
@@ -189,27 +168,7 @@ window.onerror = function(msg, url, line, col, error) {						//General error han
    var suppressErrorAlert = true;
    return suppressErrorAlert;
 };*/
-
-var xhr = new XMLHttpRequest();												//Redownloads opened image as blob 
-	xhr.responseType="blob";												// so that it would be possible to get it via downloadify button
-	xhr.onreadystatechange = function() {									// supposedly the image is being taken from cache so it shouldn't cause any slowdown
-		if (this.readyState == 4 && this.status == 200) {
-			var blob=this.response;
-			var reader = new window.FileReader();
-			reader.readAsDataURL(blob); 
-			reader.onloadend = function() {
-				base64data = reader.result;                
-				base64data=base64data.replace(/data\:image\/\w+\;base64\,/,"");
-				dl(base64data);												//Call the button creation function
-		}
-	} else if ((this.status!=200)&&(this.status!=0)) {
-		if (this.status==404) {
-			document.title='Error '+this.status;
-			throw new Error('404');
-		};
-		throw new Error('Error getting image: '+this.status);
-	};							//TODO: add fallback to the tumblr hosted image if link url fails (requires storing post id and blog name)
-};
+ 
 
 function trimObj(obj){													//Remove trailing whitespace in object keys and values & check correctness of user input
 	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;											//makes sure that folder names have no illegal characters
@@ -242,49 +201,28 @@ function trimObj(obj){													//Remove trailing whitespace in object keys a
 		if (!debug)
 			alert(err.name+': '+err.message);								//Gotta always notify the user 
 		throw err;
-  };														//TODO: even more checks here
-}; 															
+  };														 
+}; 	
 
-function toggleSettings(){													//Show drop-down menu with settings
-	$('table#port td').not('.settings').toggle();
-	$('table#translations').css('top',($('table#port').height()+30)+'px');
-	sign=$('a.settings').eq(0);
-	if (sign.text().search(/\+/,'-')!=-1) {
-		sign.text(sign.text().replace(/\+/gi,'-'));
-		$('td.settings').css('border-bottom','');
-	}
-	else {
-		sign.text(sign.text().replace(/\-/gi,'+'));
-		$('td.settings').css('border-bottom','1px solid black');
-	}
-};
-
-function debugSwitch(checkbox){												//Toggling debug mode requires page reload
-	debug = checkbox.checked;
-	tagsDB.set(':debug:',debug );
-	location.reload();
-};
-
-onDOMcontentLoaded();
-function onDOMcontentLoaded(){ 												//Load plugins and databases
-	href=document.location.href;
-
-//	$('img').wrap("<center></center>");
-	$('body')[0].appendChild(out);
-
-};
-
-function getTags(retry){													//Manages tags acquisition for current image file name from db
-	DBrec=JSON.parse(tagsDB.get(getFileName(document.location.href)));			// first attempt at getting taglist for current filename is done upon the beginning of image load
-};
+self.port.on ( 'getImageData', main); 	
+self.port.emit('getImageData', getFileName(document.location.href));  
 	
-function main(){ 															//Launch tag processing and handle afterwork
-
+function main(record){ 															//Launch tag processing and handle afterwork
+	DBrec=record;
+	$('body')[0].appendChild(out);
 	$('div#output').append(tb);
-	unsorted=analyzeTags();
+	
+	analyzeTags( );
+	$(window).load(function(){document.title=title;});
+	
 	$('input#submit')[0].onclick=submit; 
-	$('input.txt').on('change',selected);
-
+	$('input.txt').on('change', selected);	
+	
+	dlLink='<a href="'+document.location.href+'" download="'+function(){return filename;}+'" id="dlLink"></a>';
+	$('div#down').wrap(dlLink).on('click',function(){
+		if (DBrec)
+			self.port.emit('setClipboard', folder+filename);
+	});
 };
 
 function isANSI(s) {														//Some tags might be already in roman and do not require translation
@@ -295,7 +233,7 @@ function isANSI(s) {														//Some tags might be already in roman and do n
     return is;
 };
 
-function analyzeTags() {   													//This is where the tag matching magic occurs
+function analyzeTags( ) {   													//This is where the tag matching magic occurs
 	filename=getFileName(document.location.href, true);
  	if (!DBrec) return;														// if there are any tags, that is
 	folder='';
@@ -310,7 +248,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	ansi={}
 	rest=[];
 	
-	tags=$.map(tags,function(v,i){											//Some formatting is applied to the taglist before processing
+	tags=$.map(tags, function(v,i){											//Some formatting is applied to the taglist before processing
 
 		v=v.replace(/’/g,"\'").replace(/"/g,"''");					
 		v=v.replace(/\\/g, '-');									
@@ -397,7 +335,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	});		
 	
 	mt=mt.concat(Object.keys(ansi));										//Roman tags have to go somewhere until assigned a category manually	
-	filename=(mkUniq(fldrs2.concat(nms), true).concat(['']).concat(mkUniq(mt), true)
+	filename=(mkUniq(fldrs2.concat(nms), true).concat(['']).concat(mkUniq(mt, true))
 		.join(',').replace(/\s/g,'_').replace(/\,/g,' ')+' '+filename).trim(); 																
 																			//Format the filename in a booru-compatible way, replacing spaces with underscores,
 																			// first come the names alphabetically sorted, then the meta sorted separately 
@@ -408,7 +346,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);					//Unsorted flag is set if there are tags outside of 3 main categories 
 	tb.setAttribute("hidden","hidden");				
 	fn='';																	//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
-	nms=mkUniq(nms);
+	nms=mkUniq(nms, true);
 	if (unsorted)  {														//If there are any untranslated tags, make a table with text fields to provide manual translation
 		buildTable(ansi, rest);
 		folder=folders["!!unsorted"]+'\\';   								//Mark image as going to "unsorted" folder if it still has untranslated tags
@@ -524,30 +462,12 @@ function selected(inp){														//Hide the corresponding roman tag from res
 			}
 		);
 };
-
-
-function dl(base64data){													//Make downloadify button with base64 encoded image file as parameter
-																			// which will both cause save file dialog with custom filename and copy save path to clipboard
-	Downloadify.create( 'down'  ,{
-		filename: function(){ return filename;}, 							//is this called "stateless"?
-		data: base64data, 
-		dataType: 'base64',
-		downloadImage: '//dl.dropboxusercontent.com/u/74005421/js%20requisites/downloadify.png',
-		onError: function(){ throw new Error('Downloadify error');},
-		onComplete: onCmplt,
-		swf:  downloadifySwf,
-		width: 100,
-		height: 30,
-		transparent: true,
-		append: true,
-		textcopy: function(){ if (DBrec) {return folder+filename;} else return '';}	
-	});																		//If no database record is found, don't change the clipboard
-};
+ 
 
 function onCmplt(){															//Mark image as saved in the tag database
 	if (DBrec)	{															// it is used to mark saved images on tumblr pages
 		DBrec.s=1;							
-		self.port.emit('saveData',{fname:getFileName(document.location.href), tags:tags, s:1});
+		self.port.emit('saveData',{fname:getFileName(document.location.href), s:1, tags:tags});
 									
 	};																		
 }
@@ -555,8 +475,8 @@ function onCmplt(){															//Mark image as saved in the tag database
 self.port.on('saved', function(really){
 	if (really) {
 		document.title='💾 '+document.title;	
-		//remove UI here
-	};  //report error here
+		$('div#output').remove();
+	};  //else report error here
 });		
 
 function submit(){															//Collects entered translations for missing tags
@@ -608,9 +528,7 @@ function submit(){															//Collects entered translations for missing tag
 };
 
 
-//TODO: add save button activation via keyboard
-//TODO: improve the button: open assigned folder directly, use modern dialog
-//TODO: ^ try to set last used directory in flash save dialog so as to avoid clipboard usage
+//TODO: add save button activation via keyboard 
 //TODO: add checks for common mistakes in unicode names like 実/美 & 奈/菜
 //TODO: option to disable unsorted category if translations are not required by user
 //TODO: add checks for existing entries in another DB?
