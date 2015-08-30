@@ -1,16 +1,57 @@
 <html>
-<head>
-    <style type="text/css" media="all">
-      textarea {
-        margin: 10px;
-      }
-      body {
-        background-color: gray;
-      }
-    </style>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Tumblr Image Sorter</title>
+    <link rel="stylesheet" media="screen" href="panel.css"> 
+    <link rel="stylesheet" media="screen" href="./jquery-ui/jquery-ui.css">  
   </head>
-<body>
-    <input type="text" rows="13" cols="33" class="edit-box"></input>
-	<input type="text" rows="13" cols="33" class="edit-box"></input>
+  <body>
+  <script src="jquery.js"></script>
+  <script src="./jquery-ui/jquery-ui.js"></script>
+
+    <div id="title">
+      <img style="float:left;" src="icon-64.png" id="icon">
+      <h1 style="line-height:32px;height:32px;margin-top:16px;">Tumblr Image Sorter</h1>
+    </div>
+ 
+    <div id="content">
+		<div id="tabs">
+		  <ul>
+			<li><a href="#fragment-1">Lists</a></li>
+			<li><a href="#fragment-2">Options</a></li>
+			<li><a href="#fragment-3">About</a></li>
+		  </ul>
+		  <div id="fragment-1">
+		  
+			<div id="accordion">
+			  <h3>ignore</h3>
+			  <div>				
+				<p>Provide list of ignored tags, separated by commas</p>
+				<input type="text", id="ignore" style="width:100%;"/>
+			  </div>
+			  <h3>Section 2</h3>
+			  <div>
+				<p>
+				Sed non urna. Donec et ante. Phasellus eu ligula. Vestibulum sit amet
+				purus. Vivamus hendrerit, dolor at aliquet laoreet, mauris turpis porttitor
+				velit, faucibus interdum tellus libero ac justo. Vivamus non quam. In
+				suscipit faucibus urna.
+				</p>
+			  </div>
+			</div>
+			
+		  </div>
+		  <div id="fragment-2">
+			 sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+		  </div>
+		  <div id="fragment-3">
+			  laoreet dolore magna aliquam erat volutpat.
+		  </div>
+		</div>
+    </div>
+	  <script>
+	$( "#tabs" ).tabs();
+	 $( "#accordion" ).accordion();
+  </script>
   </body>
 </html>

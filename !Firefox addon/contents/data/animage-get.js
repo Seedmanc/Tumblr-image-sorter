@@ -32,7 +32,7 @@
 	var debug=			false;												//Initial debug state, affects creation of flashDBs. Value saved in the DB overrides it after DB init.
  
 // ==/Settings=========================================================
-		
+ 		
 var title;
 var filename;															
 var folder = ''; 
@@ -118,6 +118,10 @@ function main(record){ 															//Launch tag processing and handle afterwo
 	
 	analyzeTags();
 	
+	$('body').on('keyup', function(key){
+		if ((key.keyCode==13)&&($('a#dlLink').length))
+			$('a#dlLink')[0].click();
+	});
 	setInterval(function(){
 		document.title=title;													//Apparently DOM changes reset the title back to default
 	}, 1000);	
@@ -438,8 +442,7 @@ function submit(){															//Collects entered translations for missing tag
 	}, to);
 };
 
-
-//TODO: add save button activation via keyboard 
+ 
 //TODO: add checks for common mistakes in unicode names like 実/美 & 奈/菜
 //TODO: option to disable unsorted category if translations are not required by user 
 //TODO: only launch post-download events after user actually agreed to download image instead of onclick

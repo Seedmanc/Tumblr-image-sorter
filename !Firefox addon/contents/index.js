@@ -26,21 +26,23 @@ var button = ToggleButton({
   },
   onChange: handleChange
 });
-/*
+
 var panel = panels.Panel({
-  contentURL: self.data.url("panel.html"),
-  contentScriptFile: [self.data.url("jquery.js"),self.data.url("panel.js") ],
-  onHide: handleHide
+	width: 500,
+	height: 700,
+	contentURL: "./panel.html",	
+	contextMenu: true,
+	onHide: handleHide
 });
 panel.on("show", function() {
   panel.port.emit("show");
-});*/
+});
 
 function handleChange(state) {
 	if (state.checked) {
-    /*panel.show({
-      position: button
-    });*/
+		panel.show({
+			position: button
+		});
 	}
 }
 
