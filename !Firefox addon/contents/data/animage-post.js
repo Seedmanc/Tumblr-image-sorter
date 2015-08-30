@@ -42,7 +42,8 @@ var isImage=(document.location.href.indexOf('/image/')!=-1);
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(blogName.indexOf('www.')==0);  
 var posts=$([]);
-var img=progress=[];
+var img;
+var progress=[];
 /*
 window.onerror = function(msg, url, line, col, error) {								//General error handler
  	var extra = !col ? '' : '\ncolumn: ' + col;
@@ -107,7 +108,7 @@ function identifyPost(i){															//Find the ID of post in question and re
 };
 
 function main(){																	//Search for posts on page and call API to get info about them 
-	self.port.on("saved", function(response){
+	self.port.on("stored", function(response){
 		if (response!==true) {
 			if (response) {
 				alert('Storage is over quota');
@@ -168,7 +169,6 @@ function process(postData) {														//Process information obtained from AP
 	post=posts.eq(postData.i);														//pointer to post on page
 	res=postData.r;																	//API response
 	var link_url='';
-	var img=$([]);
 	var inlimg=[];
 	var photos=0;
 	var bar='';																		//Piece of progressbar, (№) for amount of photos in a post,
@@ -256,7 +256,7 @@ function process(postData) {														//Process information obtained from AP
 		self.port.emit("isSaved",{fname:getFileName(url), i:j});
 		
 		if (tags.length)
-			self.port.emit("saveData", {fname:getFileName(url), tags:tags, merge:true});		
+			self.port.emit("storeImageData", {fname:getFileName(url), tags:tags, merge:true});		
 
 	};	
 	progressBar((tags.length)?bar:'-', postData.i);									//dash indicates no found tags for the post
@@ -264,7 +264,7 @@ function process(postData) {														//Process information obtained from AP
 
 self.port.on('isSaved', function(i){			
 	if (!isImage) 														 			//Add a border of highlight color around the image to indicate saved image
-		img.eq(i).css({'outline':'3px solid '+highlightColor,'outline-offset':'-3px'});	
+		$(img[i]).css({'outline':'3px solid '+highlightColor,'outline-offset':'-3px'});	
 });
 
 function progressBar(bar, i){														//Outputs a piece of progress bar at a correct place in title

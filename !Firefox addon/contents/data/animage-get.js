@@ -22,91 +22,7 @@
 																			//Make sure to use double backslashes instead of single ones everywhere	
 	var ms=				'!';												//Metasymbol, denotes folders for categories instead of names, must be their first character
 	
-	var folders=		{													//Folder and names matching database
-		"	!!group	"	:	"		!!group	",								// used both for tag translation and providing the list of existing folders
-		"	!!solo	"	:	"		!!solo	",								// trailing whitespaces are voluntary in both keys and values,
-		"	!!unsorted"	:	"		!!unsorted	", 							// first three key names are not to be changed, but folder names can be anything
-		"	原由実		"	:	"	 !iM@S\\Hara Yumi",					      // subfolders for categories instead of names must have the metasymbol as first symbol
-		"	今井麻美	"	:	"	!iM@S\\Imai Asami	",
-		"	沼倉愛美	"	:	"	!iM@S\\Numakura Manami",
-		"	けいおん!	"	:	"	!K-On	",								 //Category folders can have their own tag, which, if present, will affect the folder choice
-		"	日笠陽子	"	:	"	!K-On\\Hikasa Yoko	",					 // for solo and group images
-		"	寿美菜子	"	:	"	!K-On\\Kotobuki Minako",
-		"	竹達彩奈	"	:	"	!K-On\\Taketatsu Ayana",
-		"	豊崎愛生	"	:	"	!K-On\\Toyosaki Aki	",
-		"	クリスマス	"	:	"	 !Kurisumasu	",
-		"	Lisp	"		:	"	!Lisp	",								//Roman tags can be used as well
-		"	阿澄佳奈	"	:	"	!Lisp\\Asumi Kana	",
-		"	酒井香奈子	"	:	"	!Lovedoll\\Sakai Kanako",
-		"	らき☆すた	"	:	"	!Lucky Star	",
-		"	遠藤綾		"	:	"	 !Lucky Star\\Endo Aya	",
-		"	福原香織	"	:	"	!Lucky Star\\Fukuhara Kaori",
-		"	長谷川静香	"	:	"	!Lucky Star\\Hasegawa Shizuka",
-		"	加藤英美里	"	:	"	!Lucky Star\\Kato Emiri	",
-		"	今野宏美	"	:	"	!Lucky Star\\Konno Hiromi	", 
-		"	井上麻里奈	"	:	"	!Minami-ke\\Inoue Marina	",
-		"	佐藤利奈	"	:	"	!Minami-ke\\Sato Rina	",
-		"	Petit Milady	":	"	!Petit Milady	", 
-		"	悠木碧		"	:	"	 !Petit Milady\\Yuuki Aoi	",
-		"	ロウきゅーぶ! "	:	"	!Ro-Kyu-Bu	",
-		"	Kalafina 	"	:	"	!Singer\\Kalafina	",
-		"	LiSA		"	:	"	!Singer\\LiSA	",
-		"	May'n		"	:	"	!Singer\\May'n	", 
-		"	茅原実里	"	:	"	!SOS-dan\\Chihara Minori",
-		"	後藤邑子	"	:	"	!SOS-dan\\Goto Yuko	",
-		"	平野綾		"	:	"	 !SOS-dan\\Hirano Aya	", 
-		"	スフィア	"	:	"	 !Sphere	", 
-		"	やまとなでしこ "	:	"	!Yamato Nadeshiko	",
-		"	堀江由衣	"	:	"	!Yamato Nadeshiko\\Horie Yui",
-		"	田村ゆかり	"	:	"	!Yamato Nadeshiko\\Tamura Yukari",
-		"	雨宮天	"		:	" 	Amamiya Sora	",
-		"	千葉紗子	"	:	"	Chiba Saeko	",
-		"	渕上舞		"	:	"	 Fuchigami Mai	",
-		"	藤田咲		"	:	"	 Fujita Saki	",
-		"	後藤沙緒里	"	:	"	Goto Saori	",
-		"	花澤香菜	"	:	"	Hanazawa Kana	",
-		"	早見沙織	"	:	"	Hayami Saori	",
-		"	井口裕香	"	:	"	Iguchi Yuka	",
-		"	井上喜久子	"	:	"	Inoue Kikuko	",
-		"	伊藤かな恵	"	:	"	Ito Kanae	",
-		"	伊藤静		"	:	"	 Ito Shizuka	",
-		"	門脇舞以	"	:	"	Kadowaki Mai	",
-		"	金元寿子	"	:	"	Kanemoto Hisako	",
-		"	茅野愛衣	"	:	"	Kayano Ai	",
-		"	喜多村英梨	"	:	"	Kitamura Eri	",
-		"	小林ゆう	"	:	"	 Kobayashi Yuu	",
-		"	小清水亜美	"	:	"	Koshimizu Ami	",
-		"	釘宮理恵	"	:	"	Kugimiya Rie	",
-		"	宮崎羽衣	"	:	"	Miyazaki Ui	",
-		"	水樹奈々	"	:	"	Mizuki Nana	",
-		"	桃井はるこ	"	:	"	Momoi Haruko	",
-		"	中原麻衣	"	:	"	Nakahara Mai	",
-		"	中島愛		"	:	"	 Nakajima Megumi	",
-		"	名塚佳織	"	:	"	Nazuka Kaori	",
-		"	野川さくら	"	:	"	 Nogawa Sakura	",
-		"	野中藍		"	:	"	 Nonaka Ai	",
-		"	能登麻美子	"	:	"	Noto Mamiko	",
-		"	折笠富美子	"	:	"	Orikasa Fumiko	",
-		"	朴璐美		"	:	"	 Paku Romi	",
-		"	榊原ゆい	"	:	"	Sakakibara Yui	",
-		"	坂本真綾	"	:	"	Sakamoto Maaya	",
-		"	佐倉綾音	"	:	"	Sakura Ayane	",
-		"	沢城みゆき	"	:	"	Sawashiro Miyuki	",
-		"	椎名へきる	"	:	"	Shiina Hekiru	",
-		"	清水愛		"	:	"	 Shimizu Ai	",
-		"	下田麻美	"	:	"	Shimoda Asami	",
-		"	新谷良子	"	:	"	Shintani Ryoko	",
-		"	白石涼子	"	:	"	Shiraishi Ryoko	",
-		"	田中理恵	"	:	"	Tanaka Rie	",
-		"	丹下桜		"	:	"	 Tange Sakura	",
-		"	東山奈央	"	:	"	Toyama Nao	",
-		"	植田佳奈	"	:	"	Ueda Kana	",
-		"	上坂すみれ	"	:	"	Uesaka Sumire	",
-		"	ゆかな		"	:	"	 Yukana	"
-	};
 
-	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};			//These tags will not count towards any category and won't be included into filename
-																			// to disable an entry without removing it use false as value
 
 	var allowUnicode=	false;												//Whether to allow unicode characters in manual translation input, not tested
 	
@@ -116,15 +32,18 @@
 	var debug=			false;												//Initial debug state, affects creation of flashDBs. Value saved in the DB overrides it after DB init.
  
 // ==/Settings=========================================================
-
-var names={} ;
-var meta={} ; 		
+		
 var title;
 var filename;															
 var folder = ''; 
 var DBrec='';																//Raw DB record,   object with fields for saved flag and tag list 
 var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to be used in filepaths
-		
+	
+var folders	=self.options.folders;
+var ignore	=self.options.ignore;
+//var names	=self.options.auxDB.names;
+//var meta	=self.options.auxDB.meta;
+ 	
 var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
 var tb =$('<table id="translations">');										//Table for entering manual translation of unknown tags
 
@@ -151,9 +70,10 @@ var	tagcell='<table class="cell"><tr>														\
 	</td></tr></thead>');
 	tb.append(thead).append(tfoot).hide();
 
+	
  
 trimObj(folders);											//Run checks on user-input content and format it
-trimObj(ignore);	
+//trimObj(ignore);	
  
 
 function trimObj(obj){													//Remove trailing whitespace in object keys and values & check correctness of user input
@@ -171,7 +91,7 @@ function trimObj(obj){													//Remove trailing whitespace in object keys a
 			delete obj[key];
 			if (typeof t == 'string') {
 				t=t.trim();
-				if (useFolderNames) {													//Expand DB with tags produced from folders names
+				if (useFolderNames) {										//Expand DB with tags produced from folders names
 					rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
 					x=getFileName(t).toLowerCase().replace(rx,'');
 					obj[x]=t;
@@ -190,8 +110,12 @@ function trimObj(obj){													//Remove trailing whitespace in object keys a
   };														 
 }; 	
 
-self.port.on ( 'getImageData', main); 	
-self.port.emit('getImageData', getFileName(document.location.href));  
+self.port.on ('gotImageData', main); 
+self.port.on ( 'sendAuxDB', function(auxDB){
+	names=	auxDB.names;
+	meta =	auxDB.meta;
+	self.port.emit('getImageData', getFileName(document.location.href)); 
+}); 
 	
 function main(record){ 															//Launch tag processing and handle afterwork
 	DBrec=record;
@@ -204,8 +128,9 @@ function main(record){ 															//Launch tag processing and handle afterwo
 		document.title=title;		
 	});
 	
-	dlLink='<a href="'+document.location.href+'" download="'+filename+'" id="dlLink"></a>';
-	$('div#down').wrap(dlLink).on('click', onDload);
+	dlLink='<a href="'+document.location.href.replace('#','')+'" download="'+filename+'" id="dlLink"></a>';
+	$('div#down').wrap(dlLink);
+	$('a#dlLink').on('click', onDload);
 };
 
 function isANSI(s) {															//Some tags might be already in roman and do not require translation
@@ -246,7 +171,7 @@ function analyzeTags( ) {   													//This is where the tag matching magic 
 		if (!v) 
 			return null;
 																
-		if ((ignore[v])||(ignore[v.split(' ').reverse().join(' ')]))
+		if ((ignore.indexOf(v)!=-1)||(ignore.indexOf(v.split(' ').reverse().join(' '))!=-1))
 			return null														//Remove ignored tags so that they don't affect the tag amount
 		else return v;
 	});		
@@ -399,7 +324,7 @@ function buildTable(ansi, rest) {											//Create table of untranslated tags 
 };
 
 function ignoreTag(anc){													//Remove clicked tag from results for current session (until page reload)
-	ignore[anc.textContent]=true;											// this way you don't have to fill in the "ignore" list, 
+	ignore.push(anc.textContent);											// this way you don't have to fill in the "ignore" list, 
 																			// while still being able to control which tags will be counted
 	tdc=$(anc).parent().parent().parent().parent().parent().parent();		//a long way up from tag link to tag cell table					
 	tdc.attr('hidden','hidden');
@@ -457,13 +382,16 @@ function selected(inp){														//Hide the corresponding roman tag from res
 function onDload(){															//Mark image as saved in the tag database
 	DBrec.s=1;																// it is used to mark saved images on tumblr pages
 	self.port.emit('setClipboard', folder+filename);
-	self.port.emit('saveData',{fname:getFileName(document.location.href), s:1, tags:tags});
+	self.port.emit('storeImageData',{fname:getFileName(document.location.href), s:1, tags:DBrec.t, auxDB:{names:names, meta:meta}});
+	console.log('GonDload');
 }
 
-self.port.on('saved', function(really){
+self.port.on('stored', function(really){	console.log('Gsaved'+unsorted);	
 	if (really) {
-		document.title=('💾 '+document.title).replace('💾 💾','💾');	
-		$('div#output').remove();
+		document.title=('💾 '+document.title).replace('💾 💾','💾');
+
+		if (!unsorted)
+			$('div#output').remove();
 	} else
 		alert('Failed to store changes');
 });	
@@ -473,7 +401,7 @@ function submit(){															//Collects entered translations for missing tag
 	missing=false;
 	$.each(tgs,function(i,v){
 		if ($(v).parent().attr('ignore')) {
-			ignore[v.id]=true;												//Mark hidden tags as ignored
+			ignore.push(v.id);												//Mark hidden tags as ignored
 			return true;
 		};
 		tg=$(v).find('input.txt');

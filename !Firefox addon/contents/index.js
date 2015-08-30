@@ -9,10 +9,15 @@ var clipboard = require("sdk/clipboard");
 var common = require("./data/common-functions.js");
 var db;
 
-if (!ss.storage.animage)  															//main storage object
-	ss.storage.animage={files:{}};
+ 
+
+if (!ss.storage.animage)  													//main storage object
+	ss.storage.animage={files:{}, settings:{}, folders:{}, auxDB:{names:{}, meta:{}}, ignore:[]};
 
 db=ss.storage.animage;
+
+//db.folders=folders;
+//db.ignore=ignore;
 
 var button = ToggleButton({
   id: "my-button",
@@ -68,6 +73,11 @@ pageMod.PageMod({
 	contentScriptFile: ["./jquery.js", "./common-functions.js", "./animage-get.js"],
 	contentScriptWhen: "ready",
 	contentStyleFile: "./animage-get.css",
+	contentScriptOptions: {
+		folders:db.folders,
+//		auxDB:	db.auxDB, 
+		ignore:	db.ignore
+	},
 	attachTo: ['top','existing'],
 	onAttach: attachListeners
 });
@@ -77,10 +87,9 @@ function isSaved(image, worker){
 		worker.port.emit("isSaved",image.i);
 };
 
-function saveData(data, worker){													//Add/modify database record for a filename
+function storeImageData(data, worker){													//Add/modify database record for a filename
 	oldRec=db.files[data.fname];													//Check if there's already a record in database for this image	
 	DBrec={s:0, t:data.tags};
-
 	if ((oldRec)&&(data.merge)) {													// if there is we need to merge existing tags with the new ones 
 		oldtags=oldRec.t; 
 		newtags=common.mkUniq(oldtags.concat(data.tags), false);
@@ -90,10 +99,13 @@ function saveData(data, worker){													//Add/modify database record for a 
 		DBrec.s=data.s;		
 	db.files[data.fname]=DBrec;	
 	
+	if (data.auxDB)
+		db.auxDB=data.auxDB;
+	console.log('Istore');
 	if (db.files[data.fname]==DBrec)
-		worker.port.emit("saved", true)
+		worker.port.emit("stored", true);
 	else																			//not sure if reachable
-		worker.port.emit("saved",false);	
+		worker.port.emit("stored",false);	
 };
 
 function getPostInfo(post, worker){
@@ -114,8 +126,8 @@ function getPostInfo(post, worker){
 
 function getImageData(fname, worker){
 	DBrec=db.files[fname];
-	if ((DBrec)&&(DBrec.t.length>0))
-		worker.port.emit('getImageData', DBrec);
+	if ((DBrec)&&(DBrec.t.length))
+		worker.port.emit('gotImageData', DBrec);
 };
 
 function attachListeners(worker){ 
@@ -123,8 +135,8 @@ function attachListeners(worker){
 		worker.port.emit("saved", 'over quota');
 		throw new Error('Simple storage is over quota.');
 	});
-	worker.port.on("saveData", function(data){
-		saveData(data, worker);
+	worker.port.on("storeImageData", function(data){
+		storeImageData(data, worker);
 	});
 	worker.port.on("isSaved", function(arg){
 		isSaved(arg, worker);
@@ -138,4 +150,26 @@ function attachListeners(worker){
 	worker.port.on("setClipboard", function(text){		
 		clipboard.set(text);
 	});
+	worker.port.emit("sendAuxDB", db.auxDB);
 };
+
+/*
+const { Cu } = require('chrome');
+
+Cu.import('resource://gre/modules/Downloads.jsm'); 
+Cu.import('resource://gre/modules/Task.jsm');
+
+Task.spawn(function () {
+
+  let list = yield Downloads.getList(Downloads.ALL);
+
+  let view = {
+    onDownloadAdded: download => console.log("Added", download),
+    onDownloadChanged: download => console.log("Changed", download),
+    onDownloadRemoved: download => console.log("Removed", download)
+  };
+
+  yield list.addView(view);
+  
+
+}).then(null, Cu.reportError);*/
