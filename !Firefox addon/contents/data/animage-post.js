@@ -1,19 +1,19 @@
 ﻿// ==UserScript==
 // @name		Animage-post
 // @description	Store tags for images and indicate saved state
-// @version		1.1
+// @version		1.2
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 
 // @include		http://*.tumblr.com/post/*
 // @include		http://*.tumblr.com/page/*
 // @include		http://*.tumblr.com/tagged/*
-// @include		http://*.tumblr.com/
+// @include		http://*.tumblr.com
 // @include		http://*.tumblr.com/image/*
 // @include		http://*.tumblr.com/search/*
 // @include		http*://www.tumblr.com/dashboard*
+// @include		http*://www.tumblr.com/tagged/*
 
-//you can turn off the script for certain blogs by putting '// @exclude http://name.tumlbr.com/*' at a new line
 // @exclude		http*://*.media.tumblr.com/*
 
 // @grant 		none

@@ -41,8 +41,6 @@ var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to b
 	
 var folders	=self.options.folders;
 var ignore	=self.options.ignore;
-//var names	=self.options.auxDB.names;
-//var meta	=self.options.auxDB.meta;
  	
 var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
 var tb =$('<table id="translations">');										//Table for entering manual translation of unknown tags
@@ -60,21 +58,17 @@ var	tagcell='<table class="cell"><tr>														\
 																			// 		if there are also roman tags, they are used as options for quick input into the text field
 																			//	if the tag is in roman and consists of two words, cell has a button enabled to swap their order
 																			//		otherwise the button is disabled
-	var tfoot=$('<tfoot><tr><td>														\
-		<input type="submit" id="submit" value="submit">								\
-	</td></tr></tfoot>');													//At the bottom of the table there is the "submit" button that applies changes
-	var thead=$('<thead><tr><td			>												\
-		<table class="cell" style="font-width:95%; font-size:small;">					\
-			<tr class="cell"><th class="cell">name</th><th class="cell">meta</th></tr>	\
-		</table>																		\
-	</td></tr></thead>');
-	tb.append(thead).append(tfoot).hide();
+var tfoot=$('<tfoot><tr><td>														\
+	<input type="submit" id="submit" value="submit">								\
+</td></tr></tfoot>');													//At the bottom of the table there is the "submit" button that applies changes
+var thead=$('<thead><tr><td			>												\
+	<table class="cell" style="font-width:95%; font-size:small;">					\
+		<tr class="cell"><th class="cell">name</th><th class="cell">meta</th></tr>	\
+	</table>																		\
+</td></tr></thead>');
+tb.append(thead).append(tfoot).hide();
 
-	
- 
 trimObj(folders);											//Run checks on user-input content and format it
-//trimObj(ignore);	
- 
 
 function trimObj(obj){													//Remove trailing whitespace in object keys and values & check correctness of user input
 	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;											//makes sure that folder names have no illegal characters
@@ -124,10 +118,10 @@ function main(record){ 															//Launch tag processing and handle afterwo
 	
 	analyzeTags();
 	
-	$(window).load(function(){													//Apparently DOM changes reset the title back to default
-		document.title=title;		
-	});
-	
+	setInterval(function(){
+		document.title=title;													//Apparently DOM changes reset the title back to default
+	}, 1000);	
+
 	dlLink='<a href="'+document.location.href.replace('#','')+'" download="'+filename+'" id="dlLink"></a>';
 	$('div#down').wrap(dlLink);
 	$('a#dlLink').on('click', onDload);
@@ -383,10 +377,9 @@ function onDload(){															//Mark image as saved in the tag database
 	DBrec.s=1;																// it is used to mark saved images on tumblr pages
 	self.port.emit('setClipboard', folder+filename);
 	self.port.emit('storeImageData',{fname:getFileName(document.location.href), s:1, tags:DBrec.t, auxDB:{names:names, meta:meta}});
-	console.log('GonDload');
 }
 
-self.port.on('stored', function(really){	console.log('Gsaved'+unsorted);	
+self.port.on('stored', function(really){
 	if (really) {
 		document.title=('💾 '+document.title).replace('💾 💾','💾');
 

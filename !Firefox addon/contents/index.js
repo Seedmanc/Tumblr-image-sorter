@@ -8,7 +8,6 @@ var ss = require("sdk/simple-storage");
 var clipboard = require("sdk/clipboard");
 var common = require("./data/common-functions.js");
 var db;
-
  
 
 if (!ss.storage.animage)  													//main storage object
@@ -16,8 +15,6 @@ if (!ss.storage.animage)  													//main storage object
 
 db=ss.storage.animage;
 
-//db.folders=folders;
-//db.ignore=ignore;
 
 var button = ToggleButton({
   id: "my-button",
@@ -75,7 +72,6 @@ pageMod.PageMod({
 	contentStyleFile: "./animage-get.css",
 	contentScriptOptions: {
 		folders:db.folders,
-//		auxDB:	db.auxDB, 
 		ignore:	db.ignore
 	},
 	attachTo: ['top','existing'],
@@ -87,7 +83,7 @@ function isSaved(image, worker){
 		worker.port.emit("isSaved",image.i);
 };
 
-function storeImageData(data, worker){													//Add/modify database record for a filename
+function storeImageData(data, worker){												//Add/modify database record for a filename
 	oldRec=db.files[data.fname];													//Check if there's already a record in database for this image	
 	DBrec={s:0, t:data.tags};
 	if ((oldRec)&&(data.merge)) {													// if there is we need to merge existing tags with the new ones 
@@ -101,7 +97,6 @@ function storeImageData(data, worker){													//Add/modify database record 
 	
 	if (data.auxDB)
 		db.auxDB=data.auxDB;
-	console.log('Istore');
 	if (db.files[data.fname]==DBrec)
 		worker.port.emit("stored", true);
 	else																			//not sure if reachable
