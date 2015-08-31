@@ -28,8 +28,8 @@ var button = ToggleButton({
 });
 
 var panel = panels.Panel({
-	width: 500,
-	height: 700,
+	width: 500, 
+	height: 550,
 	contentURL: "./panel.html",	
 	contextMenu: true,
 	onHide: handleHide

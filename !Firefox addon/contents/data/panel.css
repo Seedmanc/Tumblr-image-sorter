@@ -50,4 +50,18 @@ img#icon{
   padding: 1px; 
   width:483px
 }
+div#accordion input{
+	width:100%;
+}
+input.tag{
+	text-align: right;
+}
+table#folders, table#port{
+	border-collapse: collapse;
+	width:100%;
+}
+ 
+table#folders  th {
+	border-bottom: 1px solid black;
+}
  

@@ -24,22 +24,37 @@
 		  <div id="fragment-1">
 		  
 			<div id="accordion">
-			  <h3>ignore</h3>
+			  <h3>folders</h3>
+			  <div>
+			    <p>Root collection folder</p>
+				<p><input type="text" id="root" placeholder="F:\ull\path\" value=''/></p>
+				<p>Metasymbol: <input type="text" id="ms" value="!" maxlength=1 size=1 style="width:20px; text-align:center;"/></p><br>
+				<p>
+				List of tags matched with folders relative to root
+				</p> <center>
+				<table id="folders">	<thead><tr><th>tag</th>	<th></th>	<th>folder</th></tr></thead>
+					<tbody>
+						<tr><td><input type="text"  class="tag group" value="group" readonly disabled/></td>	<td class='btn'></td>	<td><input type="text"  class="folder group" placeholder="required" value="!group"/></td></tr>
+						<tr><td><input type="text"  class="tag solo" value="solo" readonly disabled/></td>	<td class='btn'></td>	<td><input type="text"  class="folder solo" placeholder="required" value="!solo"/></td></tr>
+						<tr><td><input type="text"  class="tag unsorted" value="unsorted" readonly disabled/></td><td class='btn'></td>	<td><input type="text"   class="folder unsorted" placeholder="required" value="!unsorted"/></td></tr>
+					<tfoot>
+						<tr><td><input type="text" class="tag"/></td>	<td class='btn'><input type="button" value="+" class="addrow"/></td>	<td><input type="text" class="folder"/></td></tr>
+					</tfoot>
+					</tbody>
+				</table>
+				<p><br>
+					<table id="port"><tr>
+						<td><input type='button' id="im" class="port" value="import..."></td><td><input type='button' id="ex" class="port" value="export..."></td>
+					</tr></table></p>
+					<input type="file" id="file" accept=".json*.txt" hidden/>
+				</center>
+			  </div>
+			<h3>ignore</h3>
 			  <div>				
-				<p>Provide list of ignored tags, separated by commas</p>
+				<p>List of ignored tags, separated by commas</p>
 				<input type="text", id="ignore" style="width:100%;"/>
 			  </div>
-			  <h3>Section 2</h3>
-			  <div>
-				<p>
-				Sed non urna. Donec et ante. Phasellus eu ligula. Vestibulum sit amet
-				purus. Vivamus hendrerit, dolor at aliquet laoreet, mauris turpis porttitor
-				velit, faucibus interdum tellus libero ac justo. Vivamus non quam. In
-				suscipit faucibus urna.
-				</p>
-			  </div>
 			</div>
-			
 		  </div>
 		  <div id="fragment-2">
 			 sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
@@ -50,8 +65,118 @@
 		</div>
     </div>
 	  <script>
-	$( "#tabs" ).tabs();
-	 $( "#accordion" ).accordion();
+	$("#tabs").tabs();
+	$("#accordion").accordion({heightStyle: "content"});
+	$('input.addrow').on('click',  addRow);
+	$('input.port#im').on('click', imprt);
+	$('input.port#ex').on('click', exprt);	
+	
+	function addRow(t){
+		var oldrow=$(t.toElement).parents('tr:first');
+		var newrow=oldrow.clone();
+		var empty=newrow.find('input:text').filter(function(){return this.value === "";}).css('background-color', '#FF8080');
+		//if (empty.length) 
+			empty.animate({backgroundColor: ''}, 1000)
+		//else {
+			newrow.find('input.addrow').attr('value', '-').attr('class','remrow').on('click', remRow);
+			oldrow.find("input[type='text']").prop('value', '');
+			$('table#folders tbody tr:last').after(newrow);
+		//}
+	};
+	function remRow(t){
+		var row=$(t.toElement).parents('tr:first');
+		row.remove();
+	};
+	
+	function collectFolderData(){
+		var obj={root:'', metasymbol:'', folders:{ }};
+		obj.root=$('input#root').prop('value');
+		obj.metasymbol=$('input#ms').prop('value');
+		var tbl = $('table#folders tbody tr').get().map(function(row) {
+			return $(row).find('td').not('.btn').get().map(function(cell) {
+				return $(cell).find('input:text').prop('value');
+			});
+		});  
+		$.each(tbl, function(i,row){
+			obj.folders[row[0]]=row[1];
+		});
+		return obj;
+	};
+	function exprt(){
+		var obj=collectFolderData();		
+		var data="text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(obj,null,'\t'));
+		$('<a href="data:'+data+'" download="folders.json.txt"></a>')[0].click()
+	};
+	
+	function imprt(){ 		
+		$('input#file')[0].onchange=function(evt){
+			var file = evt.target.files[0];
+			
+			if (file.type!='text/plain') {
+				alert('Wrong filetype: must be text/json');
+				return false;
+			};
+			
+			var obj=collectFolderData();
+			
+			var reader = new FileReader();
+			reader.onloadend = function(e) {
+				merge=confirm('Would you like to add(OK) or replace(Cancel) data?');
+			  try {	
+					o=JSON.parse(e.target.result);
+			  } catch(err){
+					alert('Error: '+err.message);
+				return false;
+			  };
+				if (o.root) {
+					if (merge && obj.root) {}
+					else 
+						obj.root=o.root;
+				}
+				else
+					alert('No root entry found');
+					
+				if (o.metasymbol) {
+					if (merge && obj.metasymbol) {}
+					else 
+						obj.metasymbol=o.metasymbol;
+				}
+				else
+					alert('No metasymbol entry found');	
+					
+				if (o.folders) {
+					if (!merge) 
+						obj.folders={};
+					$('input.remrow').each(function(i,v){v.click();});
+
+					$.each(Object.keys(o.folders), function(i,v){
+						if (!obj.folders[v])
+							obj.folders[v]=o.folders[v];
+					});
+				}
+				else
+					alert('No folders entry found');
+
+				assignFolderData(obj);
+			};
+			reader.readAsText(file);			
+		};
+		$('input#file').click();
+	};
+	function assignFolderData(obj){
+		$('input#root').prop('value',obj.root);
+		$('input#ms').prop('value',obj.metasymbol);	
+		newrow=$('input.addrow').parents('tr:first');
+		$.each(Object.keys(obj.folders), function(i,v){
+			if (['group','solo','unsorted'].indexOf(v)!=-1){
+				$('input.'+v).filter('.folder').prop('value',obj.folders[v]);
+				return true;
+			};
+			newrow.find('input:first').prop('value',v);
+			newrow.find('input:last').prop('value',obj.folders[v]);
+			newrow.find('input.addrow')[0].click();
+		});
+	}
   </script>
   </body>
 </html>
