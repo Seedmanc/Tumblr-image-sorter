@@ -27,7 +27,7 @@
 			  <h3>folders</h3>
 			  <div>
 			    <p>Root collection folder</p>
-				<p><input type="text" id="root" placeholder="F:\ull\path\" value=''/></p>
+				<p><input type="text" id="root" placeholder="F:\ull\path\required\" value=''/></p>
 				<p>Metasymbol: <input type="text" id="ms" value="!" maxlength=1 size=1 style="width:20px; text-align:center;"/></p><br>
 				<p>
 				List of tags matched with folders relative to root
@@ -64,13 +64,18 @@
 		  </div>
 		</div>
     </div>
-	  <script>
+	   
+	<div id="dialog" title="error"><span class="ui-icon ui-icon-alert"></span><div>text</div></div>
+	<div id="confirm" title="select action"><span class="ui-icon ui-icon-help"></span><div>Would you like to add or replace data?</div></div>
+
+<script>
 	$("#tabs").tabs();
 	$("#accordion").accordion({heightStyle: "content"});
 	$('input.addrow').on('click',  addRow);
 	$('input.port#im').on('click', imprt);
 	$('input.port#ex').on('click', exprt);	
-	var exclrgxp=/\/|:|\||>|<|\?|"|\*/g;
+	var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);
+	var merge=false;
 	
 	function checkTag(e){
 		$(e.target).css('background-color', '');
@@ -86,16 +91,34 @@
 		if (exclrgxp.test(e.target.value)) {
 			$(e.target).css('background-color', '#FFBF80');
 			e.target.value=e.target.value.replace(exclrgxp,'-');
-		};		 
+		};		
+		e.target.value=e.target.value.trim();		
 	};
 	
 	$('input.tag').on('change', checkTag);	
 	$('input.folder').on('change', checkFolder);
-	
+	$('input#ms').on('change', function(e){
+		$(e.target).css('background-color', '');
+		msexclrgxp=new RegExp(exclrgxp.source+"|\\s|\\\\",'g');
+		if (msexclrgxp.test(e.target.value)) {
+			e.target.value=e.target.value.replace(msexclrgxp,'!');
+			$(e.target).css('background-color', '#FFBF80');
+		};			
+	});	
+	$('input#root').on('change', function(e){
+		if (e.target.value[e.target.value.length-1]!='\\')
+			e.target.value+='\\';
+		rootrgxp=/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/gi;
+		$(e.target).css('background-color', ''); 
+		if (!rootrgxp.test(e.target.value)) {
+			e.target.focus();											//no idea how to replace wrong characters here
+			$(e.target).css('background-color', '#FF8080');
+		};			
+	});		
 	function addRow(t){
-		var oldrow=$(t.toElement).parents('tr:first');
+		var oldrow=$(t.target).parents('tr:first');
 		var newrow=oldrow.clone();
-		newrow.find('input:text').filter(function(){return this.value === "";}).css('background-color', '#FF8080');
+		newrow.find('input:text').filter(function(){return this.value.trim() === "";}).css('background-color', '#FF8080');
 		newrow.find('input.addrow').attr('value', '-').attr('class','remrow').on('click', remRow);
 		newrow.find('input.tag').on('change', checkTag);
 		newrow.find('input.folder').on('change', checkFolder);
@@ -103,7 +126,7 @@
 		$('table#folders tbody tr:last').after(newrow);
 	};
 	function remRow(t){
-		var row=$(t.toElement).parents('tr:first');
+		var row=$(t.target).parents('tr:first');
 		row.remove();
 	};
 	
@@ -132,7 +155,8 @@
 			var file = evt.target.files[0];
 			
 			if (file.type!='text/plain') {
-				alert('Wrong filetype: must be text/json');
+				$('#dialog div').text('Wrong filetype: must be text/json');
+				$("#dialog").dialog("open"); 
 				return false;
 			};
 			
@@ -140,11 +164,11 @@
 			
 			var reader = new FileReader();
 			reader.onloadend = function(e) {
-				merge=confirm('Would you like to add(OK) or replace(Cancel) data?');
 			  try {	
 					o=JSON.parse(e.target.result);
 			  } catch(err){
-					alert('Error: '+err.message);
+					$('#dialog div').text('Error: '+err.message);
+					$("#dialog").dialog("open"); 
 				return false;
 			  };
 				if (o.root) {
@@ -152,16 +176,20 @@
 					else 
 						obj.root=o.root;
 				}
-				else
-					alert('No root entry found');
+				else {
+					$('#dialog div').text('No root entry found');
+					$("#dialog").dialog("open");
+				};
 					
 				if (o.metasymbol) {
 					if (merge && obj.metasymbol) {}
 					else 
 						obj.metasymbol=o.metasymbol;
 				}
-				else
-					alert('No metasymbol entry found');	
+				else {
+					$('#dialog div').text('No metasymbol entry found');
+					$("#dialog").dialog("open");
+				};	
 					
 				if (o.folders) {
 					if (!merge) 
@@ -173,18 +201,23 @@
 							obj.folders[v]=o.folders[v];
 					});
 				}
-				else
-					alert('No folders entry found');
+				else{
+					$('#dialog div').text('No folders entry found');
+					$("#dialog").dialog("open");
+				};
 
 				assignFolderData(obj);
 			};
 			reader.readAsText(file);			
 		};
-		$('input#file').click();
+		$('#confirm').dialog('open').on( "dialogclose", function() {
+			$('input#file').click();
+		});
 	};
+	
 	function assignFolderData(obj){
-		$('input#root').prop('value',obj.root);
-		$('input#ms').prop('value',obj.metasymbol);	
+		$('input#root').prop('value',obj.root).change();
+		$('input#ms').prop('value',obj.metasymbol).change();	
 		newrow=$('input.addrow').parents('tr:first');
 		$.each(Object.keys(obj.folders), function(i,v){
 			if (['group','solo','unsorted'].indexOf(v)!=-1){
@@ -194,11 +227,35 @@
 			newrow.find('input:first').prop('value',v).change();
 			newrow.find('input:last').prop('value',obj.folders[v]).change();
 			newrow.find('input.addrow')[0].click();
-		});
-		/*setTimeout(function(){
-				newrow.find('input:text').css('background-color','');
-			}, 500);*/
+		}); 
 	}
+	
+	$( "#dialog" ).dialog({
+		dialogClass:'alert',
+		autoOpen: false,
+		modal:true,
+		buttons: {
+			Ok: function() {
+				$( this ).dialog( "close" );
+			}
+		}
+	});
+	
+	$( "#confirm" ).dialog({
+		dialogClass:'no-close',
+		autoOpen: false,
+		modal: 	true,
+		 buttons: {
+			"Add": function() {
+				merge=true;
+				$( this ).dialog( "close" );
+			},
+			"Replace": function() {
+				merge=false;
+				$( this ).dialog( "close" );
+			}
+		  }
+	});
   </script>
   </body>
 </html>

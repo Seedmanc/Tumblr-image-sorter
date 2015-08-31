@@ -71,13 +71,13 @@ tb.append(thead).append(tfoot).hide();
 trimObj(folders);											//Run checks on user-input content and format it
 
 function trimObj(obj){													//Remove trailing whitespace in object keys and values & check correctness of user input
-	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;											//makes sure that folder names have no illegal characters
+	rootrgxp=/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/g;											//makes sure that folder names have no illegal characters
   try {
 	roota=root.split('\\');
-	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) 
+	if (!rootrgxp.test(root)) 
 		throw new Error('Illegal characters in root folder path: "'+root+'"');
 	ms=ms[0];																//It's a symbol, not a string, after all
-	if ((exclrgxp.test(ms))||(/\\/.test(ms)))  
+	if ((exclrgxp.test(ms))||(/\\|\s/.test(ms)))  
 		throw new Error ('Illegal character as metasymbol: "'+ms+'"');
 	for (var key in obj) {													//Convert keys to lower case for better matching
 		if (obj.hasOwnProperty(key)) { 
