@@ -70,18 +70,37 @@
 	$('input.addrow').on('click',  addRow);
 	$('input.port#im').on('click', imprt);
 	$('input.port#ex').on('click', exprt);	
+	var exclrgxp=/\/|:|\||>|<|\?|"|\*/g;
+	
+	function checkTag(e){
+		$(e.target).css('background-color', '');
+		if (e.target.value.indexOf(',')!=-1) {
+			$(e.target).css('background-color', '#FFBF80');
+			e.target.value=e.target.value.replace(',',' ');
+		};		
+		e.target.value=e.target.value.toLowerCase().trim();
+	};
+	
+	function checkFolder(e){
+		$(e.target).css('background-color', '');
+		if (exclrgxp.test(e.target.value)) {
+			$(e.target).css('background-color', '#FFBF80');
+			e.target.value=e.target.value.replace(exclrgxp,'-');
+		};		 
+	};
+	
+	$('input.tag').on('change', checkTag);	
+	$('input.folder').on('change', checkFolder);
 	
 	function addRow(t){
 		var oldrow=$(t.toElement).parents('tr:first');
 		var newrow=oldrow.clone();
-		var empty=newrow.find('input:text').filter(function(){return this.value === "";}).css('background-color', '#FF8080');
-		//if (empty.length) 
-			empty.animate({backgroundColor: ''}, 1000)
-		//else {
-			newrow.find('input.addrow').attr('value', '-').attr('class','remrow').on('click', remRow);
-			oldrow.find("input[type='text']").prop('value', '');
-			$('table#folders tbody tr:last').after(newrow);
-		//}
+		newrow.find('input:text').filter(function(){return this.value === "";}).css('background-color', '#FF8080');
+		newrow.find('input.addrow').attr('value', '-').attr('class','remrow').on('click', remRow);
+		newrow.find('input.tag').on('change', checkTag);
+		newrow.find('input.folder').on('change', checkFolder);
+		oldrow.find("input:text").prop('value', '').css('background-color','');
+		$('table#folders tbody tr:last').after(newrow);
 	};
 	function remRow(t){
 		var row=$(t.toElement).parents('tr:first');
@@ -172,10 +191,13 @@
 				$('input.'+v).filter('.folder').prop('value',obj.folders[v]);
 				return true;
 			};
-			newrow.find('input:first').prop('value',v);
-			newrow.find('input:last').prop('value',obj.folders[v]);
+			newrow.find('input:first').prop('value',v).change();
+			newrow.find('input:last').prop('value',obj.folders[v]).change();
 			newrow.find('input.addrow')[0].click();
 		});
+		/*setTimeout(function(){
+				newrow.find('input:text').css('background-color','');
+			}, 500);*/
 	}
   </script>
   </body>
