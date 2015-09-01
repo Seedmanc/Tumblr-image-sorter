@@ -17,49 +17,83 @@
     <div id="content">
 		<div id="tabs">
 		  <ul>
-			<li><a href="#fragment-1">Lists</a></li>
-			<li><a href="#fragment-2">Options</a></li>
-			<li><a href="#fragment-3">About</a></li>
+			<li><a href="#lists">Lists</a></li>
+			<li><a href="#options">Options</a></li>
+			<li><a href="#about">About</a></li>
 		  </ul>
-		  <div id="fragment-1">
+		  <div id="lists">
 		  
 			<div id="accordion">
+			
+			  <h3>names & meta</h3>
+			    <div><center>			
+					<p>List of name tags by category matched with translations</p><br>					
+					<table id="names" class="taglist">	<thead><tr><th>tag</th>	<th></th>	<th>translation</th></tr></thead>
+						<tbody>
+						</tbody>
+						<tfoot>
+							<tr><td><input type="text" class="tag name"/></td>	<td class='btn'><input type="button" value="+" class="addrow"/></td>	<td><input type="text" class="translation"/></td></tr>
+						</tfoot> 
+					</table><br>
+					<p>List of meta tags by category matched with translations</p><br>
+					<center>
+					<table id="meta" class="taglist">	<thead><tr><th>tag</th>	<th></th>	<th>translation</th></tr></thead>
+						<tbody>
+						</tbody>
+						<tfoot>
+							<tr><td><input type="text" class="tag meta"/></td>	<td class='btn'><input type="button" value="+" class="addrow"/></td>	<td><input type="text" class="translation"/></td></tr>
+						</tfoot>
+						</tbody>
+					</table>
+					</center>
+					<p><br><table id="port"><tr>
+						<td><input type='button' class="im" name="names & meta" value="import..."></td><td><input type='button' class="ex" name="names & meta" value="export..."></td>
+						</tr>
+					</table></p> 
+			    </div>
+				
 			  <h3>folders</h3>
-			  <div>
-			    <p>Root collection folder</p>
+			  <div>				
+			    
+				<p>Root collection folder</p>
 				<p><input type="text" id="root" placeholder="F:\ull\path\required\" value=''/></p>
-				<p>Metasymbol: <input type="text" id="ms" value="!" maxlength=1 size=1 style="width:20px; text-align:center;"/></p><br>
+				<p>Metasymbol: <input type="text" id="ms" value="!" maxlength=1 size=1 style="width:20px; text-align:center;"/> indicates a subcategory folder</p><br>
 				<p>
 				List of tags matched with folders relative to root
 				</p> <center>
-				<table id="folders">	<thead><tr><th>tag</th>	<th></th>	<th>folder</th></tr></thead>
+				<table id="folders" class="taglist">	<thead><tr><th>tag</th>	<th></th>	<th>folder</th></tr></thead>
 					<tbody>
 						<tr><td><input type="text"  class="tag group" value="group" readonly disabled/></td>	<td class='btn'></td>	<td><input type="text"  class="folder group" placeholder="required" value="!group"/></td></tr>
 						<tr><td><input type="text"  class="tag solo" value="solo" readonly disabled/></td>	<td class='btn'></td>	<td><input type="text"  class="folder solo" placeholder="required" value="!solo"/></td></tr>
 						<tr><td><input type="text"  class="tag unsorted" value="unsorted" readonly disabled/></td><td class='btn'></td>	<td><input type="text"   class="folder unsorted" placeholder="required" value="!unsorted"/></td></tr>
+					</tbody>
 					<tfoot>
 						<tr><td><input type="text" class="tag"/></td>	<td class='btn'><input type="button" value="+" class="addrow"/></td>	<td><input type="text" class="folder"/></td></tr>
 					</tfoot>
-					</tbody>
+
 				</table>
-				<p><br>
-					<table id="port"><tr>
-						<td><input type='button' id="im" class="port" value="import..."></td><td><input type='button' id="ex" class="port" value="export..."></td>
-					</tr></table></p>
-					<input type="file" id="file" accept=".json*.txt" hidden/>
 				</center>
+				<p><br><table id="port"><tr>
+					<td><input type='button'  class="im" name="folders" value="import..."></td><td><input type='button'  class="ex" name="folders" value="export..."></td>
+					</tr>
+				</table></p>
+				<input type="file" id="file" accept=".json*.txt" hidden/>
 			  </div>
+			  
 			<h3>ignore</h3>
 			  <div>				
 				<p>List of ignored tags, separated by commas</p>
 				<input type="text", id="ignore" style="width:100%;"/>
 			  </div>
+			  
 			</div>
 		  </div>
-		  <div id="fragment-2">
+		  
+		  <div id="options">
 			 sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
 		  </div>
-		  <div id="fragment-3">
+		  
+		  <div id="about">
 			  laoreet dolore magna aliquam erat volutpat.
 		  </div>
 		</div>
@@ -70,10 +104,14 @@
 
 <script>
 	$("#tabs").tabs();
-	$("#accordion").accordion({heightStyle: "content"});
+	$("#accordion").accordion({
+		heightStyle: "content",
+		collapsible: true
+  });
 	$('input.addrow').on('click',  addRow);
-	$('input.port#im').on('click', imprt);
-	$('input.port#ex').on('click', exprt);	
+	$('input.im').on('click', imprt);
+	$('input.ex').on('click', exprt);	
+	
 	var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);
 	var merge=false;
 	
@@ -84,19 +122,25 @@
 			e.target.value=e.target.value.replace(',',' ');
 		};		
 		e.target.value=e.target.value.toLowerCase().trim();
+		if (!e.target.value)
+			$(e.target).css('background-color', '#FF8080');
 	};
 	
-	function checkFolder(e){
+	function checkMatch(e){
 		$(e.target).css('background-color', '');
 		if (exclrgxp.test(e.target.value)) {
 			$(e.target).css('background-color', '#FFBF80');
 			e.target.value=e.target.value.replace(exclrgxp,'-');
 		};		
 		e.target.value=e.target.value.trim();		
+		if (!e.target.value)
+			$(e.target).css('background-color', '#FF8080');
 	};
 	
 	$('input.tag').on('change', checkTag);	
-	$('input.folder').on('change', checkFolder);
+	$('input.folder').on('change', checkMatch);
+	$('input.translation').on('change', checkMatch);
+
 	$('input#ms').on('change', function(e){
 		$(e.target).css('background-color', '');
 		msexclrgxp=new RegExp(exclrgxp.source+"|\\s|\\\\",'g');
@@ -121,9 +165,13 @@
 		newrow.find('input:text').filter(function(){return this.value.trim() === "";}).css('background-color', '#FF8080');
 		newrow.find('input.addrow').attr('value', '-').attr('class','remrow').on('click', remRow);
 		newrow.find('input.tag').on('change', checkTag);
-		newrow.find('input.folder').on('change', checkFolder);
+		newrow.find('input:text:last').on('change', checkMatch);
 		oldrow.find("input:text").prop('value', '').css('background-color','');
-		$('table#folders tbody tr:last').after(newrow);
+		var whereto=oldrow.parents('table').find('tbody');
+		if (whereto.find('tr:last').length)
+			whereto.find('tr:last').after(newrow)
+		else
+			whereto.append(newrow);
 	};
 	function remRow(t){
 		var row=$(t.target).parents('tr:first');
@@ -144,13 +192,35 @@
 		});
 		return obj;
 	};
-	function exprt(){
-		var obj=collectFolderData();		
+	function collectNaMeData(){
+		var obj={names:{ }, meta:{ }};
+		var names = $('table#names tbody tr').get().map(function(row) {
+			return $(row).find('td').not('.btn').get().map(function(cell) {
+				return $(cell).find('input:text').prop('value');
+			});
+		});  
+		var meta = $('table#meta tbody tr').get().map(function(row) {
+			return $(row).find('td').not('.btn').get().map(function(cell) {
+				return $(cell).find('input:text').prop('value');
+			});
+		}); 
+		$.each(names, function(i,row){
+			obj.names[row[0]]=row[1].replace('\\','-');
+		});
+		$.each(meta, function(i,row){
+			obj.meta[row[0]]=row[1].replace('\\','-');
+		});
+		return obj;
+	};
+	function exprt(e){
+		var source=$(e.target).prop('name');
+		var obj=(source=='folders')?collectFolderData():collectNaMeData();		
 		var data="text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(obj,null,'\t'));
-		$('<a href="data:'+data+'" download="folders.json.txt"></a>')[0].click()
+		$('<a href="data:'+data+'" download="'+source+'.json.txt">&nbsp;</a>')[0].click();
 	};
 	
-	function imprt(){ 		
+	function imprt(e){ 		
+		var source=$(e.target).prop('name');
 		$('input#file')[0].onchange=function(evt){
 			var file = evt.target.files[0];
 			
@@ -160,7 +230,7 @@
 				return false;
 			};
 			
-			var obj=collectFolderData();
+			var obj=(source=='folders')?collectFolderData():collectNaMeData();
 			
 			var reader = new FileReader();
 			reader.onloadend = function(e) {
@@ -171,6 +241,7 @@
 					$("#dialog").dialog("open"); 
 				return false;
 			  };
+			   if (source=='folders'){
 				if (o.root) {
 					if (merge && obj.root) {}
 					else 
@@ -194,31 +265,60 @@
 				if (o.folders) {
 					if (!merge) 
 						obj.folders={};
-					$('input.remrow').each(function(i,v){v.click();});
+					$('table#folders input.remrow').each(function(i,v){v.click();});
 
 					$.each(Object.keys(o.folders), function(i,v){
 						if (!obj.folders[v])
 							obj.folders[v]=o.folders[v];
 					});
 				}
-				else{
+				else {
 					$('#dialog div').text('No folders entry found');
 					$("#dialog").dialog("open");
-				};
-
+				};				
 				assignFolderData(obj);
+				
+			   } else {
+				if (o.names) {
+					if (!merge) 
+						obj.names={};
+					$('table#names input.remrow').each(function(i,v){v.click();});
+
+					$.each(Object.keys(o.names), function(i,v){
+						if (!obj.names[v])
+							obj.names[v]=o.names[v];
+					});
+				}
+				else{
+					$('#dialog div').text('No names entry found');
+					$("#dialog").dialog("open");
+				};
+				if (o.meta) {
+					if (!merge) 
+						obj.meta={};
+					$('table#meta input.remrow').each(function(i,v){v.click();});
+
+					$.each(Object.keys(o.meta), function(i,v){
+						if (!obj.meta[v])
+							obj.meta[v]=o.meta[v];
+					});
+				}
+				else{
+					$('#dialog div').text('No meta entry found');
+					$("#dialog").dialog("open");
+				};
+				assignNaMeData(obj);
+			  };
 			};
 			reader.readAsText(file);			
 		};
-		$('#confirm').dialog('open').on( "dialogclose", function() {
-			$('input#file').click();
-		});
+		$('#confirm').dialog('open');
 	};
 	
 	function assignFolderData(obj){
 		$('input#root').prop('value',obj.root).change();
 		$('input#ms').prop('value',obj.metasymbol).change();	
-		newrow=$('input.addrow').parents('tr:first');
+		newrow=$('table#folders input.addrow').parents('tr:first');
 		$.each(Object.keys(obj.folders), function(i,v){
 			if (['group','solo','unsorted'].indexOf(v)!=-1){
 				$('input.'+v).filter('.folder').prop('value',obj.folders[v]);
@@ -228,7 +328,23 @@
 			newrow.find('input:last').prop('value',obj.folders[v]).change();
 			newrow.find('input.addrow')[0].click();
 		}); 
-	}
+	};
+	
+	function assignNaMeData(obj){ 
+		newrow=$('table#names input.addrow').parents('tr:first');
+		$.each(Object.keys(obj.names), function(i,v){ 
+			newrow.find('input:first').prop('value',v).change();
+			newrow.find('input:last').prop('value',obj.names[v]).change();
+			newrow.find('input.addrow')[0].click();
+		}); 
+		
+		newrow=$('table#meta input.addrow').parents('tr:first');
+		$.each(Object.keys(obj.meta), function(i,v){ 
+			newrow.find('input:first').prop('value',v).change();
+			newrow.find('input:last').prop('value',obj.meta[v]).change();
+			newrow.find('input.addrow')[0].click();
+		});
+	};
 	
 	$( "#dialog" ).dialog({
 		dialogClass:'alert',
@@ -254,8 +370,13 @@
 				merge=false;
 				$( this ).dialog( "close" );
 			}
-		  }
+		},
+		close:function() {
+			$('input#file').click();
+		}
 	});
+	//TODO: ergonomize (lol) 'Lists' tab interface so that large amount of rows won't affect accessibility of buttons
+	//TODO generalize load and save functions even more to avoid duplicating code
   </script>
   </body>
 </html>

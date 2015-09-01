@@ -56,12 +56,12 @@ div#accordion input{
 input.tag{
 	text-align: right;
 }
-table#folders, table#port{
+table.taglist, table#port{
 	border-collapse: collapse;
 	width:100%;
 }
  
-table#folders  th {
+table.taglist  th {
 	border-bottom: 1px solid black;
 }
 
