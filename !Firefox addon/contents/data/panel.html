@@ -18,9 +18,9 @@
     <div id="content">
 		<div id="tabs">
 		  <ul>
-			<li><a href="#lists">Lists</a></li>
-			<li><a href="#options">Options</a></li>
-			<li><a href="#about">About</a></li>
+			<li><a name="lists" href="#lists">Lists</a></li>
+			<li><a name="options" href="#options">Options</a></li>
+			<li><a name="about" href="#about">About</a></li>
 		  </ul>
 		  <div id="lists">
 		  
@@ -36,7 +36,7 @@
 			  <div>				
 			    
 				<p>Root collection folder</p>
-				<p><input type="text" id="root" placeholder="F:\ull\path\required\" value=''/></p>
+				<p><input type="text" id="root" placeholder="F:\ull\path\required\" value='C:\my\collection\'/></p>
 				<p>Metasymbol: <input type="text" id="ms" value="!" maxlength=1 size=1 style="width:20px; text-align:center;"/> indicates a subcategory folder</p><br>
 				<p>
 				List of tags matched with folders relative to root
@@ -140,7 +140,9 @@
   });
 	$('input.addrow').on('click',  addRow);
 	$('input.im').on('click', imprt);
-	$('input.ex').on('click', exprt);	
+	$('input.ex').on('click', exprt);
+	$('div#tabs a').on('click', storeSettings); 
+	
 	$('input#ignore').on('change', function(e){
 		input=e.target.value;
 		e.target.value=$.map(input.split(','), function(v){
@@ -150,11 +152,43 @@
 	});
 	$("#highlightColor").spectrum({
 		color: "#000",
-		change: function(color) {alert(color.toHexString());
-    }
-});
+		clickoutFiresChange: true
+	});
 	var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);
 	var merge=false;
+	var settings={lists:{}, options:{}};
+	
+	function storeSettings(e){
+		var lists={}; var options={post:{},image:{}};
+		if (e.target.name!='lists') {
+			lists.ignore=$('input#ignore').prop('value').split(',');
+			lists.folders=collectFolderData();
+			lists.name=collectNaMeData();
+			settings.lists=lists;
+		};
+		if (e.target.name!='options') {
+			options.post.highlightColor=$('#highlightColor').spectrum("get").toHexString();
+			options.post.enableOnDashboard=$('#enableOnDashboard').prop('checked');
+			options.post.linkify=$('#linkify').prop('checked');
+			options.image.allowUnicode=$('#allowUnicode').prop('checked');
+			options.image.useFolderNames=$('#useFolderNames').prop('checked');
+			settings.options=options; 
+		}; 
+		alert(JSON.stringify(settings,null,'\t'));
+	};
+	
+	function applySettings(){
+		var lists=settings.lists; var options=settings.options;
+		assignFolderData(settings.lists.folders);
+		assignNaMeData(settings.lists.name);
+		$('input#ignore').prop('value',settings.lists.ignore.join(',')).change();
+		
+		$('#highlightColor').spectrum("set", settings.options.post.highlightColor);
+		$('#enableOnDashboard').prop('checked', options.post.enableOnDashboard);
+		$('#linkify').prop('checked', options.post.linkify);
+		$('#allowUnicode').prop('checked', options.image.allowUnicode);
+		$('#useFolderNames').prop('checked', options.image.useFolderNames);
+	};
 	
 	function checkTag(e){
 		$(e.target).css('background-color', '');
@@ -173,7 +207,8 @@
 			$(e.target).css('background-color', '#FFBF80');
 			e.target.value=e.target.value.replace(exclrgxp,'-');
 		};		
-		e.target.value=e.target.value.trim();		
+		e.target.value=e.target.value.trim();
+		e.target.value=e.target.value.replace(/^\\|\\$/g,'');		
 		if (!e.target.value)
 			$(e.target).css('background-color', '#FF8080');
 	};
@@ -220,16 +255,18 @@
 	};
 	
 	function collectFolderData(){
-		var obj={root:'', metasymbol:'', folders:{ }};
-		obj.root=$('input#root').prop('value');
+		var obj ={root:'', metasymbol:'', folders:{ }};
+		obj.root=($('input#root').css('background-color')!='#FF8080')?$('input#root').prop('value'):'';
 		obj.metasymbol=$('input#ms').prop('value');
+		
 		var tbl = $('table#folders tbody tr').get().map(function(row) {
 			return $(row).find('td').not('.btn').get().map(function(cell) {
 				return $(cell).find('input:text').prop('value');
 			});
 		});  
 		$.each(tbl, function(i,row){
-			obj.folders[row[0]]=row[1];
+			if (row[0]&&row[1])
+				obj.folders[row[0]]=row[1];
 		});
 		return obj;
 	};
@@ -246,10 +283,12 @@
 			});
 		}); 
 		$.each(names, function(i,row){
-			obj.names[row[0]]=row[1].replace('\\','-');
+			if (row[0]&&row[1])
+				obj.names[row[0]]=row[1].replace('\\','-');
 		});
 		$.each(meta, function(i,row){
-			obj.meta[row[0]]=row[1].replace('\\','-');
+			if (row[0]&&row[1])
+				obj.meta[row[0]]=row[1].replace('\\','-');
 		});
 		return obj;
 	};
@@ -418,6 +457,7 @@
 	});
 	//TODO: ergonomize (lol) 'Lists' tab interface so that large amount of rows won't affect accessibility of buttons
 	//TODO generalize load and save functions even more to avoid duplicating code
+	//TODO add parsing of dir CMD output to quickly fill in folders
   </script>
   </body>
 </html>

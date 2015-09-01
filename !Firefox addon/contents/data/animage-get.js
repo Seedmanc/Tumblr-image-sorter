@@ -274,7 +274,7 @@ function analyzeTags( ) {   													//This is where the tag matching magic 
 		
 	filename=filename.replace(exclrgxp, '-').trim();						//Make sure there are no forbidden characters in the resulting name 
 	document.title+=' \\'+folder+filename;
-	folder=root+folder;														//If no name or folder tags were found, folder will be set to root directory
+	folder=(root+folder).replace(/\\\\/g,'\\');								//If no name or folder tags were found, folder will be set to root directory
 	
 	if (DBrec.s==1) 
 		document.title=('💾 '+document.title).replace('💾 💾','💾');			//Indicate if the image has been marked as saved before
@@ -445,4 +445,4 @@ function submit(){															//Collects entered translations for missing tag
  
 //TODO: add checks for common mistakes in unicode names like 実/美 & 奈/菜
 //TODO: option to disable unsorted category if translations are not required by user 
-//TODO: only launch post-download events after user actually agreed to download image instead of onclick
+//TODO: only launch post-download events after user actually agreed to download image instead of onclick 
