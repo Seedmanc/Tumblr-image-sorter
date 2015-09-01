@@ -65,3 +65,11 @@ table.taglist  th {
 	border-bottom: 1px solid black;
 }
 
+fieldset p{
+	text-align:justify;
+}
+div#version {
+	float: right;
+    top: -10px;
+    position: relative;
+}
