@@ -25,10 +25,6 @@ function mkUniq(arr, sort){														//Ensures uniqueness of array elements,
 	return (sort)?arr2.sort():arr2;
 };
 
-/*try{																			//for some reason exports gives an error here, but it works in index.js just fine
-	exports.mkUniq = mkUniq;													//This function is used by both addon and content scripts
-}catch(e){};*/
-
 
 if ( typeof exports !== "undefined") {
 	exports.mkUniq = mkUniq;

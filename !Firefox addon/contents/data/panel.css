@@ -6,6 +6,7 @@ body {
   overflow-x: hidden; 
    width:500px; 
    margin:auto;
+   overflow-y:-moz-scrollbars-none;
 }
 
 h1 {
@@ -75,4 +76,7 @@ div#version {
 	float: right;
     top: -10px;
     position: relative;
+}
+input#reset{
+	color:red;
 }

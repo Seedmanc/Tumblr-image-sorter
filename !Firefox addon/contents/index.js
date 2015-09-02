@@ -7,14 +7,14 @@ var Request = require("sdk/request").Request;
 var ss = require("sdk/simple-storage");
 var clipboard = require("sdk/clipboard");
 var common = require("./data/common-functions.js");
-var db;
+var db; var update=true;
  
+defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{ }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
 if (!ss.storage.animage)  													//main storage object
-	ss.storage.animage={files:{}, settings:{}, folders:{}, auxDB:{names:{}, meta:{}}, ignore:[]};
+	ss.storage.animage=defaults;
 
 db=ss.storage.animage;
-
 
 var button = ToggleButton({
   id: "my-button",
@@ -28,15 +28,51 @@ var button = ToggleButton({
 });
 
 var panel = panels.Panel({
-	width: 500, 
+	width: 505, 
 	height: 550,
 	contentURL: "./panel.html",	
 	contextMenu: true,
-	onHide: handleHide
+	onHide: handleHide,
+	onShow: applyPanelData
 });
-panel.on("show", function() {
-  panel.port.emit("show");
+
+panel.port.on("reset", function(){
+	db=defaults;
+	applyPanelData();
 });
+
+function applyPanelData() { 
+	if (!update) {
+		update=true;
+		return;
+	};
+	panel.port.emit("show",{
+		lists:{
+			folders: {
+				root:		db.settings.root,
+				metasymbol:	db.settings.metasymbol,
+				folders:	db.folders
+			},
+			name: {
+				names:		db.auxdb.names,
+				meta:		db.auxdb.meta
+			},
+			ignore:		db.ignore
+		},
+		options: {
+			post:	{
+				highlightColor: 	db.settings.highlightColor,
+				enableOnDashboard:	db.settings.enableOnDashboard,
+				linkify:			db.settings.linkify
+			},
+			image: {
+				allowUnicode:		db.settings.allowUnicode,
+				useFolderNames:		db.settings.useFolderNames
+			}
+		}
+	});
+};
+ 
 
 function handleChange(state) {
 	if (state.checked) {
@@ -48,7 +84,28 @@ function handleChange(state) {
 
 function handleHide() {
 	button.state('window', {checked: false});
+	panel.port.emit('storePanelData');
 }
+
+panel.port.on('showPanel', function(){
+	update=false;
+	button.click(); 
+});
+
+panel.port.on('storedPanelData', function(data){
+	if (data.lists.folders.root)
+		db.settings.root =			data.lists.folders.root;
+	db.settings.metasymbol =		data.lists.folders.metasymbol;
+	db.settings.highlightColor =	data.options.post.highlightColor;
+	db.settings.enableOnDashboard =	data.options.post.enableOnDashboard;
+	db.settings.linkify =			data.options.post.linkify;
+	db.settings.allowUnicode =		data.options.image.allowUnicode;
+	db.settings.useFolderNames =	data.options.image.useFolderNames;
+	db.auxdb.meta =					data.lists.name.meta;
+	db.auxdb.names =				data.lists.name.names;	
+	db.ignore =						data.lists.ignore;
+	db.folders =					data.lists.folders.folders;
+});
 
 pageMod.PageMod({
 	include: [	/http[^s].*tumblr\.com\/?$/,										//match all personal blog pages containing posts
@@ -149,24 +206,3 @@ function attachListeners(worker){
 	});
 	worker.port.emit("sendAuxDB", db.auxDB);
 };
-
-/*
-const { Cu } = require('chrome');
-
-Cu.import('resource://gre/modules/Downloads.jsm'); 
-Cu.import('resource://gre/modules/Task.jsm');
-
-Task.spawn(function () {
-
-  let list = yield Downloads.getList(Downloads.ALL);
-
-  let view = {
-    onDownloadAdded: download => console.log("Added", download),
-    onDownloadChanged: download => console.log("Changed", download),
-    onDownloadRemoved: download => console.log("Removed", download)
-  };
-
-  yield list.addView(view);
-  
-
-}).then(null, Cu.reportError);*/
