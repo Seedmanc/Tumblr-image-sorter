@@ -1,6 +1,6 @@
 {
   "title": "Tumblr Image Sorter",
-  "name": "TumblrImageSorter",
+  "name": "tumblrimagesorter",
   "version": "1.2.0",
   "description": "Saves time spent on choosing folder and file name for saving tumblr images.",
   "main": "index.js",

@@ -7,6 +7,7 @@ var Request = require("sdk/request").Request;
 var ss = require("sdk/simple-storage");
 var clipboard = require("sdk/clipboard");
 var common = require("./data/common-functions.js"); 
+var core = require("sdk/view/core");
  
 defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
@@ -29,13 +30,11 @@ var panel = panels.Panel({
 	height: 550,
 	contentURL: "./panel.html",	
 	onHide: handleHide,
-	onShow: applyPanelData,
-	noautohide: true,
-	closemenu:true
+	onShow: applyPanelData 
 });
 
-panel.setAttribute('noautohide','true');
-panel.setAttribute('closemenu','true');
+core.getActiveView(panel).setAttribute("noautohide", true);
+
 panel.port.on("reset", function(){
 	ss.storage.animage=defaults;
 	applyPanelData();
@@ -87,11 +86,12 @@ function applyPanelData() {
  
 
 function handleChange(state) {
-	if (state.checked) {
+	if (state.checked) 
 		panel.show({
 			position: button
-		});
-	}
+		})
+	else
+		panel.hide();
 }
 
 function handleHide() {

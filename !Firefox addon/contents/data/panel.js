@@ -26,15 +26,14 @@ $( "#confirm" ).dialog({
 	 buttons: {
 		"Add": function() {
 			merge=true;
+			$('input#file').click();
 			$( this ).dialog( "close" );
 		}, 
 		"Replace": function() {
 			merge=false;
+			$('input#file').click();
 			$( this ).dialog( "close" );
 		}
-	}, 
-	close:function() {
-		$('input#file').click();
 	}
 });
 
