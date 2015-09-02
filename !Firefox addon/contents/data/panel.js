@@ -51,8 +51,11 @@ $('a#external').on('click', function(e){
 	return false;
 });
 
-$('input#resetConfirm').on('click', function(){
-	$('input#reset').removeAttr('disabled');
+$('input#resetConfirm').on('change', function(e){
+	if (e.target.checked)
+		$('input#reset').removeAttr('disabled')
+	else	
+		$('input#reset').attr('disabled', 'disabled')
 }); 
 $('input#reset').on('click', function(){
 	$('input#reset').attr('disabled', 'disabled');

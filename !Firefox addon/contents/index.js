@@ -15,7 +15,7 @@ if (!ss.storage.animage)  													//main storage object
 
 var button = ToggleButton({
   id: "my-button",
-  label: "my button",
+  label: "Tumblr Image Sorter",
   icon: {
     "16": "./icon-16.png",
     "32": "./icon-32.png",
@@ -29,9 +29,13 @@ var panel = panels.Panel({
 	height: 550,
 	contentURL: "./panel.html",	
 	onHide: handleHide,
-	onShow: applyPanelData
+	onShow: applyPanelData,
+	noautohide: true,
+	closemenu:true
 });
 
+panel.setAttribute('noautohide','true');
+panel.setAttribute('closemenu','true');
 panel.port.on("reset", function(){
 	ss.storage.animage=defaults;
 	applyPanelData();

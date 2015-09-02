@@ -1,13 +1,14 @@
 {
-  "title": "My Jetpack Addon",
-  "name": "my-addon",
-  "version": "0.0.1",
-  "description": "A basic add-on",
+  "title": "Tumblr Image Sorter",
+  "name": "TumblrImageSorter",
+  "version": "1.2.0",
+  "description": "Saves time spent on choosing folder and file name for saving tumblr images.",
   "main": "index.js",
   "author": "Seedmanc",
+  "homepage": "http://github.com/Seedmanc/Tumblr-image-sorter",
   "engines": {
-    "firefox": ">=38.0a1",
-    "fennec": ">=38.0a1"
+    "firefox": ">=32",
+    "fennec": ">=32"
   },
   "license": "MIT"
 }
