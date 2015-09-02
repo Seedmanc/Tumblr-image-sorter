@@ -1,3 +1,4 @@
+
 $("#tabs").tabs();
 $("#accordion").accordion({
 	heightStyle: "content", 
@@ -20,8 +21,8 @@ $( "#dialog" ).dialog({
 });
 $( "#confirm" ).dialog({
 	dialogClass:'no-close', 
-	autoOpen: false, 
-	modal: 	true, 
+	autoOpen: 	false, 
+	modal: 		true, 
 	 buttons: {
 		"Add": function() {
 			merge=true;
@@ -59,19 +60,19 @@ $('input#reset').on('click', function(){
 	addon.port.emit('reset');
 }); 
 
-$('input#ignore').on('change', function(e){
+$('input#ignore').on('change', function(e){						//most of the onchange functions perform data validation 
 	input=e.target.value;
 	e.target.value=$.map(input.split(','), function(v){
 		trimmed=v.trim();
 		return (trimmed!='')?v.trim():undefined;
-	}).join(', ');
+	}).join(',');
 });
 $('input#ms').on('change', function(e){
 	$(e.target).css('background-color', '');
 	msexclrgxp=new RegExp(exclrgxp.source+"|\\s|\\\\", 'g');
 	if ((!e.target.value)||(msexclrgxp.test(e.target.value))) {
 		e.target.value=e.target.value.replace(msexclrgxp, '!');
-		$(e.target).css('background-color', '#FFBF80');
+		$(e.target).css('background-color', '#FFBF80');				//orange color indicates where the script attempted to fix input mistakes
 	};			
 });	
 $('input#root').on('change', function(e){
@@ -81,7 +82,7 @@ $('input#root').on('change', function(e){
 	$(e.target).css('background-color', ''); 
 	if (!rootrgxp.test(e.target.value)) {
 		e.target.focus();											//no idea how to replace wrong characters here
-		$(e.target).css('background-color', '#FF8080');
+		$(e.target).css('background-color', '#FF8080');				//red color indicates unfixable errors, user input won't be saved until corrected
 	};			
 });	
 
@@ -100,7 +101,7 @@ addon.port.on("stored", function(response){
 	};
 });
 				
-var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);
+var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);						//characters not allowed in filenames
 var merge=false;
 var panelData={lists:{}, options:{}};
 
@@ -180,12 +181,12 @@ function collectFolderData(){
 	obj.root=($('input#root').css('background-color')!='rgb(255, 128, 128)')?$('input#root').prop('value'):'';
 	obj.metasymbol=$('input#ms').prop('value');
 	
-	var tbl = $('table#folders tbody tr').get().map(function(row) {
+	var tbl = $('table#folders tbody tr').get().map(function(row) {			//convert data frmo table to 2D array
 		return $(row).find('td').not('.btn').get().map(function(cell) {
 			return $(cell).find('input:text').prop('value');
 		});
 	});  
-	$.each(tbl, function(i, row){
+	$.each(tbl, function(i, row){											//convert array to object
 		if (row[0]&&row[1])
 			obj.folders[row[0]]=row[1];
 	});
@@ -360,3 +361,5 @@ function assignNaMeData(obj){
 //TODO add parsing of dir CMD output to quickly fill in folders
 //TODO hide scrollbar while leaving ability to scroll
 //TODO move to simple prefs
+//TODO prevent panel hiding on file dialogs
+//TODO option to disable clipboard copy

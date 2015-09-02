@@ -87,7 +87,11 @@ self.port.on ('init', function(obj){
 	self.port.emit('getImageData', getFileName(document.location.href)); 
 }); 
 	
-function main(record){ 															//Launch tag processing and handle afterwork
+function main(record){ 																//Launch tag processing and handle afterwork
+	if (document.location.href.indexOf('tumblr')==-1) 								//If not on tumblr
+		if (!(/(jpe*g|bmp|png|gif)/gi).test(document.location.href.split('.').pop()))// check if this is actually an image link
+			return;
+			
 	DBrec=record;
 	$('body').append(out);
 	$('div#output').append(tb);

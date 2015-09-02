@@ -38,7 +38,6 @@ panel.port.on("reset", function(){
 });
 
 panel.port.on("openLink", function(link){
-	ss.storage.animage=defaults;
 	tabs.open(link);
 });
 
@@ -127,10 +126,14 @@ pageMod.PageMod({
 	attachTo: ['top' ],
 	onAttach: attachListeners
 });
-
+ 
 pageMod.PageMod({
 	include: [	"*.media.tumblr.com",												//match only directly opened images
-				"*.amazonaws.com/data.tumblr.com/"	],								//older tumblr posts hosted images on amazon
+				"*.amazonaws.com/data.tumblr.com/",									//older tumblr posts hosted images on amazon
+				"http://scenario.myweb.hinet.net/*",								//other sites are used by animage.tumblr.com to host images
+				"http://e.blog.xuite.net/*",
+				"http://voice.x.fc2.com/*",
+				"https://mywareroom.files.wordpress.com/*"],								
 	contentScriptFile: ["./jquery.js", "./common-functions.js", "./animage-get.js"],
 	contentScriptWhen: "ready",
 	contentStyleFile: "./animage-get.css",
