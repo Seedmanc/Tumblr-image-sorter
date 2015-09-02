@@ -7,7 +7,7 @@ var Request = require("sdk/request").Request;
 var ss = require("sdk/simple-storage");
 var clipboard = require("sdk/clipboard");
 var common = require("./data/common-functions.js");
-var db; var update=true;
+var db; 
  
 defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{ }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
@@ -42,10 +42,7 @@ panel.port.on("reset", function(){
 });
 
 function applyPanelData() { 
-	if (!update) {
-		update=true;
-		return;
-	};
+ 
 	panel.port.emit("show",{
 		lists:{
 			folders: {
@@ -86,11 +83,7 @@ function handleHide() {
 	button.state('window', {checked: false});
 	panel.port.emit('storePanelData');
 }
-
-panel.port.on('showPanel', function(){
-	update=false;
-	button.click(); 
-});
+ 
 
 panel.port.on('storedPanelData', function(data){
 	if (data.lists.folders.root)

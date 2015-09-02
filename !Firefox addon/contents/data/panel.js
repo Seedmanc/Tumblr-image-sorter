@@ -202,14 +202,13 @@ function exprt(e){
 	var source=$(e.target).prop('name');
 	var obj=(source=='folders')?collectFolderData():collectNaMeData();		
 	var data="text/json;charset=utf-8, "+encodeURIComponent(JSON.stringify(obj, null, '\t'));
-	$('<a href="data:'+data+'" download="'+source+'.json.txt">&nbsp;</a>')[0].click();
+	$('a#dl').prop('href','data://'+data)[0].click();
 };
 function imprt(e){ 		
 	var source=$(e.target).prop('name');
 	$('input#file').prop('value', '');
 	
 	$('input#file')[0].onchange=function(evt){
-		setTimeout(function(){addon.port.emit('showPanel');},500);
 		var file = evt.target.files[0];
 		
 		if (file.type!='text/plain') {
@@ -296,6 +295,7 @@ function imprt(e){
 				};
 				assignNaMeData(obj);
 			};
+			addon.port.emit('storedPanelData', storePanelData());
 		};
 		reader.readAsText(file);			
 	};
@@ -343,3 +343,4 @@ function assignNaMeData(obj){
 //TODO generalize load and save functions even more to avoid duplicating code
 //TODO add parsing of dir CMD output to quickly fill in folders
 //TODO hide scrollbar while leaving ability to scroll
+//TODO move to simple prefs
