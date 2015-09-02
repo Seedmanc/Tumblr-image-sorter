@@ -18,19 +18,14 @@
 													
 // ==Settings=====================================================
 
-	var root=			'E:\\#-A\\!Seiyuu\\';								//Main collection folder
-																			//Make sure to use double backslashes instead of single ones everywhere	
-	var ms=				'!';												//Metasymbol, denotes folders for categories instead of names, must be their first character
+	var root;															//Main collection folder
+																		//Make sure to use double backslashes instead of single ones everywhere	
+	var ms;																//Metasymbol, denotes folders for categories instead of names, must be their first character
+
+	var allowUnicode;													//Whether to allow unicode characters in manual translation input, not tested
 	
-
-
-	var allowUnicode=	false;												//Whether to allow unicode characters in manual translation input, not tested
-	
-	var useFolderNames=	true;												//In addition to tags listed in keys of the folders object, recognize also folder names themselves
-																			// this way you won't have to provide both roman and unicode spellings for names as separate tags
-
-	var debug=			false;												//Initial debug state, affects creation of flashDBs. Value saved in the DB overrides it after DB init.
- 
+	var useFolderNames;													//In addition to tags listed in keys of the folders object, recognize also folder names themselves
+																		// this way you won't have to provide both roman and unicode spellings for names as separate tags 
 // ==/Settings=========================================================
  		
 var title;
@@ -38,9 +33,6 @@ var filename;
 var folder = ''; 
 var DBrec='';																//Raw DB record,   object with fields for saved flag and tag list 
 var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to be used in filepaths
-	
-var folders	=self.options.folders;
-var ignore	=self.options.ignore;
  	
 var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
 var tb =$('<table id="translations">');										//Table for entering manual translation of unknown tags
@@ -68,46 +60,30 @@ var thead=$('<thead><tr><td			>												\
 </td></tr></thead>');
 tb.append(thead).append(tfoot).hide();
 
-trimObj(folders);											//Run checks on user-input content and format it
 
-function trimObj(obj){													//Remove trailing whitespace in object keys and values & check correctness of user input
-	rootrgxp=/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/g;											//makes sure that folder names have no illegal characters
-  try {
-	roota=root.split('\\');
-	if (!rootrgxp.test(root)) 
-		throw new Error('Illegal characters in root folder path: "'+root+'"');
-	ms=ms[0];																//It's a symbol, not a string, after all
-	if ((exclrgxp.test(ms))||(/\\|\s/.test(ms)))  
-		throw new Error ('Illegal character as metasymbol: "'+ms+'"');
-	for (var key in obj) {													//Convert keys to lower case for better matching
-		if (obj.hasOwnProperty(key)) { 
-			t=obj[key];			
-			delete obj[key];
-			if (typeof t == 'string') {
-				t=t.trim();
-				if (useFolderNames) {										//Expand DB with tags produced from folders names
-					rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
-					x=getFileName(t).toLowerCase().replace(rx,'');
-					obj[x]=t;
-				};
-			};
-			k=key.trim().toLowerCase();
-			obj[k]=t;
-			if (exclrgxp.test(obj[k]))  									//Can't continue until the problem is fixed
-				throw new Error('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"'); 
+function expandFolders(){													 //Complement DB with tags produced from folders names
+	for (var key in folders) {													 
+		if (folders.hasOwnProperty(key)&&(['!group','!solo','!unsorted'].indexOf(key)==-1)) { 
+			t=folders[key];											
+			rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
+			x=getFileName(t).toLowerCase().replace(rx,'');
+			folders[x]=t;
 		};
-	};
-  } catch (err) {
-		if (!debug)
-			alert(err.name+': '+err.message);								//Gotta always notify the user 
-		throw err;
-  };														 
+	};													 
 }; 	
 
 self.port.on ('gotImageData', main); 
-self.port.on ( 'sendAuxDB', function(auxDB){
-	names=	auxDB.names;
-	meta =	auxDB.meta;
+self.port.on ('init', function(obj){
+	allowUnicode =	obj.options.image.allowUnicode;
+	useFolderNames =obj.options.image.useFolderNames;
+	root =			obj.lists.folders.root;
+	ms =			obj.lists.folders.metasymbol;
+	folders =		obj.lists.folders.folders;
+	names =			obj.lists.name.names;
+	meta =			obj.lists.name.meta;
+	ignore =		obj.lists.ignore;
+	if (useFolderNames)
+		expandFolders();	
 	self.port.emit('getImageData', getFileName(document.location.href)); 
 }); 
 	
@@ -229,8 +205,8 @@ function analyzeTags( ) {   													//This is where the tag matching magic 
 		}
 	);
 	if (fldrs2.length==1) {													//Make sure only one folder meta tag exists
-		folders['!!solo']=fldrs2[0];										//replace solo folder with metatag folder, so the image can go there if needed,
-		folders['!!group']=fldrs2[0];										// same for group folder (see 3rd sorting stage)
+		folders['!solo']=fldrs2[0];										//replace solo folder with metatag folder, so the image can go there if needed,
+		folders['!group']=fldrs2[0];										// same for group folder (see 3rd sorting stage)
 	};		
 	
 	fldrs2=$.map(fldrs,function(vl,ix){
@@ -254,7 +230,7 @@ function analyzeTags( ) {   													//This is where the tag matching magic 
 			return fn+' '+'['+v.replace(/\s/g,'_')+']';						// such tags are enclosed in [ ]  in filename for better searchability on disk
 		},''); 											
 		buildTable(ansi, rest);
-		folder=folders["!!unsorted"]+'\\';   								//Mark image as going to "unsorted" folder if it still has untranslated tags
+		folder=folders["!unsorted"]+'\\';   								//Mark image as going to "unsorted" folder if it still has untranslated tags
 		filename=fn+' '+filename;
 		document.title+='? ';												//no match ;_;
 	} else											
@@ -266,11 +242,11 @@ function analyzeTags( ) {   													//This is where the tag matching magic 
 		document.title+='✓ '; 												//100% match, yay
 	} else
 	 if ((fldrs.length==0)&&(nms.length==1)){								//If there's only one name tag without a folder for it, goes into default "solo" folder
-		folder=folders['!!solo']+'\\'; 										// unless we had a !meta folder tag earlier, then the solo folder 
+		folder=folders['!solo']+'\\'; 										// unless we had a !meta folder tag earlier, then the solo folder 
 																			// would have been replaced with the appropriate !meta folder
 	} else 
 	 if (nms.length+fldrs.length>1)											//Otherwise if there are several name tags, folder or not, move to the default "group" folder
-		folder=folders['!!group']+'\\';										// same as the above applies for meta
+		folder=folders['!group']+'\\';										// same as the above applies for meta
 		
 	filename=filename.replace(exclrgxp, '-').trim();						//Make sure there are no forbidden characters in the resulting name 
 	document.title+=' \\'+folder+filename;
@@ -380,12 +356,12 @@ function selected(inp){														//Hide the corresponding roman tag from res
 function onDload(){															//Mark image as saved in the tag database
 	DBrec.s=1;																// it is used to mark saved images on tumblr pages
 	self.port.emit('setClipboard', folder+filename);
-	self.port.emit('storeImageData',{fname:getFileName(document.location.href), s:1, tags:DBrec.t, auxDB:{names:names, meta:meta}});
+	self.port.emit('storeImageData',{fname:getFileName(document.location.href), s:1, tags:DBrec.t, auxdb:{names:names, meta:meta}});
 }
 
 self.port.on('stored', function(really){
 	if (really) {
-		document.title=('💾 '+document.title).replace('💾 💾','💾');
+		title=('💾 '+title).replace('💾 💾','💾');
 
 		if (!unsorted)
 			$('div#output').remove();

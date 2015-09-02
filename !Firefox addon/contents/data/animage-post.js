@@ -23,18 +23,14 @@
 
 // ==Settings=====================================================
 
-	var highlightColor=		'black';												//Because chrome sucks it does not support outline-color invert which ensured visibility
-																					// you'll have to specify a color to mark saved images and hope it won't blend with bg
+	var highlightColor;																//Specify a color to mark saved images and hope it won't blend with bg
 	
-	var enableOnDashboard=	true;													//Will try to collect post info from dashboard posts too
+	var enableOnDashboard;															//Will try to collect post info from dashboard posts too
 																					// might be slow and/or glitchy so made optional
 
-	var linkify= 			true;													//Make every image (even inline images in non-photo posts) to be processed
+	var linkify;																	//Make every image (even inline images in non-photo posts) to be processed
 																					// and linked to either itself, it's larger version or its reverse image search
 																					// might break themes like PixelUnion Fluid
-																					
-	var debug=				false;													//Initial debug value, gets changed to settings value after DB creation
- 																					//Flash databases are bound to the URL, must be same as in the other script
 // ==/Settings====================================================
  
 var blogName=document.location.host; 				
@@ -44,23 +40,13 @@ var isDash=(blogName.indexOf('www.')==0);
 var posts=$([]);
 var img;
 var progress=[];
-/*
-window.onerror = function(msg, url, line, col, error) {								//General error handler
- 	var extra = !col ? '' : '\ncolumn: ' + col;
- 	extra += !error ? '' : '\nerror: ' + error;										//Shows '✗' for errors in title and also alerts a message if debug is on
- 	if (msg.search('Script error')!=-1)
- 		return true;																// except for irrelevant errors
- 	document.title+='✗';
-	if (debug)
-		alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra)
-	else 
-		throw error;
- 	var suppressErrorAlert = true;
- 	return suppressErrorAlert;
-}; 
-*/
 
-main();
+self.port.on('init', function(obj){
+	highlightColor =	obj.options.post.highlightColor;
+	enableOnDashboard =	obj.options.post.enableOnDashboard; 
+	linkify =			obj.options.post.linkify; 	
+	main();
+});
  
 function getID(lnk){																//Extract numerical post ID from self-link
 	if (lnk.search(/[^0-9]/g)==-1)

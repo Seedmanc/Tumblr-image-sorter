@@ -43,6 +43,13 @@ $('input.ex').on('click', exprt);
 $('input.tag').on('change', checkTag);	
 $('input.folder').on('change', checkMatch);
 $('input.translation').on('change', checkMatch);
+
+$('a#external').on('click', function(e){
+	e.preventDefault();
+	addon.port.emit('openLink',e.target.href);
+	return false;
+});
+
 $('input#resetConfirm').on('click', function(){
 	$('input#reset').removeAttr('disabled');
 }); 
@@ -84,6 +91,15 @@ addon.port.on('storePanelData', function(){
 	addon.port.emit('storedPanelData', storePanelData());
 });
 
+addon.port.emit('panelStarted');
+
+addon.port.on("stored", function(response){
+	if (response=='over quota') {
+		$('#dialog div').text('Error: storage is over quota.');
+		$("#dialog").dialog("open");
+	};
+});
+				
 var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);
 var merge=false;
 var panelData={lists:{}, options:{}};
@@ -310,8 +326,8 @@ function assignFolderData(obj){
 	
 	newrow=$('table#folders input.addrow').parents('tr:first');
 	$.each(Object.keys(obj.folders), function(i, v){
-		if (['group', 'solo', 'unsorted'].indexOf(v)!=-1){
-			$('input.'+v).filter('.folder').prop('value', obj.folders[v]);
+		if (['!group', '!solo', '!unsorted'].indexOf(v)!=-1){
+			$('input.'+v.replace('!','')).filter('.folder').prop('value', obj.folders[v]);
 			return true;
 		};
 		newrow.find('input:first').prop('value', v).change();

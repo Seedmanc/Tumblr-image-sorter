@@ -6,15 +6,12 @@ var pageMod = require("sdk/page-mod");
 var Request = require("sdk/request").Request;
 var ss = require("sdk/simple-storage");
 var clipboard = require("sdk/clipboard");
-var common = require("./data/common-functions.js");
-var db; 
+var common = require("./data/common-functions.js"); 
  
-defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{ }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
+defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
 if (!ss.storage.animage)  													//main storage object
-	ss.storage.animage=defaults;
-
-db=ss.storage.animage;
+	ss.storage.animage=defaults; 
 
 var button = ToggleButton({
   id: "my-button",
@@ -31,43 +28,58 @@ var panel = panels.Panel({
 	width: 505, 
 	height: 550,
 	contentURL: "./panel.html",	
-	contextMenu: true,
 	onHide: handleHide,
 	onShow: applyPanelData
 });
 
 panel.port.on("reset", function(){
-	db=defaults;
+	ss.storage.animage=defaults;
 	applyPanelData();
 });
 
-function applyPanelData() { 
- 
-	panel.port.emit("show",{
+panel.port.on("openLink", function(link){
+	ss.storage.animage=defaults;
+	tabs.open(link);
+});
+
+
+panel.port.on('panelStarted', function(){
+	ss.on("OverQuota", function(){
+		panel.port.emit("stored", 'over quota');
+		throw new Error('Simple storage is over quota due to panel script.');
+	});
+}); 
+
+function settingsObject(){
+	return {
 		lists:{
 			folders: {
-				root:		db.settings.root,
-				metasymbol:	db.settings.metasymbol,
-				folders:	db.folders
+				root:		ss.storage.animage.settings.root,
+				metasymbol:	ss.storage.animage.settings.metasymbol,
+				folders:	ss.storage.animage.folders
 			},
 			name: {
-				names:		db.auxdb.names,
-				meta:		db.auxdb.meta
+				names:		ss.storage.animage.auxdb.names,
+				meta:		ss.storage.animage.auxdb.meta
 			},
-			ignore:		db.ignore
+			ignore:		ss.storage.animage.ignore
 		},
 		options: {
 			post:	{
-				highlightColor: 	db.settings.highlightColor,
-				enableOnDashboard:	db.settings.enableOnDashboard,
-				linkify:			db.settings.linkify
+				highlightColor: 	ss.storage.animage.settings.highlightColor,
+				enableOnDashboard:	ss.storage.animage.settings.enableOnDashboard,
+				linkify:			ss.storage.animage.settings.linkify
 			},
 			image: {
-				allowUnicode:		db.settings.allowUnicode,
-				useFolderNames:		db.settings.useFolderNames
+				allowUnicode:		ss.storage.animage.settings.allowUnicode,
+				useFolderNames:		ss.storage.animage.settings.useFolderNames
 			}
 		}
-	});
+	};
+};
+
+function applyPanelData() {  
+	panel.port.emit("show", settingsObject());
 };
  
 
@@ -87,17 +99,17 @@ function handleHide() {
 
 panel.port.on('storedPanelData', function(data){
 	if (data.lists.folders.root)
-		db.settings.root =			data.lists.folders.root;
-	db.settings.metasymbol =		data.lists.folders.metasymbol;
-	db.settings.highlightColor =	data.options.post.highlightColor;
-	db.settings.enableOnDashboard =	data.options.post.enableOnDashboard;
-	db.settings.linkify =			data.options.post.linkify;
-	db.settings.allowUnicode =		data.options.image.allowUnicode;
-	db.settings.useFolderNames =	data.options.image.useFolderNames;
-	db.auxdb.meta =					data.lists.name.meta;
-	db.auxdb.names =				data.lists.name.names;	
-	db.ignore =						data.lists.ignore;
-	db.folders =					data.lists.folders.folders;
+		ss.storage.animage.settings.root =			data.lists.folders.root;
+	ss.storage.animage.settings.metasymbol =		data.lists.folders.metasymbol;
+	ss.storage.animage.settings.highlightColor =	data.options.post.highlightColor;
+	ss.storage.animage.settings.enableOnDashboard =	data.options.post.enableOnDashboard;
+	ss.storage.animage.settings.linkify =			data.options.post.linkify;
+	ss.storage.animage.settings.allowUnicode =		data.options.image.allowUnicode;
+	ss.storage.animage.settings.useFolderNames =	data.options.image.useFolderNames;
+	ss.storage.animage.auxdb.meta =					data.lists.name.meta;
+	ss.storage.animage.auxdb.names =				data.lists.name.names;	
+	ss.storage.animage.ignore =						data.lists.ignore;
+	ss.storage.animage.folders =					data.lists.folders.folders; 
 });
 
 pageMod.PageMod({
@@ -112,7 +124,7 @@ pageMod.PageMod({
 	exclude: "*.media.tumblr.com",
 	contentScriptFile: ["./jquery.js", "./common-functions.js", "./animage-post.js"],
 	contentScriptWhen: "ready",
-	attachTo: ['top','existing'],
+	attachTo: ['top' ],
 	onAttach: attachListeners
 });
 
@@ -123,20 +135,20 @@ pageMod.PageMod({
 	contentScriptWhen: "ready",
 	contentStyleFile: "./animage-get.css",
 	contentScriptOptions: {
-		folders:db.folders,
-		ignore:	db.ignore
+		folders:ss.storage.animage.folders,
+		ignore:	ss.storage.animage.ignore
 	},
-	attachTo: ['top','existing'],
+	attachTo: ['top' ],
 	onAttach: attachListeners
 });
 
 function isSaved(image, worker){
-	if ((db.files[image.fname])&&(db.files[image.fname].s==1))
+	if ((ss.storage.animage.files[image.fname])&&(ss.storage.animage.files[image.fname].s==1))
 		worker.port.emit("isSaved",image.i);
 };
 
 function storeImageData(data, worker){												//Add/modify database record for a filename
-	oldRec=db.files[data.fname];													//Check if there's already a record in database for this image	
+	oldRec=ss.storage.animage.files[data.fname];													//Check if there's already a record in database for this image	
 	DBrec={s:0, t:data.tags};
 	if ((oldRec)&&(data.merge)) {													// if there is we need to merge existing tags with the new ones 
 		oldtags=oldRec.t; 
@@ -145,14 +157,12 @@ function storeImageData(data, worker){												//Add/modify database record f
 		DBrec.s=oldRec.s;
 	} else if (data.s!==undefined)
 		DBrec.s=data.s;		
-	db.files[data.fname]=DBrec;	
+	ss.storage.animage.files[data.fname]=DBrec;	
 	
-	if (data.auxDB)
-		db.auxDB=data.auxDB;
-	if (db.files[data.fname]==DBrec)
-		worker.port.emit("stored", true);
-	else																			//not sure if reachable
-		worker.port.emit("stored",false);	
+	if (data.auxdb)
+		ss.storage.animage.auxdb=data.auxdb;
+	
+	worker.port.emit("stored", true);	
 };
 
 function getPostInfo(post, worker){
@@ -172,15 +182,15 @@ function getPostInfo(post, worker){
 };
 
 function getImageData(fname, worker){
-	DBrec=db.files[fname];
+	DBrec=ss.storage.animage.files[fname];
 	if ((DBrec)&&(DBrec.t.length))
 		worker.port.emit('gotImageData', DBrec);
-};
+}; 
 
 function attachListeners(worker){ 
 	ss.on("OverQuota", function(){
-		worker.port.emit("saved", 'over quota');
-		throw new Error('Simple storage is over quota.');
+		worker.port.emit("stored", 'over quota');
+		throw new Error('Simple storage is over quota due to get script.');
 	});
 	worker.port.on("storeImageData", function(data){
 		storeImageData(data, worker);
@@ -197,5 +207,5 @@ function attachListeners(worker){
 	worker.port.on("setClipboard", function(text){		
 		clipboard.set(text);
 	});
-	worker.port.emit("sendAuxDB", db.auxDB);
+	worker.port.emit("init", settingsObject());
 };
