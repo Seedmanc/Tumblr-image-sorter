@@ -38,7 +38,7 @@ var isImage=(document.location.href.indexOf('/image/')!=-1);
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(blogName.indexOf('www.')==0);  
 var posts=$([]);
-var img;
+var img=$([]);
 var progress=[];
 
 self.port.on('init', function(obj){
