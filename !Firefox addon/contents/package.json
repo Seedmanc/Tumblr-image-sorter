@@ -1,0 +1,13 @@
+{
+  "title": "Tumblr Image Sorter",
+  "name": "tumblrimagesorter",
+  "version": "1.2.0",
+  "description": "Saves time on choosing folder and file name for saving tumblr images.",
+  "main": "index.js",
+  "author": "Seedmanc",
+  "homepage": "http://github.com/Seedmanc/Tumblr-image-sorter",
+  "engines": {
+    "firefox": ">=38.0" 
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,1 @@
+Here goes the will-be Firefox addon version.

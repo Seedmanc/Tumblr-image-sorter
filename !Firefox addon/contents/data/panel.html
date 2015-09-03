@@ -1,0 +1,144 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Tumblr Image Sorter</title>
+    <link rel="stylesheet" media="screen" href="panel.css"> 
+	<link rel="stylesheet" media="screen" href="./spectrum/spectrum.css"> 
+    <link rel="stylesheet" media="screen" href="./jquery-ui/jquery-ui.css">  
+  </head>
+  <body>
+  <script src="./jquery-ui/jquery.js"></script>
+  <script src="./jquery-ui/jquery-ui.js"></script>
+  <script src="./spectrum/spectrum.js"></script>
+    <div id="title">
+      <img style="float:left;" src="./images/icon-64.png" id="icon">
+      <h1 style="line-height:32px;height:32px;margin-top:16px;">Tumblr Image Sorter</h1><div id="version">v1.2</div>
+    </div>
+ 
+    <div id="content">
+		<div id="tabs">
+		  <ul>
+			<li><a name="lists" href="#lists">Lists</a></li>
+			<li><a name="options" href="#options">Options</a></li>
+			<li><a name="about" href="#about">About</a></li>
+		  </ul>
+		  <div id="lists">
+		  
+			<div id="accordion">
+			
+			<h3>ignore</h3>
+			  <div>				
+				<p>List of ignored tags, separated by commas</p>
+				<input type="text", id="ignore"  />
+			  </div>	
+			  
+			<h3>folders</h3>
+			  <div>				
+			    <a href="#" download="file.json.txt" id="dl" hidden>&nbsp;</a>
+				<p>Root collection folder</p>
+				<p><input type="text" id="root" placeholder="F:\ull\path\required\" value='C:\my\collection\'/></p>
+				<p>Metasymbol: <input type="text" id="ms" value="!" maxlength=1 size=1 style="width:20px; text-align:center;"/> indicates a subcategory folder</p><br>
+				<p>
+				List of tags matched with folders relative to root
+				</p> <center>
+				<table id="folders" class="taglist">	<thead><tr><th>tag</th>	<th></th>	<th>folder</th></tr></thead>
+					<tbody>
+						<tr><td><input type="text"  class="tag group" value="!group" readonly disabled/></td>	<td class='btn'></td>	<td><input type="text"  class="folder group" placeholder="required" value="!group"/></td></tr>
+						<tr><td><input type="text"  class="tag solo" value="!solo" readonly disabled/></td>	<td class='btn'></td>	<td><input type="text"  class="folder solo" placeholder="required" value="!solo"/></td></tr>
+						<tr><td><input type="text"  class="tag unsorted" value="!unsorted" readonly disabled/></td><td class='btn'></td>	<td><input type="text"   class="folder unsorted" placeholder="required" value="!unsorted"/></td></tr>
+					</tbody>
+					<tfoot>
+						<tr><td><input type="text" class="tag"/></td>	<td class='btn'><input type="button" value="+" class="addrow"/></td>	<td><input type="text" class="folder"/></td></tr>
+					</tfoot>
+
+				</table>
+				</center>
+				<p><br><table id="port"><tr>
+					<td><input type='button'  class="im" name="folders" value="import..."></td><td><input type='button'  class="ex" name="folders" value="export..."></td>
+					</tr>
+				</table></p>
+				<input type="file" id="file" accept=".json*.txt" hidden/>
+			  </div>
+			  
+			<h3>names & meta</h3>
+			    <div><center>			
+					<p>List of name tags by category matched with translations</p><br>					
+					<table id="names" class="taglist">	<thead><tr><th>tag</th>	<th></th>	<th>translation</th></tr></thead>
+						<tbody>
+						</tbody>
+						<tfoot>
+							<tr><td><input type="text" class="tag name"/></td>	<td class='btn'><input type="button" value="+" class="addrow"/></td>	<td><input type="text" class="translation"/></td></tr>
+						</tfoot> 
+					</table><br>
+					<p>List of meta tags by category matched with translations</p><br>
+					<center>
+					<table id="meta" class="taglist">	<thead><tr><th>tag</th>	<th></th>	<th>translation</th></tr></thead>
+						<tbody>
+						</tbody>
+						<tfoot>
+							<tr><td><input type="text" class="tag meta"/></td>	<td class='btn'><input type="button" value="+" class="addrow"/></td>	<td><input type="text" class="translation"/></td></tr>
+						</tfoot>
+					</table>
+					</center>
+					<p><br><table id="port"><tr>
+						<td><input type='button' class="im" name="names & meta" value="import..."></td><td><input type='button' class="ex" name="names & meta" value="export..."></td>
+						</tr>
+					</table></p> 
+			    </div>
+			  
+			</div>
+		  </div>
+		  
+		  <div id="options">			   
+			 <fieldset> 
+			  <legend>Post page settings</legend><p>
+				<input type="color"  id="highlightColor" value="#000">				
+				<label for="highlightColor">Outline color for saved images in posts</label>
+				</p><br><p>
+				<input type="checkbox"  id="enableOnDashboard" checked>				
+				<label for="enableOnDashboard">Enable on /dashboard and /tagged/</label>
+				</p><br><p>
+				<input type="checkbox"  id="linkify" checked>				
+				<label for="linkify">Linkify inline images</label><p >
+				<small>Enables processing of images found in any posts, not only photo ones. Inline images are linked to either their HD version (if available), or their reverse Google image search.</small></p>
+				</p>
+			 </fieldset>  
+			 <br>
+			 <fieldset> 
+			  <legend>Image page settings</legend> <p>
+				<input type="checkbox"  id="allowUnicode" >				
+				<label for="allowUnicode">Allow Unicode characters in manual translation input</label><p >
+				<small>The goal of the addon is to produce filenames with highest compatibility, converting all input to ANSI. But you can enable it to accept Unicode characters as well (not tested).</small></p>
+				</p><br><p>
+				<input type="checkbox"  id="useFolderNames" checked>				
+				<label for="useFolderNames">Use folder names as tags</label><p >
+				<small>Automatically expand &lt;folders&gt; database to recognize folder names as tags. This way you won't have to input both original and translated versions of a tag if you match original tag with translated folder name.</small></p>
+				</p>
+			 </fieldset> 
+		  </div>
+		  
+		  <div id="about">
+			<fieldset>
+			<legend>About</legend><p>
+			  <b>Tumblr Image Sorter</b> is a free browser extension created by Seedmanc to save time spent on choosing the correct save destination and file name for images from Tumblr.</p><br>
+			  <p>You can find the source code and a thorough Readme in English & Russian at the project page: <u><a href="http://github.com/Seedmanc/Tumblr-image-sorter" id="external">http://github.com/Seedmanc/Tumblr-image-sorter</a></u>.
+			  </p>
+			</fieldset>			
+			<fieldset>
+			<legend>Reset database</legend><p>
+			  This button allows you to empty all databases of this addon (including collected image tags data), resetting it to "factory defaults". Use with caution.
+			  </p><br>
+			  <center> <input type="checkbox"  id="resetConfirm">				
+				<label for="resetConfirm">I understand what the button does and want to continue</label><br>
+				<input type="button" id="reset" value="RESET" disabled/></center>
+			</fieldset>	
+		  </div>
+		</div>
+    </div>
+	   
+	<div id="dialog" title="error"><span class="ui-icon ui-icon-alert"></span><div>text</div></div>
+	<div id="confirm" title="select action"><span class="ui-icon ui-icon-help"></span><div>Would you like to add or replace data?</div></div>
+
+	<script src="panel.js"> </script>
+</body>
+</html>
