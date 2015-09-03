@@ -1,5 +1,6 @@
-﻿  
+﻿
 function getFileName(fullName, full){										//Source URL processing for filename
+	var i;
 	full=full || false;
 	fullName=fullName.replace(/(#|\?).*$/gim,'');							//first remove url parameters
 	if (fullName.indexOf('xuite')!=-1) {									//This host names their images as "(digit).jpg" causing filename collisions
@@ -17,11 +18,11 @@ function getFileName(fullName, full){										//Source URL processing for filen
 
 
 function mkUniq(arr, sort){													//Ensures uniqueness of array elements, optionally sorting them
-	to={};
+	var to={};
 	for (var i=0;i<arr.length;i++){
 		to[arr[i].toLowerCase()]=true;
 	};
-	arr2=Object.keys(to);
+	var arr2=Object.keys(to);
 	return (sort)?arr2.sort():arr2;
 };
 

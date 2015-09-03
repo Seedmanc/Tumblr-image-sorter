@@ -63,15 +63,15 @@ $('input#reset').on('click', function(){
 }); 
 
 $('input#ignore').on('change', function(e){							//most of the onchange functions perform input validation 
-	input=e.target.value;
+	var input=e.target.value;
 	e.target.value=$.map(input.split(','), function(v){
-		trimmed=v.trim();
+		var trimmed=v.trim();
 		return (trimmed!='')?v.trim():undefined;
 	}).join(',');
 });
 $('input#ms').on('change', function(e){
 	$(e.target).css('background-color', '');
-	msexclrgxp=new RegExp(exclrgxp.source+"|\\s|\\\\", 'g');
+	var msexclrgxp=new RegExp(exclrgxp.source+"|\\s|\\\\", 'g');
 	if ((!e.target.value)||(msexclrgxp.test(e.target.value))) {
 		e.target.value=e.target.value.replace(msexclrgxp, '!');
 		$(e.target).css('background-color', '#FFBF80');				//orange color indicates where the script attempted to fix input mistakes
@@ -80,7 +80,7 @@ $('input#ms').on('change', function(e){
 $('input#root').on('change', function(e){
 	if ((e.target.value)&&(e.target.value[e.target.value.length-1]!='\\'))
 		e.target.value+='\\';
-	rootrgxp=/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/gi;
+	var rootrgxp=/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/gi;
 	$(e.target).css('background-color', ''); 
 	if (!rootrgxp.test(e.target.value)) {
 		e.target.focus();											//no idea how to replace wrong characters here
@@ -226,7 +226,7 @@ function exprt(e){
 function imprt(e){ 		
 	var source=$(e.target).prop('name');
 	$('input#file').prop('value', '');
-	
+	var o;
 	$('input#file')[0].onchange=function(evt){
 		var file = evt.target.files[0];
 		
@@ -327,7 +327,7 @@ function assignFolderData(obj){
 	
 	$('table#folders input.remrow').each(function(i, v){v.click();});
 	
-	newrow=$('table#folders input.addrow').parents('tr:first');
+	var newrow=$('table#folders input.addrow').parents('tr:first');
 	$.each(Object.keys(obj.folders), function(i, v){
 		if (['!group', '!solo', '!unsorted'].indexOf(v)!=-1){
 			$('input.'+v.replace('!','')).filter('.folder').prop('value', obj.folders[v]);
@@ -341,7 +341,7 @@ function assignFolderData(obj){
 
 function assignNaMeData(obj){ 
 	$('table#names input.remrow').each(function(i, v){v.click();});
-	newrow=$('table#names input.addrow').parents('tr:first');
+	var newrow=$('table#names input.addrow').parents('tr:first');
 	$.each(Object.keys(obj.names), function(i, v){ 
 		newrow.find('input:first').prop('value', v).change();
 		newrow.find('input:last').prop('value', obj.names[v]).change();

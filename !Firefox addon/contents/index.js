@@ -1,3 +1,4 @@
+
 var tabs = require("sdk/tabs");
 var { ToggleButton } = require('sdk/ui/button/toggle');
 var panels = require("sdk/panel");
@@ -9,7 +10,7 @@ var clipboard = require("sdk/clipboard");
 var common = require("./data/common-functions.js"); 
 var core = require("sdk/view/core");
  
-defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
+var defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
 if (!ss.storage.animage)  														//Main storage object
 	ss.storage.animage=defaults; 
@@ -147,15 +148,15 @@ pageMod.PageMod({
 
 function isSaved(imageName, worker){
 	if ((ss.storage.animage.files[imageName])&&(ss.storage.animage.files[imageName].s==1))
-		worker.port.emit("isSaved",imageName);
+		worker.port.emit("isSaved", imageName);
 };
 
 function storeImageData(data, worker){												//Add/modify database record for a filename
-	oldRec=ss.storage.animage.files[data.fname];									//Check if there's already a record in database for this image	
-	DBrec={s:0, t:data.tags};
+	var oldRec=ss.storage.animage.files[data.fname];									//Check if there's already a record in database for this image	
+	var DBrec={s:0, t:data.tags};
 	if ((oldRec)&&(data.merge)) {													// if there is we need to merge existing tags with the new ones 
-		oldtags=oldRec.t; 
-		newtags=common.mkUniq(oldtags.concat(data.tags), false);
+		var oldtags=oldRec.t; 
+		var newtags=common.mkUniq(oldtags.concat(data.tags), false);
 		DBrec.t=newtags;
 		DBrec.s=oldRec.s;
 	} else if (data.s!==undefined)
@@ -185,7 +186,7 @@ function getPostInfo(post, worker){
 };
 
 function getImageData(fname, worker){
-	DBrec=ss.storage.animage.files[fname];
+	var DBrec=ss.storage.animage.files[fname];
 	if ((DBrec)&&(DBrec.t.length))
 		worker.port.emit('gotImageData', DBrec);
 }; 

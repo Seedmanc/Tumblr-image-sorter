@@ -1,4 +1,5 @@
-﻿// ==UserScript==
+﻿
+// ==UserScript==
 // @name		Animage-post
 // @description	Store tags for images and indicate saved state
 // @version		1.2
@@ -51,9 +52,9 @@ self.port.on('init', function(obj){
 function getID(lnk){																//Extract numerical post ID from self-link
 	if (lnk.search(/[^0-9]/g)==-1)
 		return lnk;																	//Sometimes the argument is the ID itself that needs checking
-	Result=lnk.substring(lnk.indexOf('/post/')+7+lnk.indexOf('image/'));			//one of those will be -1, another the actual offset	
+	var Result=lnk.substring(lnk.indexOf('/post/')+7+lnk.indexOf('image/'));		//one of those will be -1, another the actual offset	
 	Result=Result.replace(/(#).*$/gim,'');											//remove url postfix 
-	i=Result.lastIndexOf('/');
+	var i=Result.lastIndexOf('/');
 	if (i!=-1)
 		Result=Result.substring(0,i);
 	if ((Result=='')||(Result.search(/[^0-9]/g)!=-1)) 
@@ -63,9 +64,10 @@ function getID(lnk){																//Extract numerical post ID from self-link
 };
 
 function identifyPost(i){															//Find the ID of post in question and request info via API for it
-	post=posts.eq(i);
+	var id; var h;
+	var post=posts.eq(i);
 	if (isDash) {
-		slflnk=post.find('a.post_permalink')[0]; 
+		var slflnk=post.find('a.post_permalink')[0]; 
 		blogName=slflnk.hostname;													//On dashboard every post might have a different author
 		id=getID(slflnk.href);
 	} else if (isPost)
@@ -78,8 +80,8 @@ function identifyPost(i){															//Find the ID of post in question and re
 		if (h.length) 
 			id=getID(h[h.length-1].href);														
 		if (id == '') {																//If no link has been found, try to find ID in the attributes of nodes
-			phtst=post.find("div[id^='photoset']");									// photosets have IDs inside, well, id attributes starting with photoset_
-			pht=post.attr('id');													// single photos might have ID inside same attribute
+			var phtst=post.find("div[id^='photoset']");								// photosets have IDs inside, well, id attributes starting with photoset_
+			var pht=post.attr('id');												// single photos might have ID inside same attribute
 			if (phtst.length) 
 				id=phtst.attr('id').split('_')[1]
 			else if (pht)
@@ -133,7 +135,7 @@ function main(){																	//Search for posts on page and call API to get 
 			return;
 		};
 
-		hc=posts.find('.hc.nest');
+		var hc=posts.find('.hc.nest');
 		if (hc.length) {
 			hc.css('position','relative');											//Fix 'broken' themes with image links being under a large div		
 			posts=hc.parent();														// this should be generalized somehow
@@ -152,13 +154,13 @@ function main(){																	//Search for posts on page and call API to get 
 };
 
 function process(postData) {														//Process information obtained from API by post ID
-	post=posts.eq(postData.i);														//pointer to post on page
-	res=postData.r;																	//API response
+	var post=posts.eq(postData.i);													//pointer to post on page
+	var res=postData.r;																//API response
 	var link_url='';
 	var inlimg=[];
 	var photos=0;
 	var img=jQuery([]);
-	var bar='';																		//Piece of progressbar, (№) for amount of photos in a post,
+	var bar='';	var href='';														//Piece of progressbar, (№) for amount of photos in a post,
 																					// space for non-photo posts, ✗ for errors
 	if (res.meta.status!='200') {
 		throw  new Error('API error: '+res.meta.msg);
@@ -168,6 +170,7 @@ function process(postData) {														//Process information obtained from AP
 	var isPhoto=res.response.posts[0].type=='photo';
 
 	if (linkify) {																	//Find inline images
+		var r;
 		inlimg=post.find('img[src*="tumblr_inline_"]');
 		inlimg=$.grep(inlimg, function(vl,ix) {
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
@@ -182,7 +185,7 @@ function process(postData) {														//Process information obtained from AP
 				r=false;															// otherwise link it to google reverse image search 
 			};
 			
-			a='<a href="'+href+'" style=""></a>';
+			var a='<a href="'+href+'" style=""></a>';
 			i=$(vl);
 			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;		//Basically either direct parent or grandparent of the image can be a link already
 			if ((x.parent().is('a'))||(i.width()<128)) 								// in which case we need to skip processing to avoid problems
@@ -210,14 +213,13 @@ function process(postData) {														//Process information obtained from AP
 			img=img.not('img[src*="tumblr_inline_"]');
 		} else {																	//single image
 			link_url+=res.response.posts[0].link_url;								//For a single photo post, link url might have the highest-quality image version,
-			ext=link_url.split('.').pop();											// unaffected by tumblr compression
-			r=/(jpe*g|bmp|png|gif)/gi;												// check if this is actually an image link
-			link_url=(r.test(ext))?link_url:''; 
+			var ext=link_url.split('.').pop();											// unaffected by tumblr compression 
+			link_url=(/(jpe*g|bmp|png|gif)/gi.test(ext))?link_url:'';				// check if this is actually an image link
 
 			img=post.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//Find image in the post to linkify it
 			if (img.length && linkify) {
-				p=img.parent().wrap('<p/>');										//Parent might be either the link itself or contain it as a child,
-				lnk=p.parent().find('a[href*="/image/"]');							// depends on particular theme
+				var p=img.parent().wrap('<p/>');									//Parent might be either the link itself or contain it as a child,
+				var lnk=p.parent().find('a[href*="/image/"]');						// depends on particular theme
 				lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].link_url+'"]');
 				lnk=(lnk.length)?lnk:p.parent().find('a[href*="'+res.response.posts[0].photos[0].original_size.url+'"]');
 				if ((lnk.length) && (lnk[0].href))					
@@ -231,11 +233,11 @@ function process(postData) {														//Process information obtained from AP
 																					
 	};
 	img=$(img.toArray().concat(inlimg));											//Make sure inline images go after the usual ones
-	tags=$.map(res.response.posts[0].tags, function(v,i){
+	var tags=$.map(res.response.posts[0].tags, function(v,i){
 		return v.toLowerCase();
 	});																				//get tags associated with the post
-	
-	for (j=0; j<photos+inlimg.length; j++) {
+	var url;
+	for (var j=0; j<photos+inlimg.length; j++) {
 		if (j<photos) 																//First come the images in photo posts if exist
 			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
 		else																		// then the inline ones

@@ -1,4 +1,5 @@
-﻿// ==UserScript==
+﻿
+// ==UserScript==
 // @name			Animage-get
 // @description		Format file name & save path for current image by its tags
 // @version	    1.2
@@ -31,7 +32,12 @@
 var title;
 var filename;															
 var folder = ''; 
-var DBrec='';																 
+var DBrec='';
+var folders={};
+var ignore=[];	
+var names={};
+var meta={};	
+var unsorted;														 
 var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to be used in filepaths
  	
 var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
@@ -58,10 +64,12 @@ var thead=$('<thead><tr><td			>												\
 		<tr class="cell"><th class="cell">name</th><th class="cell">meta</th></tr>	\
 	</table>																		\
 </td></tr></thead>');
+
 tb.append(thead).append(tfoot).hide();
 
 
 function expandFolders(){													 //Complement DB with tags produced from folders names
+	var t,rx,x;
 	for (var key in folders) {													 
 		if (folders.hasOwnProperty(key)&&(['!group','!solo','!unsorted'].indexOf(key)==-1)) { 
 			t=folders[key];											
@@ -106,14 +114,14 @@ function main(record){ 														//Launch tag processing and handle afterwor
 		document.title=title;												//Apparently DOM changes reset the title back to default
 	}, 1000);	
 
-	dlLink='<a href="'+document.location.href.replace('#','')+'" download="'+filename+'" id="dlLink"></a>';
+	var dlLink='<a href="'+document.location.href.replace('#','')+'" download="'+filename+'" id="dlLink"></a>';
 	$('div#down').wrap(dlLink);
 	$('a#dlLink').on('click', onDload);
 };
 
 function isANSI(s) {														//Some tags might be already in roman and do not require translation
-	is=true;
-	s=s.split('');
+	var is=true;
+	var s=s.split('');
 	$.each(s,function(i,v){
 		is=is&&(/[\u0000-\u00ff]/.test(v));});
     return is;
@@ -130,7 +138,7 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 	var mt=[];
 	var ansi={}
 	var rest=[];
-	
+	var sp;
 	tags=$.map(tags, function(v,i){											//Some formatting is applied to the taglist before processing
 
 		v=v.replace(/’/g,"\'").replace(/"/g,"''");					
@@ -165,9 +173,9 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 			if (tags.length==1)												//If the tag is already in roman and has no folder it might be either name or meta
 				nms.push(v)													//if it's the only tag it is most likely the name, otherwise put it into 
 			else {															//	 the "ansi" category that does not require translation
-				splt=v.split(' ');
+				var splt=v.split(' ');
 				if (splt.length==2)	{										//Some bloggers put tags for both name reading orders (name<->surname),
-					rvrs=splt.reverse().join(' ');
+					var rvrs=splt.reverse().join(' ');
 					if (names[rvrs]) {										// thus creating duplicating tags
 						nms.push(names[rvrs])								// try to find database entry for reversed order first,
 						return true;									
@@ -182,7 +190,7 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 			rest.push(v);													//	finally the "untranslated" category.
 	});
 																			//2nd sorting stage, now we know how many tags of each category there are
-																			//It's time to filter the "ansi" category further
+	var rx,x,y;																//It's time to filter the "ansi" category further
 	$.each(fldrs.concat(nms.concat(mt)), function(i,v){						//Some bloggers put both unicode and translated names into tags
 		rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');
 		x=getFileName(v).toLowerCase().replace(rx,'');
@@ -192,8 +200,8 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 	});																		//This also gets rid of reverse duplicates between recognized tags and ansi
 	fldrs=mkUniq(fldrs, true);	
 	nms=$(nms).not(fldrs).get();											//subtract fldrs from nms if they happen to have repeating elements
-	fldrs2=[];			
-	
+	var fldrs2=[];			
+	var fmeta;
 	fldrs=$.grep(fldrs,function(v,i){										//A trick to process folders for meta tags, having subfolders for names inside
 		fmeta=getFileName(v);
 		if ((fmeta.indexOf(ms)==0)) {										// such folders must have the metasymbol as the first character
@@ -230,7 +238,7 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 																			
 	nms=mkUniq(nms, true);													//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
 	if (unsorted)  {														//If there are any untranslated tags, make a table with text fields to provide manual translation
-		fn=rest.reduce(function (fn, v){
+		var fn=rest.reduce(function (fn, v){
 			return fn+' '+'['+v.replace(/\s/g,'_')+']';						// such tags are enclosed in [ ]  in filename for better searchability on disk
 		},''); 											
 		buildTable(ansi, rest);
@@ -265,14 +273,14 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 
 function buildTable(ansi, rest) {											//Create table of untranslated tags for manual translation input
 	tb.show();
-	var options='';
+	var options=''; var row1,cell1,swp;
 	var tbd=tb[0].appendChild(document.createElement('tbody'));
 	$.each(ansi, function(i,v){												//First process the unassigned roman tags
 		row1=tbd.insertRow(0);
 		cell1=row1.insertCell(0);  
 		cell1.id=i;
 		swp='<input type="button" value="swap"  id="swap" />'
-		cell1.innerHTML=tagcell+i+'</a><br>'+swp+'</td></tr></table>'; 
+		$(cell1).html(tagcell+i+'</a><br>'+swp+'</td></tr></table>'); 
 		if (i.split(' ').length!=2)											//For roman tags consisting of 2 words enable button for swapping their order
 			$(cell1).find('input#swap').attr('disabled','disabled');		// script can't know which name/surname order is correct so the choice is left to user
 		$(cell1).attr('class','cell ansi');
@@ -285,8 +293,8 @@ function buildTable(ansi, rest) {											//Create table of untranslated tags 
 		row1=tbd.insertRow(0);
 		cell1=row1.insertCell(0); 
 		cell1.id=v;
-		cell1.innerHTML=tagcell+v+'</a><br><input list="translation" size=10 class="txt"/>\
-			<datalist id="translation">'+options+'</datalist></td></tr></table>'; 
+		$(cell1).html(tagcell+v+'</a><br><input list="translation" size=10 class="txt"/>\
+			<datalist id="translation">'+options+'</datalist></td></tr></table>'); 
 		$(cell1).attr('class','cell unicode');
 		$(cell1).find('input[type="radio"]').attr('name',v);				//In case the blogger provided both roman tag and unicode tag for names,
 	}); 																	// the user can simply select one of roman tags for every unicode tag as translation
@@ -304,7 +312,7 @@ function buildTable(ansi, rest) {											//Create table of untranslated tags 
 function ignoreTag(anc){													//Remove clicked tag from results for current session (until page reload)
 	ignore.push(anc.textContent);											// this way you don't have to fill in the "ignore" list, 
 																			// while still being able to control which tags will be counted
-	tdc=$(anc).parent().parent().parent().parent().parent().parent();		//a long way up from tag link to tag cell table					
+	var tdc=$(anc).parent().parent().parent().parent().parent().parent();	//a long way up from tag link to tag cell table					
 	tdc.attr('hidden','hidden');
 	tdc.attr('ignore','ignore');	
 
@@ -317,18 +325,18 @@ function ignoreTag(anc){													//Remove clicked tag from results for curre
 
 function swap(txt){															//Swap roman tags consisting of 2 words
 																		
-	data=$('datalist');														// these are most likely the names so they can have different writing orders
-	set=[];
-	theTag=$(txt).prev().prev()[0];
+	var data=$('datalist');													// these are most likely the names so they can have different writing orders
+	var set=[];
+	var theTag=$(txt).prev().prev()[0];
 	$.each(data.find('option'), function(i,v){
 		if (v.value==theTag.textContent)
 			set.push(v);													//Collect all options from drop-down lists containing the tag to be swapped
 		}
 	);
-	swapped=theTag.textContent.split(' ').reverse().join(' ');
+	var swapped=theTag.textContent.split(' ').reverse().join(' ');
 
 	theTag.textContent=swapped;
-	tdc=$(txt).parent().parent().parent().parent().parent();				//Change ids of tag cells as well
+	var tdc=$(txt).parent().parent().parent().parent().parent();				//Change ids of tag cells as well
 	tdc.prop('swap',!tdc.prop('swap'));										//mark node as swapped
 	$.each(set,function(i,v){
 		v.value=swapped;													//apply changes to the quick selection lists too
@@ -337,9 +345,9 @@ function swap(txt){															//Swap roman tags consisting of 2 words
 };
 
 function selected(inp){														//Hide the corresponding roman tag from results when it has been selected 
-	ansi=$('td.ansi');														// as a translation for unicode tag
-	unicode=$('td.unicode').find('input.txt');								 
-	knj={};
+	var ansi=$('td.ansi');													// as a translation for unicode tag
+	var unicode=$('td.unicode').find('input.txt');								 
+	var knj={};
 	$.each(unicode,function(i,v){
 		knj[v.value]=true;
 		$.each(ansi,function(ix,vl){ 										//Have to show a previously hidden tag if another was selected
@@ -370,8 +378,9 @@ self.port.on('stored', function(){
 });	
 
 function submit(){															//Collects entered translations for missing tags
-	tgs=$('td.cell');														// saves them to databases and relaunches tag analysis with new data
-	missing=false;
+	var tgs=$('td.cell');													// saves them to databases and relaunches tag analysis with new data
+	var missing=false;
+	var tg,t;
 	$.each(tgs,function(i,v){
 		if ($(v).parent().attr('ignore')) {
 			ignore.push(v.id);												//Mark hidden tags as ignored
@@ -387,7 +396,7 @@ function submit(){															//Collects entered translations for missing tag
 				DBrec.t=t.split(',');										//Apply swap changes to the current taglist
 			};
 		}											
-		cat=$(v).find('input.category');
+		var cat=$(v).find('input.category');
 		if (tg.length){
 			if (!isANSI(tg)&&!allowUnicode) {
 				$(v).find('input.txt').css("background-color","#ffC080");
@@ -409,8 +418,8 @@ function submit(){															//Collects entered translations for missing tag
 			}
 		}
 	);						
-	tbd=$('#translations > tbody')[0];
-	to=missing?1000:10;														//If there was missing input, delay before applying changes to show that
+	var tbd=$('#translations > tbody')[0];
+	var to=missing?1000:10;														//If there was missing input, delay before applying changes to show that
 	setTimeout(function(){
 		tbd.parentNode.removeChild(tbd);
 		tb.hide();
