@@ -11,11 +11,7 @@ h1 {
   color:#4F545A;
 }
 
-h2 {
-  margin:0;
-}
-
-p {
+h2, p {
   margin:0;
 }
 
@@ -40,7 +36,7 @@ div {
   border-radius: 3px;
 }
 
-img#icon{
+#icon{
 	padding-right: 10px;
 }
 
@@ -52,29 +48,29 @@ img#icon{
   padding: 1px; 
   width:483px
 }
-div#accordion input{
+#accordion input{
 	width:100%;
 }
 input.tag{
 	text-align: right;
 }
-table.taglist, table#port{
+table.taglist, #port{
 	border-collapse: collapse;
 	width:100%;
 }
  
-table.taglist  th {
+th {
 	border-bottom: 1px solid black;
 }
 
-fieldset p{
+fieldset > p{
 	text-align:justify;
 }
-div#version {
+#version {
 	float: right;
     top: -10px;
     position: relative;
 }
-input#reset{
+#reset{
 	color:red;
 }

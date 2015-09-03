@@ -1,9 +1,9 @@
-﻿div#output {						
+﻿#output {						
 	position: absolute;				
 	left: 0;		top: 0;			
 	width: 100px;	height: 30px;	
 }									
-div#down {		
+#down {		
 	left: 1px;
 	top: 1px;
 	position: fixed;	
@@ -14,15 +14,15 @@ div#down {
 		url('./images/downloadify.png') left top no-repeat; 		
 }									
 
-div#down:hover {							
+#down:hover {							
 	background-position: 0 -30px;	
 }
 
-div#down:active {							
+#down:active {							
 	background-position: 0 -60px;	
 }
  								
-table#translations {						
+#translations {						
 	position: absolute;				
 	background-color:				
 		rgba(255,255,255,0.8);		
@@ -59,7 +59,7 @@ th {
 	border: 0;						
 	color:black;		
 }									
-input#submit {						
+#submit {						
 	width:  98%;					
 	height: 29px;					
 }									

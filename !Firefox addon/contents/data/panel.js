@@ -4,10 +4,6 @@ $("#accordion").accordion({
 	heightStyle: "content", 
 	collapsible: true
 });
-$("#highlightColor").spectrum({
-	color: "#000", 
-	clickoutFiresChange: true
-});
 
 $( "#dialog" ).dialog({
 	dialogClass:'alert', 
@@ -114,7 +110,7 @@ function storePanelData(){
 	lists.folders=collectFolderData();
 	lists.name=collectNaMeData();
 
-	options.post.highlightColor=$('#highlightColor').spectrum("get").toHexString();
+	options.post.highlightColor=$('#highlightColor').prop('value');
 	options.post.enableOnDashboard=$('#enableOnDashboard').prop('checked');
 	options.post.linkify=$('#linkify').prop('checked');
 	options.image.allowUnicode=$('#allowUnicode').prop('checked');
@@ -129,7 +125,7 @@ function applyPanelData(panelData){
 	assignNaMeData(panelData.lists.name);
 	$('input#ignore').prop('value', panelData.lists.ignore.join(', ')).change();
 	
-	$('#highlightColor').spectrum("set", panelData.options.post.highlightColor);
+	$('#highlightColor').prop('value', panelData.options.post.highlightColor);
 	$('#enableOnDashboard').prop('checked', options.post.enableOnDashboard);
 	$('#linkify').prop('checked', options.post.linkify);
 	$('#allowUnicode').prop('checked', options.image.allowUnicode);

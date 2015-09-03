@@ -1,14 +1,8 @@
-
-var tabs = require("sdk/tabs");
-var { ToggleButton } = require('sdk/ui/button/toggle');
+var {ToggleButton} = require('sdk/ui/button/toggle');
 var panels = require("sdk/panel");
-var self = require("sdk/self");
 var pageMod = require("sdk/page-mod");
-var Request = require("sdk/request").Request;
-var ss = require("sdk/simple-storage");
-var clipboard = require("sdk/clipboard");
-var common = require("./data/common-functions.js"); 
-var core = require("sdk/view/core");
+var ss = require("sdk/simple-storage"); 
+var common = require("./data/common-functions.js");  
  
 var defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
@@ -34,7 +28,7 @@ var panel = panels.Panel({
 	onShow: applyPanelData 
 });
 
-core.getActiveView(panel).setAttribute("noautohide", true);
+require("sdk/view/core").getActiveView(panel).setAttribute("noautohide", true);
 
 panel.port.on("reset", function(){
 	ss.storage.animage=defaults;
@@ -42,7 +36,7 @@ panel.port.on("reset", function(){
 });
 
 panel.port.on("openLink", function(link){
-	tabs.open(link);
+	require("sdk/tabs").open(link);
 });
 
 
@@ -170,7 +164,7 @@ function storeImageData(data, worker){												//Add/modify database record f
 };
 
 function getPostInfo(post, worker){
-	var APIcall = Request({
+	require("sdk/request").Request({
 		url: "https://api.tumblr.com/v2/blog/"+post.source+"/posts/photo",
 		content: {
 			api_key:'fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4',
@@ -209,7 +203,7 @@ function attachListeners(worker){
 		getImageData(fname, worker);
 	});
 	worker.port.on("setClipboard", function(text){		
-		clipboard.set(text);
+		require("sdk/clipboard").set(text);
 	});
 	worker.port.emit("init", settingsObject());
 };
