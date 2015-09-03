@@ -1,16 +1,16 @@
 ﻿// ==UserScript==
-// @name		Animage-get
-// @description	Format file name & save path for current image by its tags
+// @name			Animage-get
+// @description		Format file name & save path for current image by its tags
 // @version	    1.2
-// @author		Seedmanc
-// @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
+// @author			Seedmanc
+// @namespace		https://github.com/Seedmanc/Tumblr-image-sorter
 
 // @include		http*://*.amazonaws.com/data.tumblr.com/* 
 // @include		http*://*.media.tumblr.com/*
 
 
-// @grant 		none 
-// @require 	https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js
+// @grant 			none 
+// @require 		https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js
 
 // @run-at 		document-body
 // @noframes
@@ -18,20 +18,20 @@
 													
 // ==Settings=====================================================
 
-	var root;															//Main collection folder
-																		//Make sure to use double backslashes instead of single ones everywhere	
-	var ms;																//Metasymbol, denotes folders for categories instead of names, must be their first character
-
-	var allowUnicode;													//Whether to allow unicode characters in manual translation input, not tested
+	var root;																//Main collection folder 
 	
-	var useFolderNames;													//In addition to tags listed in keys of the folders object, recognize also folder names themselves
-																		// this way you won't have to provide both roman and unicode spellings for names as separate tags 
+	var ms;																	//Metasymbol, denotes folders for categories instead of names, must be their first character
+
+	var allowUnicode;														//Whether to allow unicode characters in manual translation input 
+	
+	var useFolderNames;														//In addition to tags listed in keys of the folders object, recognize also folder names themselves
+																			 
 // ==/Settings=========================================================
  		
 var title;
 var filename;															
 var folder = ''; 
-var DBrec='';																//Raw DB record,   object with fields for saved flag and tag list 
+var DBrec='';																 
 var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to be used in filepaths
  	
 var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
@@ -52,7 +52,7 @@ var	tagcell='<table class="cell"><tr>														\
 																			//		otherwise the button is disabled
 var tfoot=$('<tfoot><tr><td>														\
 	<input type="submit" id="submit" value="submit">								\
-</td></tr></tfoot>');													//At the bottom of the table there is the "submit" button that applies changes
+</td></tr></tfoot>');														//At the bottom of the table there is the "submit" button that applies changes
 var thead=$('<thead><tr><td			>												\
 	<table class="cell" style="font-width:95%; font-size:small;">					\
 		<tr class="cell"><th class="cell">name</th><th class="cell">meta</th></tr>	\
@@ -87,10 +87,10 @@ self.port.on ('init', function(obj){
 	self.port.emit('getImageData', getFileName(document.location.href)); 
 }); 
 	
-function main(record){ 																//Launch tag processing and handle afterwork
-	if (document.location.href.indexOf('tumblr')==-1) 								//If not on tumblr
-		if (!(/(jpe*g|bmp|png|gif)/gi).test(document.location.href.split('.').pop()))// check if this is actually an image link
-			return;
+function main(record){ 														//Launch tag processing and handle afterwork
+	if (document.location.href.indexOf('tumblr')==-1) 						//If not on tumblr
+		if (!(/(jpe*g|bmp|png|gif)/gi).test(document.location.href.split('.').pop()))
+			return;															// check if this is actually an image link
 			
 	DBrec=record;
 	$('body').append(out);
@@ -103,7 +103,7 @@ function main(record){ 																//Launch tag processing and handle afterw
 			$('a#dlLink')[0].click();
 	});
 	setInterval(function(){
-		document.title=title;													//Apparently DOM changes reset the title back to default
+		document.title=title;												//Apparently DOM changes reset the title back to default
 	}, 1000);	
 
 	dlLink='<a href="'+document.location.href.replace('#','')+'" download="'+filename+'" id="dlLink"></a>';
@@ -111,7 +111,7 @@ function main(record){ 																//Launch tag processing and handle afterw
 	$('a#dlLink').on('click', onDload);
 };
 
-function isANSI(s) {															//Some tags might be already in roman and do not require translation
+function isANSI(s) {														//Some tags might be already in roman and do not require translation
 	is=true;
 	s=s.split('');
 	$.each(s,function(i,v){
@@ -119,7 +119,7 @@ function isANSI(s) {															//Some tags might be already in roman and do 
     return is;
 };
 
-function analyzeTags( ) {   													//This is where the tag matching magic occurs
+function analyzeTags( ) {   												//This is where the tag matching magic occurs
 	filename=getFileName(document.location.href, true); 
 	var tags=DBrec.t;	
 
@@ -163,8 +163,8 @@ function analyzeTags( ) {   													//This is where the tag matching magic 
 			mt.push(meta[v])												// which doesn't count towards final folder decision, but simply adds to filename;
 		else if (isANSI(v)) {											
 			if (tags.length==1)												//If the tag is already in roman and has no folder it might be either name or meta
-				nms.push(v)													//if it's the only tag it is most likely the name
-			else {															//	otherwise put it into the "ansi" category that does not require translation
+				nms.push(v)													//if it's the only tag it is most likely the name, otherwise put it into 
+			else {															//	 the "ansi" category that does not require translation
 				splt=v.split(' ');
 				if (splt.length==2)	{										//Some bloggers put tags for both name reading orders (name<->surname),
 					rvrs=splt.reverse().join(' ');
@@ -209,7 +209,7 @@ function analyzeTags( ) {   													//This is where the tag matching magic 
 		}
 	);
 	if (fldrs2.length==1) {													//Make sure only one folder meta tag exists
-		folders['!solo']=fldrs2[0];										//replace solo folder with metatag folder, so the image can go there if needed,
+		folders['!solo']=fldrs2[0];											//replace solo folder with metatag folder, so the image can go there if needed,
 		folders['!group']=fldrs2[0];										// same for group folder (see 3rd sorting stage)
 	};		
 	
@@ -338,7 +338,7 @@ function swap(txt){															//Swap roman tags consisting of 2 words
 
 function selected(inp){														//Hide the corresponding roman tag from results when it has been selected 
 	ansi=$('td.ansi');														// as a translation for unicode tag
-	unicode=$('td.unicode').find('input.txt');								//that's not a filename, fyi
+	unicode=$('td.unicode').find('input.txt');								 
 	knj={};
 	$.each(unicode,function(i,v){
 		knj[v.value]=true;
@@ -349,9 +349,9 @@ function selected(inp){														//Hide the corresponding roman tag from res
 		);
 		}
 	);
-	$.each(ansi,function(ix,vl){											//I don't even remember how and why this works
+	$.each(ansi,function(ix,vl){											 
 			if ((!knj[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
-				$(vl).parent().removeAttr('hidden');						// but it does
+				$(vl).parent().removeAttr('hidden');						 
 			}
 		);
 };
@@ -363,18 +363,14 @@ function onDload(){															//Mark image as saved in the tag database
 	self.port.emit('storeImageData',{fname:getFileName(document.location.href), s:1, tags:DBrec.t, auxdb:{names:names, meta:meta}});
 }
 
-self.port.on('stored', function(really){
-	if (really) {
-		title=('💾 '+title).replace('💾 💾','💾');
-
-		if (!unsorted)
-			$('div#output').remove();
-	} else
-		alert('Failed to store changes');
+self.port.on('stored', function(){
+	title=('💾 '+title).replace('💾 💾','💾');
+	if (!unsorted)
+		$('div#output').remove();
 });	
 
 function submit(){															//Collects entered translations for missing tags
-	tgs=$('td.cell');														//saves them to databases and relaunches tag analysis with new data
+	tgs=$('td.cell');														// saves them to databases and relaunches tag analysis with new data
 	missing=false;
 	$.each(tgs,function(i,v){
 		if ($(v).parent().attr('ignore')) {
@@ -421,8 +417,7 @@ function submit(){															//Collects entered translations for missing tag
 		analyzeTags();
 	}, to);
 };
-
- 
+	
 //TODO: add checks for common mistakes in unicode names like 実/美 & 奈/菜
 //TODO: option to disable unsorted category if translations are not required by user 
 //TODO: only launch post-download events after user actually agreed to download image instead of onclick 

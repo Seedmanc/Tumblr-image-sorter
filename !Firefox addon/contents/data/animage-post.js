@@ -112,7 +112,7 @@ function main(){																	//Search for posts on page and call API to get 
 		posts=$('ol.posts').find('div.post').not('.new_post');						//Getting posts on dashboard is straightforward with its constant design,
 	}																				// but outside of it are all kinds of faulty designs, so we have to experiment
 	else if (isImage) 
-		posts=$('<div><a href="'+document.location.href+'" >a</a></div>')		//Make it work also on image pages, since we can get post id from url
+		posts=$('<div><a href="'+document.location.href+'" >a</a></div>')			//Make it work also on image pages, since we can get post id from url
 	else {																			
 																					//iterate through possible ways of finding posts in various themes
 																					
@@ -189,7 +189,7 @@ function process(postData) {														//Process information obtained from AP
 				return false;														// as well as if the image is in fact a button and not a part of the post
 			i.wrap(a);
 			if (typeof pxuDemoURL !== 'undefined' && pxuDemoURL=="fluid-theme.pixelunion.net")
-				i.parent().css('position','relative');								//Fix for PixelUnion Fluid which otherwise gets rekt if you insert a link
+				i.parent().css('position','relative');								//Fix for PixelUnion Fluid which otherwise gets #rekt if you insert a link
 			return r;
 		});
 	};
@@ -224,7 +224,7 @@ function process(postData) {														//Process information obtained from AP
 					lnk[0].href=link_url?link_url:res.response.posts[0].photos[0].original_size.url
 				else if (typeof pxuDemoURL == 'undefined')																	
 					img.wrap('<a href="'+res.response.posts[0].photos[0].original_size.url+'"></a>');
-				p.unwrap();															//^ this might break themes like Fluid by PU?
+				p.unwrap();															 
 			};
 		};
 		bar=String.fromCharCode(10111+photos);										
@@ -268,4 +268,4 @@ function progressBar(bar, i){														//Outputs a piece of progress bar at 
 //TODO: add tags retrieval from reblog source if no tags were found here  
 //TODO: check if the actual width of an image to be linked is within limits of the _ postfix, because tumblr lies
 //TODO: store post ID and blog name for images? Will make it possible to have a backlink from image page
-//TODO: only call API if no DB record was found for images in the current post
+//TODO: only call API if no DB record was found for images in the current post (requires ^)

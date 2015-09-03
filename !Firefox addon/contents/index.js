@@ -11,16 +11,16 @@ var core = require("sdk/view/core");
  
 defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
-if (!ss.storage.animage)  													//main storage object
+if (!ss.storage.animage)  														//Main storage object
 	ss.storage.animage=defaults; 
 	
 var button = ToggleButton({
   id: "my-button",
   label: "Tumblr Image Sorter",
   icon: {
-    "16": "./icon-16.png",
-    "32": "./icon-32.png",
-    "64": "./icon-64.png"
+    "16": "./images/icon-16.png",
+    "32": "./images/icon-32.png",
+    "64": "./images/icon-64.png"
   },
   onChange: handleChange
 });
@@ -116,7 +116,7 @@ panel.port.on('storedPanelData', function(data){
 });
 
 pageMod.PageMod({
-	include: [	/http[^s].*tumblr\.com\/?$/,										//match all personal blog pages containing posts
+	include: [	/http[^s].*tumblr\.com\/?$/,										//Match all personal blog pages containing posts
 				/http[^s].*tumblr\.com\/post\/.*/,									// hope tumblr won't make https everywhere
 				/http[^s].*tumblr\.com\/image\/.*/,
 				/http[^s].*tumblr\.com\/page\/.*/,
@@ -125,26 +125,22 @@ pageMod.PageMod({
 				"https://www.tumblr.com/dashboard*",								//and also dashboard
 				"https://www.tumblr.com/tagged/*"	],
 	exclude: "*.media.tumblr.com",
-	contentScriptFile: ["./jquery.js", "./common-functions.js", "./animage-post.js"],
+	contentScriptFile: ["./jquery-ui/jquery.js", "./common-functions.js", "./animage-post.js"],
 	contentScriptWhen: "ready",
 	attachTo: ['top' ],
 	onAttach: attachListeners
 });
  
 pageMod.PageMod({
-	include: [	"*.media.tumblr.com",												//match only directly opened images
+	include: [	"*.media.tumblr.com",												//Match only directly opened images
 				"*.amazonaws.com/data.tumblr.com/",									//older tumblr posts hosted images on amazon
 				"http://scenario.myweb.hinet.net/*",								//other sites are used by animage.tumblr.com to host images
 				"http://e.blog.xuite.net/*",
 				"http://voice.x.fc2.com/*",
 				"https://mywareroom.files.wordpress.com/*"],								
-	contentScriptFile: ["./jquery.js", "./common-functions.js", "./animage-get.js"],
+	contentScriptFile: ["./jquery-ui/jquery.js", "./common-functions.js", "./animage-get.js"],
 	contentScriptWhen: "ready",
 	contentStyleFile: "./animage-get.css",
-	contentScriptOptions: {
-		folders:ss.storage.animage.folders,
-		ignore:	ss.storage.animage.ignore
-	},
 	attachTo: ['top' ],
 	onAttach: attachListeners
 });
@@ -155,7 +151,7 @@ function isSaved(imageName, worker){
 };
 
 function storeImageData(data, worker){												//Add/modify database record for a filename
-	oldRec=ss.storage.animage.files[data.fname];													//Check if there's already a record in database for this image	
+	oldRec=ss.storage.animage.files[data.fname];									//Check if there's already a record in database for this image	
 	DBrec={s:0, t:data.tags};
 	if ((oldRec)&&(data.merge)) {													// if there is we need to merge existing tags with the new ones 
 		oldtags=oldRec.t; 

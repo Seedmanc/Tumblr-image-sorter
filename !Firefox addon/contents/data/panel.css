@@ -1,12 +1,10 @@
- 
-
+  
 body {
   font-family:arial,helvetica,sans-serif; 
   background-color:#36465D;
   overflow-x: hidden; 
    width:500px; 
-   margin:auto;
-   overflow-y:-moz-scrollbars-none;
+   margin:auto; 
 }
 
 h1 {

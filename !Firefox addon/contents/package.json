@@ -7,8 +7,7 @@
   "author": "Seedmanc",
   "homepage": "http://github.com/Seedmanc/Tumblr-image-sorter",
   "engines": {
-    "firefox": ">=32",
-    "fennec": ">=32"
+    "firefox": ">=32" 
   },
   "license": "MIT"
 }

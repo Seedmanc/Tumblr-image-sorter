@@ -62,7 +62,7 @@ $('input#reset').on('click', function(){
 	addon.port.emit('reset');
 }); 
 
-$('input#ignore').on('change', function(e){						//most of the onchange functions perform data validation 
+$('input#ignore').on('change', function(e){							//most of the onchange functions perform input validation 
 	input=e.target.value;
 	e.target.value=$.map(input.split(','), function(v){
 		trimmed=v.trim();
@@ -103,7 +103,7 @@ addon.port.on("stored", function(response){
 	};
 });
 				
-var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);						//characters not allowed in filenames
+var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);					//characters not allowed in filenames
 var merge=false;
 var panelData={lists:{}, options:{}};
 
@@ -183,7 +183,7 @@ function collectFolderData(){
 	obj.root=($('input#root').css('background-color')!='rgb(255, 128, 128)')?$('input#root').prop('value'):'';
 	obj.metasymbol=$('input#ms').prop('value');
 	
-	var tbl = $('table#folders tbody tr').get().map(function(row) {			//convert data frmo table to 2D array
+	var tbl = $('table#folders tbody tr').get().map(function(row) {			//convert data from table to 2D array
 		return $(row).find('td').not('.btn').get().map(function(cell) {
 			return $(cell).find('input:text').prop('value');
 		});
@@ -221,7 +221,7 @@ function exprt(e){
 	var source=$(e.target).prop('name');
 	var obj=(source=='folders')?collectFolderData():collectNaMeData();		
 	var data="text/json;charset=utf-8, "+encodeURIComponent(JSON.stringify(obj, null, '\t'));
-	$('a#dl').prop('href','data://'+data)[0].click();
+	$('a#dl').prop('href','data://'+data).prop('download', source+'.json.txt')[0].click();
 };
 function imprt(e){ 		
 	var source=$(e.target).prop('name');
@@ -358,10 +358,9 @@ function assignNaMeData(obj){
 };
  
 
-//TODO ergonomize (lol) 'Lists' tab interface so that large amount of rows won't affect accessibility of buttons
+//TODO ergonomize 'Lists' tab interface so that large amount of rows won't affect accessibility of buttons
 //TODO generalize load and save functions even more to avoid duplicating code
 //TODO add parsing of dir CMD output to quickly fill in folders
 //TODO hide scrollbar while leaving ability to scroll
-//TODO move to simple prefs
-//TODO prevent panel hiding on file dialogs
-//TODO option to disable clipboard copy
+//TODO move to simple prefs? 
+//TODO option to disable clipboard copy?
