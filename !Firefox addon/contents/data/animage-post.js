@@ -37,9 +37,9 @@ var blogName=document.location.host;
 var isImage=(document.location.href.indexOf('/image/')!=-1); 
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(blogName.indexOf('www.')==0);  
-var posts=$([]);
-var img=$([]);
+var posts=$([]); 
 var progress=[];
+var imageLinks={};
 
 self.port.on('init', function(obj){
 	highlightColor =	obj.options.post.highlightColor;
@@ -157,6 +157,7 @@ function process(postData) {														//Process information obtained from AP
 	var link_url='';
 	var inlimg=[];
 	var photos=0;
+	var img=jQuery([]);
 	var bar='';																		//Piece of progressbar, (№) for amount of photos in a post,
 																					// space for non-photo posts, ✗ for errors
 	if (res.meta.status!='200') {
@@ -180,6 +181,7 @@ function process(postData) {														//Process information obtained from AP
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
 				r=false;															// otherwise link it to google reverse image search 
 			};
+			
 			a='<a href="'+href+'" style=""></a>';
 			i=$(vl);
 			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;		//Basically either direct parent or grandparent of the image can be a link already
@@ -238,8 +240,9 @@ function process(postData) {														//Process information obtained from AP
 			url=(link_url)?link_url:res.response.posts[0].photos[j].original_size.url
 		else																		// then the inline ones
 			url=img.eq(j).parent().attr('href');
-			
-		self.port.emit("isSaved",{fname:getFileName(url), i:j});
+		
+		imageLinks[getFileName(url)]=img.eq(j);	
+		self.port.emit("isSaved",getFileName(url));
 		
 		if (tags.length)
 			self.port.emit("storeImageData", {fname:getFileName(url), tags:tags, merge:true});		
@@ -248,9 +251,9 @@ function process(postData) {														//Process information obtained from AP
 	progressBar((tags.length)?bar:'-', postData.i);									//dash indicates no found tags for the post
 };
 
-self.port.on('isSaved', function(i){			
+self.port.on('isSaved', function(imageName){			
 	if (!isImage) 														 			//Add a border of highlight color around the image to indicate saved image
-		$(img[i]).css({'outline':'3px solid '+highlightColor,'outline-offset':'-3px'});	
+		imageLinks[imageName].css({'outline':'3px solid '+highlightColor,'outline-offset':'-3px'});	
 });
 
 function progressBar(bar, i){														//Outputs a piece of progress bar at a correct place in title

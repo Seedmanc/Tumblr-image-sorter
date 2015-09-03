@@ -13,7 +13,7 @@ defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,high
 
 if (!ss.storage.animage)  													//main storage object
 	ss.storage.animage=defaults; 
-
+	
 var button = ToggleButton({
   id: "my-button",
   label: "Tumblr Image Sorter",
@@ -149,9 +149,9 @@ pageMod.PageMod({
 	onAttach: attachListeners
 });
 
-function isSaved(image, worker){
-	if ((ss.storage.animage.files[image.fname])&&(ss.storage.animage.files[image.fname].s==1))
-		worker.port.emit("isSaved",image.i);
+function isSaved(imageName, worker){
+	if ((ss.storage.animage.files[imageName])&&(ss.storage.animage.files[imageName].s==1))
+		worker.port.emit("isSaved",imageName);
 };
 
 function storeImageData(data, worker){												//Add/modify database record for a filename
