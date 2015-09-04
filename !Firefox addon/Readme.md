@@ -23,10 +23,21 @@ Addons provides input validation for all fields. The rules are as follows:
 |:-:          |---  |---              |
 |Ignore|Words separated by commas|Trailing whitespace and extra commas removed|
 |Root| Full path to a folder inlcuding disc letter  |Marked red, input discarded|  
-|Metasymbol|Characters legal for file names, except space, not empty| Marked orange, replaced by '!'|
+|Metasymbol|Characters legal for file names, except space| Marked orange, replaced by '!'|
 |Folders left pane| Any characters except comma, not empty|Marked orange, comma removed. Marked red on empty, whole row discarded|
 |Folders right pane|Characters legal for file paths (including backslash), not empty|Marked orange, illegal characters replaced by dashes. Marked red on empty, whole row discarded|
 |Name & meta left pane|Same as folders|Same as folders|
 |Name & meta right pane|Same as folders (excluding backslash)|Same as folders|
+
+In short, only the root and the three special folder entries (solo, group and unsorted) are essential and will be marked red if filled incorrectly/left blank. Other input mistakes are not critical and the addon will attempt to fix them by removing/replacing incorrect characters, while marking the input orange for user attention.
+
+### Loading and saving databases.
+
+Addon allows exporting and importing of folder list (including root folder and the metasymbol) and names+meta lists. Same data validation as above is applied when loading databases from a file. 
+
+Before import user is asked to choose mode: add or replace data. Adding does not change records already present in the database.  
+  File format is JSON-stringified Javascript objects, it is human-readable and can be edited before import (I recommend using something better than just Notepad). You can use my databases as an example: [folders.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/!Firefox%20addon/folders.json.txt), [names & meta.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/names%20%26%20meta.json.txt). Note that those databases are pretty large, over 200 entries in total.
+
+
 
 https://addons.mozilla.org/en-US/firefox/addon/anti-tumblr-infinite-scroll/?src=search
