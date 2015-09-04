@@ -13,6 +13,8 @@ After installation (no restart required) addon's icon will appear either on the 
   
 The icon allows you to access addon settings and enter the [required info](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/README.md#data-required-for-the-script).
 
+### Lists
+
 From there you can fill in the Ignore, Folders and Names & Meta lists either manually or by importing a .json file.
 
 ![http://puu.sh/jZz0Z/fa7d1ea701.png](http://puu.sh/jZz0Z/fa7d1ea701.png)
@@ -36,8 +38,31 @@ In short, only the root and the three special folder entries (solo, group and un
 Addon allows exporting and importing of folder list (including root folder and the metasymbol) and names+meta lists. Same data validation as above is applied when loading databases from a file. 
 
 Before import user is asked to choose mode: add or replace data. Adding does not change records already present in the database.  
-  File format is JSON-stringified Javascript objects, it is human-readable and can be edited before import (I recommend using something better than just Notepad). You can use my databases as an example: [folders.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/!Firefox%20addon/folders.json.txt), [names & meta.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/names%20%26%20meta.json.txt). Note that those databases are pretty large, over 200 entries in total.
+  File format is JSON-stringified Javascript objects, it is human-readable and can be edited before import (I recommend using something better than just Notepad). You can use my databases as an example: [folders.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/!Firefox%20addon/folders.json.txt), [names & meta.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/names%20%26%20meta.json.txt). Note that those databases are pretty large, over 250 entries in total.
 
+### Options
 
+![http://puu.sh/jZAhH/ba639a2632.png](http://puu.sh/jZAhH/ba639a2632.png)
 
-https://addons.mozilla.org/en-US/firefox/addon/anti-tumblr-infinite-scroll/?src=search
+This should be self-explanatory, I hope.
+
+### About
+
+![http://puu.sh/jZAjg/d5417807df.png](http://puu.sh/jZAjg/d5417807df.png)
+
+Here is the `Reset` button.
+
+---
+
+Note that so far this version is a more or less direct port of the existing userscript, with a couple of bugs fixed, but still very little to no new features (if you don't count the GUI itself), so the existing limitations apply.
+
+No support for infinite scroll themes yet, you can use http://addons.mozilla.org/en-US/firefox/addon/anti-tumblr-infinite-scroll/ to compensate for that.
+
+Still doesn't work for themes with Wikplayer installed, turned out it wasn't a flash issue, but the fact that player's script wraps the entire page into an iframe hosted somewhere else, which breaks things.
+
+Refer to the [main readme entry](https://github.com/Seedmanc/Tumblr-image-sorter#compatibility) for more compatibility info.
+
+### Version-specific TODOs
+
+* Make the addon open save dialog directly at the determined folder, avoiding clipboard usage.
+* Add ability to parse `dir /s/b/o:n/A:D > folders.txt` input to fill in right pane of the Folder List, saving time on entering it manually.
