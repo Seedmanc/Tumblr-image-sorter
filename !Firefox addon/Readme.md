@@ -21,7 +21,7 @@ From there you can fill in the Ignore, Folders and Names & Meta lists either man
 
 ![http://puu.sh/jZz0Z/fa7d1ea701.png](http://puu.sh/jZz0Z/fa7d1ea701.png)
 
-Addons provides input validation for all fields. The rules are as follows:
+Addon provides input validation for all fields. The rules are as follows:
 
 |Input field  |Rules| Error behaviour | 
 |:-:          |---  |---              |
