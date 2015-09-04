@@ -1,3 +1,5 @@
+[русскоязычная версия](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/!Firefox%20addon/README.rus.md)
+
 # Firefox addon version
 
 Finally a version with an actual GUI, ability to save/load both folder and name lists and all that without Flash.
