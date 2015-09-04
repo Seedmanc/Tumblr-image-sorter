@@ -31,39 +31,39 @@
 |Name и meta левая часть|Как в folders|Как в folders|
 |Name и meta правая часть|Как в folders (исключая обратную косую черту)|Как в folders|
 
+Иначе говоря, только корневая папка и три специальные подпапки для сольных, групповых и нераспознанных фото являются обязательными для заполнения и будут отмечены красным цветом в случае ошибок. В остальных случаях аддон будет автоматически исправлять ошибки, выделяя измененные поля оранжевым цветом.
 
-In short, only the root and the three special folder entries (solo, group and unsorted) are essential and will be marked red if filled incorrectly/left blank. Other input mistakes are not critical and the addon will attempt to fix them by removing/replacing incorrect characters, while marking the input orange for user attention.
+### Загрузка и сохранение списков.
 
-### Loading and saving databases.
+Аддон позволяет экспортировать и импортировать списки папок (включая корневую папку и метасимвол) и списки имен/метатегов. Вышеописанные методы проверки корректности применяются и в этом случае.
 
-Addon allows exporting and importing of folder list (including root folder and the metasymbol) and names+meta lists. Same data validation as above is applied when loading databases from a file. 
+При загрузке пользователю будет предложено выбрать режим импорта - добавление или замена данных. При добавлении существующие  записи не изменяются, при замене выбранная база данных очищается.
 
-Before import user is asked to choose mode: add or replace data. Adding does not change records already present in the database.  
-  File format is JSON-stringified Javascript objects, it is human-readable and can be edited before import (I recommend using something better than just Notepad). You can use my databases as an example: [folders.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/!Firefox%20addon/folders.json.txt), [names & meta.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/names%20%26%20meta.json.txt). Note that those databases are pretty large, over 250 entries in total.
+  Содержимое файла представляет собой яваскрипт-объект в JSON-строковом формате. Такие файлы можно редактировать перед импортом (я рекомендую использовать редактор получше просто блокнота). Вы можете использовать мои базы данных папок и тегов как пример: [folders.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/!Firefox%20addon/folders.json.txt), [names & meta.json.txt](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/names%20%26%20meta.json.txt). Учтите, что они довольно велики, более 250 записей в сумме.
 
-### Options
+### Настройки
 
 ![http://puu.sh/jZAhH/ba639a2632.png](http://puu.sh/jZAhH/ba639a2632.png)
 
-This should be self-explanatory, I hope.
+Первая панель содержит настройки для страниц с постами. Здесь можно выбрать цвет рамки, которой выделяются сохраненные картинки, отключить запуск скрипта в ленте и обработку вложенных изображений, разрешить использование символов юникода при вводе переводов тегов вручную и отключить автоматическое расширение базы данных папок за счет использования имен папок как тегов.
 
-### About
+### Об аддоне
 
 ![http://puu.sh/jZAjg/d5417807df.png](http://puu.sh/jZAjg/d5417807df.png)
 
-Here is the `Reset` button.
+Здесь находится кнопка сброса, очищающая все базы данных аддона.
 
-### Compatibility
+### Совместимость
 
-Note that so far this version is a more or less direct port of the existing userscript, with a couple of bugs fixed, but still very little to no new features (if you don't count the GUI itself), so the existing limitations apply.
+На данный момент аддон-версия является прямым портом юзерскрипта и не содержит каких-либо значительных нововведение (если не считать самого интерфейса). Существующие ограничения действуют и здесь.
 
-No support for infinite scroll themes yet, you can use http://addons.mozilla.org/en-US/firefox/addon/anti-tumblr-infinite-scroll/ to compensate for that.
+Нет поддержки тем с бесконечной прокруткой. Можно использовать аддон, отключающий ее http://addons.mozilla.org/en-US/firefox/addon/anti-tumblr-infinite-scroll/ .
 
-Still doesn't work for themes with Wikplayer installed, turned out it wasn't a flash issue, but the fact that player's script wraps the entire page into an iframe hosted somewhere else, which breaks things.
+Нет поддержки тем с Wikplayer'ом. Похоже, что он оборачивает всю страницу в iframe, находящийся на другом хостинге.
 
-Refer to the [main readme entry](https://github.com/Seedmanc/Tumblr-image-sorter#compatibility) for more compatibility info.
+Смотрите [раздел основного readme](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/README.rus.md#%D0%A1%D0%BE%D0%B2%D0%BC%D0%B5%D1%81%D1%82%D0%B8%D0%BC%D0%BE%D1%81%D1%82%D1%8C), чтобы получить больше информаии о совместимости.
 
-### Version-specific TODOs
+### TODO для этой версии
 
-* Make the addon open save dialog directly at the determined folder, avoiding clipboard usage.
-* Add ability to parse `dir /s/b/o:n/A:D > folders.txt` input to fill in right pane of the Folder List, saving time on entering it manually.
+* Открывать диалог сохранения напрямую в определенной папке, чтобы не использовать буфер обмена
+* Добавить возможность чтения результатов команды `dir /s/b/o:n/A:D > folders.txt` для быстрого заполнения правой части списка папок.
