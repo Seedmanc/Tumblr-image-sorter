@@ -52,7 +52,7 @@ This should be self-explanatory, I hope.
 
 Here is the `Reset` button.
 
----
+### Compatibility
 
 Note that so far this version is a more or less direct port of the existing userscript, with a couple of bugs fixed, but still very little to no new features (if you don't count the GUI itself), so the existing limitations apply.
 
