@@ -207,3 +207,13 @@ function attachListeners(worker){
 	});
 	worker.port.emit("init", settingsObject());
 };
+
+/*const { setTimeout } = require("sdk/timers");
+
+     
+
+function handleChange(state) {
+  if (state.checked) {
+    setTimeout(() => panel.show({ position: button }), 100);
+  }
+}*/
