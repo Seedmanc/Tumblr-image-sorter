@@ -48,12 +48,14 @@
 // ==/Settings====================================================
 
  tagsDB=null;
-var J=T=P=false;
-var namae=document.location.host; 				
+var J=T=false;
+var blogName=document.location.host; 				
 var isImage=(document.location.href.indexOf('/image/')!=-1); 
 var isPost=(document.location.href.indexOf('/post/')!=-1);
-var isDash=(namae.indexOf('www.')==0); 
+var isDash=(blogName.indexOf('www.')==0); 
 var asked=false;
+var posts=$([]); 
+var progress=[];
 
 window.onerror = function(msg, url, line, col, error) {								//General error handler
  	var extra = !col ? '' : '\ncolumn: ' + col;
@@ -96,23 +98,24 @@ function getID(lnk){																//Extract numerical post ID from self-link
 		return Result;
 };
 
-function identifyPost(v){															//Find the ID of post in question and request info via API for it
+function identifyPost(i){															//Find the ID of post in question and request info via API for it
+	var post=posts.eq(i);
 	if (isDash) {
-		self=jQuery(v).find('a.post_permalink')[0]; 
-		namae=self.hostname;														//On dashboard every post might have a different author
-		id=getID(self.href);
+		slflnk=post.find('a.post_permalink')[0]; 
+		blogName=slflnk.hostname;													//On dashboard every post might have a different author
+		id=getID(slflnk.href);
 	} else if (isPost)
 		id=getID(document.location.href)											//Even simpler on the post page
 	else {																			// but it gets tricky in the wild
 		id='';
-		h=jQuery(v).find("a[href*='"+namae+"/post/']");								//Several attempts to find selflink
-		h=(h.length)?h:jQuery(v).next().find("a[href*='"+namae+"/post/']");			//workaround for Optica and seigaku themes that don't have selflinks within post elements
-		h=(h.length)?h:jQuery(v).find("a[href*='"+namae+"/image/']");				//IDs can be found both in links to post and to image page
+		h=post.find("a[href*='"+blogName+"/post/']");								//Several attempts to find selflink
+		h=(h.length)?h:post.next().find("a[href*='"+blogName+"/post/']");			//workaround for Optica and seigaku themes that don't have selflinks within post elements
+		h=(h.length)?h:post.find("a[href*='"+blogName+"/image/']");					//IDs can be found both in links to post and to image page
 		if (h.length) 
 			id=getID(h[h.length-1].href);														
 		if (id == '') {																//If no link was found, try to find ID in attributes of nodes
-			phtst=jQuery(v).find("div[id^='photoset']");							// photosets have IDs inside, well, id attributes starting with photoset_
-			pht=jQuery(v).attr('id');												// single photos might have ID inside same attribute
+			phtst=post.find("div[id^='photoset']");									// photosets have IDs inside, well, id attributes starting with photoset_
+			pht=post.attr('id');													// single photos might have ID inside same attribute
 			if (phtst.length) 
 				id=phtst.attr('id').split('_')[1]
 			else if (pht)
@@ -122,19 +125,17 @@ function identifyPost(v){															//Find the ID of post in question and re
 				return false;
 			};
 		};			
-	};											//TODO: only call API if no DB record was found for images in current post			
-    return new Promise(function(resolve, reject) {									//I have no idea what this is
-     	jQuery.ajax({																//get info about current post via tumblr API based on the ID
-			type:'GET',
-			url: "//api.tumblr.com/v2/blog/"+namae+"/posts/photo",
-			dataType:'jsonp',
-			data: {
-				api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
-				id: id
-			}
-		}).done(function(result) {resolve({r:result, v:v});})						//Have to return two values at once, data and pointer to post on page
-		  .fail(function(jqXHR, textStatus, errorThrown) {reject(Error(textStatus));});
-    });	
+	};												 
+	jQuery.ajax({																	//get info about current post via tumblr API based on the ID
+		type:'GET',
+		url: "//api.tumblr.com/v2/blog/"+blogName+"/posts/photo",
+		dataType:'jsonp',
+		data: {
+			api_key : "fuiKNFp9vQFvjLNvx4sUwti4Yb5yGutBN4Xh10LXZhhRKjWlV4",
+			id: id
+		}
+	}).done(function(result) {process({r:result, i:i});})							//Have to return two values at once, data and pointer to post on page
+	  .fail(function(jqXHR, textStatus, errorThrown)  {throw new Error(textStatus+' in post #'+i) ;}) ; 
 };
 
 function loadAndExecute(url, callback){												//Load specified js library and launch a function after that
@@ -177,11 +178,8 @@ function main(){																	//Search for post IDs on page and call API to g
 			document.title+=' [No posts found]';									//Give up
 			return;
 		};
-	};
-																					//Because chrome sucks it has no window title area
-	document.title="▶[";															// we're limited to tab title which is very small
-																					//A "progressbar" will be displayed in page title,
-	if (!isImage)	{																// indicating that the page is ready for interaction
+	}; 
+	if (!isImage)	{																 
 		hc=posts.find('.hc.nest');
 		if (hc.length) {
 			hc.css('position','relative');											//Fix 'broken' themes with image links being under a large div		
@@ -189,13 +187,8 @@ function main(){																	//Search for post IDs on page and call API to g
 		};
 	};
 	
-	promisePosts(jQuery(posts).toArray()).then(function() {									//the what
- 		if (isImage)																//Redirect to actual image from image page after we got the ID
- 			document.location.href=jQuery('img#content-image')[0].src;						
- 		document.title+=']■';														//At the end of processing indicate it's finished
-	}).catch(function(err) {														//catch any error that happened along the way
-		throw err;
-	}); 	
+	posts.each(identifyPost);
+
 };
 
 function mkUniq(arr){																//Sorts an array and ensures uniqueness of its elements
@@ -207,8 +200,8 @@ function mkUniq(arr){																//Sorts an array and ensures uniqueness of 
 };
 
 function mutex(){																	//Check readiness of libraries being loaded simultaneously
-	if (J&&T&&P){		
-		J=T=P=false;																											
+	if (J&&T){		
+		J=T=false;													
 		main();																		//when everything is loaded, proceed further
 	}
 };
@@ -225,13 +218,6 @@ function onDOMContentLoaded(){														//Load plugins
 	if (isDash && !enableOnDashboard)												//don't run on dashboard unless enabled
 		return;
 			
-	if (!(Promise && Promise.resolve))  											//Because tumblr sucks it replaces native Promise implementation
-		loadAndExecute('//dl.dropboxusercontent.com/u/74005421/js%20requisites/es6-promise.min.js', function(){ 
-			P=true;																	// with it's own bullshit on dashboard via index.js that doesn't work
-			mutex();
-		})																			// therefore I have to fix that by overwriting it back by a polyfill
-	else
-		P=true;
 	if (jQuery.fn.jquery.split('.')[1]<5) {											//@require doesn't load jQuery if it's already present on the site
 		loadAndExecute('//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js', function(){ 
 			$.noConflict();															// but existing version might be older than required (1.5)
@@ -273,27 +259,28 @@ function loadTagsDB(nmspc){															//Main tag database, holds pairs "file
 };
 
 function process(postData) {														//Process information obtained from API by post ID
-	v=jQuery(postData.v);															//pointer to post on page
+	post=posts.eq(postData.i);															//pointer to post on page
 	res=postData.r;																	//API response
 	var link_url='';
-	var img=jQuery([]);
 	var inlimg=[];
-	var photos=0;
-	var bar='';
+	var photos=0;	
+	var img=jQuery([]);
+	var bar='';	
 	if (res.meta.status!='200') {													//I don't even know if this is reachable
 		throw  new Error('API error: '+res.meta.msg);
 		return;
 	};
+	
 	var isPhoto=res.response.posts[0].type=='photo';
 	if (linkify) {																	//Find inline images
-		inlimg=v.find('img[src*="tumblr_inline_"]');
+		inlimg=post.find('img[src*="tumblr_inline_"]');
 		inlimg=jQuery.grep(inlimg, function(vl,ix) {
 			if (vl.src.search(/(_\d{2}\d{0,2})(?=\.)/gim)!=-1) {
 				href=vl.src.replace(/(_\d{2}\d{0,2})(?=\.)/gim,'_1280');			//If there is an HD version, link it
 				if (vl.src.split('.').pop()=='gif')
 					href=vl.src;													//except for gifs
 				r=true;
-				bar=inlimg.length+'.';
+				bar='('+inlimg.length+')';
 			}
 			else {
 				href='http://www.google.com/searchbyimage?sbisrc=cr_1_0_0&image_url='+escape(vl.src);
@@ -313,16 +300,16 @@ function process(postData) {														//Process information obtained from AP
 	};
 	if (!isPhoto) {																	//Early termination if there are no images at all
 		if ((!linkify)||(inlimg.length==0)) {										// or if processing is disabled
-			document.title+=' ';
+			progressBar(' ',postData.i);
 			return;				
 		};
 	} else {
 		photos=res.response.posts[0].photos.length;									//Find whether this is a single photo post or a photoset
 		if (photos>1) {
-			img=v.find('iframe.photoset').contents();
-			img=img.length?img:v.find('figure.photoset');
+			img=post.find('iframe.photoset').contents();
+			img=img.length?img:post.find('figure.photoset');
 			if (img.length==0)														//Some photosets are in iframes, some aren't
-				img=v.find("div[id^='photoset'] img")
+				img=post.find("div[id^='photoset'] img")
 			else 
 				img=img.find('img');
 			img=img.not('img[src*="tumblr_inline_"]');
@@ -332,7 +319,7 @@ function process(postData) {														//Process information obtained from AP
 			r=/(jpe*g|bmp|png|gif)/gi;												// check if this is actually an image link
 			link_url=(r.test(ext))?link_url:''; 
 
-			img=v.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//Find image in the post to linkify it
+			img=post.find('img[src*="tumblr_"]').not('img[src*="tumblr_inline_"]');	//Find image in the post to linkify it
 			if (img.length && linkify) {
 				p=img.parent().wrap('<p/>');										//Parent might be either the link itself or contain it as a child,
 				lnk=p.parent().find('a[href*="/image/"]');							// depends on particular theme
@@ -381,7 +368,8 @@ function process(postData) {														//Process information obtained from AP
 					window.scrollTo(0, 0);
 					asked=true;
 				};	
-		};												//TODO: add tags retrieval from reblog source if no tags were found here
+		};											
+		
 		if ((tst)&&(JSON.parse(tst).s=='1')&&(!isImage)) 							//Otherwise if there is a record and it says the image has been saved 
 			img.eq(j).css('outline','3px solid '+highlightColor).css('outline-offset','-3px');	
 																					//Add a border of highlight color around the image to indicate that
@@ -391,20 +379,20 @@ function process(postData) {														//Process information obtained from AP
 			if (y.is('a'))  
 				removeEvents(y[0]);													//get rid of that annoying photoview feature
 		};
-	};	
-	document.title+=(tags.length)?bar:'-';											//dash indicates no found tags for the post
+	};		 
+	if (isImage)																	//Redirect to actual image from image page after we got the ID
+		document.location.href=jQuery('img#content-image')[0].src;						
+
+	progressBar((tags.length)?bar:'-', postData.i);									//dash indicates no found tags for the post
 };
 
-function promisePosts(posts){														//because chrome sucks I have write a bunch of nonsensical code just to make sure it behaves
-																					// and processes posts in their order instead of randomly. 		
- 	return posts.map(identifyPost).reduce(function(sequence, chapterPromise) {		// Opera did everything properly right away without tinkering
- 		return sequence.then(function() {
- 			return chapterPromise;
-		}).then(function(chapter) {													//copied directly from some html5 site, don't ask me about variable names, ask chrome why it sucks
-			process(chapter);
-		});
-	}, Promise.resolve());
+function progressBar(bar, i){														//Outputs a piece of progress bar at a correct place in title
+	progress[i]=bar;
+	document.title='▶['+progress.join('');
+	if (progress.length==posts.length)
+		document.title+=']■';
 };
+
 
 function removeEvents(node){	 													//Remove event listeners such as onclick, because in chrome they mess with middlebutton new tab opening
 	if (fixMiddleClick) {
@@ -415,7 +403,9 @@ function removeEvents(node){	 													//Remove event listeners such as oncl
 };
 
 //TODO: add support for custom domains
+//TODO: add tags retrieval from reblog source if no tags were found here  
 //TODO: output FlashDB messages to flash window instead of console on debug.
 //TODO: implement some kind of feedback from flash to script about space request success
 //TODO: check if the actual width of an image to be linked is within limits of the _ postfix, because tumblr lies
 //TODO: store post ID and blog name for images? Will make it possible to have a backlink from image page
+//TODO: only call API if no DB record was found for images in the current post (requires ^)

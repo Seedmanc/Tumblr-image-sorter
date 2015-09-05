@@ -585,7 +585,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 		folder=folders['!!group']+'\\';										// same as the above applies for meta
 	filename=filename.replace(exclrgxp, '-').trim();						//Make sure there are no forbidden characters in the resulting name 
 	document.title+=' \\'+folder+filename;
-	folder=root+folder;														//If no name or folder tags were found, folder will be set to root directory
+	folder=(root+folder).replace(/\\\\/g,'\\');								//If no name or folder tags were found, folder will be set to root directory
 	
 	if (DBrec.s=='1') document.title='♥ '+document.title;					//Indicate if the image has been marked as saved before
 	title=document.title;
