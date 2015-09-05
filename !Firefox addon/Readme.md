@@ -6,7 +6,9 @@ Finally a version with an actual GUI, ability to save/load both folder and name 
 
 ## Installation instructions
 
-Until the [AMO version](https://addons.mozilla.org/en-US/firefox/addon/tumblr-image-sorter/) gets approved you can download the .xpi file from here and drop it on your browser's window, that'll install it. Note that for FF starting with 41 it'll refuse launching unsigned addons at all, so you'll need to go to about:config#xpinstall.signatures.required and change that to false.
+#### Get it from AMO here:  [https://addons.mozilla.org/firefox/addon/tumblr-image-sorter/](https://addons.mozilla.org/firefox/addon/tumblr-image-sorter/) 
+
+If for some reason it's unavailable there, you download the .xpi file from here and drop it on your browser's window, that'll install it. Note that in this case for FF starting with 41 it'll refuse launching unsigned addons at all, so you'll need to go to about:config#xpinstall.signatures.required and change that to false.  
 
 ## GUI manual
 
