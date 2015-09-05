@@ -67,4 +67,4 @@ Refer to the [main readme entry](https://github.com/Seedmanc/Tumblr-image-sorter
 ### Version-specific TODOs
 
 * Make the addon open save dialog directly at the determined folder, avoiding clipboard usage.
-* Add ability to parse `dir /s/b/o:n/A:D > folders.txt` input to fill in right pane of the Folder List, saving time on entering it manually.
+* Add ability to parse `dir /s/b/o:n/A:D > folders.txt` output to fill in right pane of the Folder List, saving time on entering it manually.
