@@ -26,9 +26,9 @@ Addon provides input validation for all fields. The rules are as follows:
 |Input field  |Rules| Error behaviour | 
 |:-:          |---  |---              |
 |Ignore|Words separated by commas|Trailing whitespace and extra commas removed|
-|Root| Full path to a folder inlcuding disc letter  |Marked red, input discarded|  
+|Root| Full path to a folder including disc letter  |Marked red, input discarded|  
 |Metasymbol|Characters legal for file names, except space| Marked orange, replaced by '!'|
-|Folders left pane| Any characters except comma, not empty|Marked orange, comma removed. Marked red on empty, whole row discarded|
+|Folders left pane| Any characters except commas, not empty|Marked orange, commas replaced by spaces. Marked red on empty, whole row discarded|
 |Folders right pane|Characters legal for file paths (including backslash), not empty|Marked orange, illegal characters replaced by dashes. Marked red on empty, whole row discarded|
 |Name & meta left pane|Same as folders|Same as folders|
 |Name & meta right pane|Same as folders (excluding backslash)|Same as folders|

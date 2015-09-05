@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name		Animage-post
 // @description	Store tags for images and indicate saved state
-// @version		1.1
+// @version		1.2
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 
@@ -54,7 +54,7 @@ var isImage=(document.location.href.indexOf('/image/')!=-1);
 var isPost=(document.location.href.indexOf('/post/')!=-1);
 var isDash=(blogName.indexOf('www.')==0); 
 var asked=false;
-var posts=$([]); 
+var posts=jQuery([]); 
 var progress=[];
 
 window.onerror = function(msg, url, line, col, error) {								//General error handler
@@ -162,8 +162,8 @@ function main(){																	//Search for post IDs on page and call API to g
 			if (tagsDB.get(getFname(jQuery('img#content-image')[0].src)))
 				document.location.href=jQuery('img#content-image')[0].src			//Proceed directly to the image if it already has a DB record with tags	
 			else
-				posts=[jQuery('<div><a href="'+document.location.href+'" >a</a></div>')];	
-																					//Make it work also on image pages, since we can get post id from url
+				posts=$('<div><a href="'+document.location.href+'" >a</a></div>');	//Make it work also on image pages, since we can get post id from url
+ 
 		posts=posts.length?posts:jQuery('.column').eq(2).find('.bottompanel').parent();
 																					//for "Catching elephant" theme
 		posts=posts.length?posts:jQuery('[id="post"]');								//for "Cinereoism" that uses IDs instead of Classes /0	

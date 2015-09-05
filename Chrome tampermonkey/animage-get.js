@@ -1,13 +1,13 @@
 ﻿// ==UserScript==
 // @name		Animage-get
 // @description	Format file name & save path for current image by its tags
-// @version	    1.1
+// @version	    1.2
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 
 // @include		http*://*.amazonaws.com/data.tumblr.com/* 
 // @include		http*://*.media.tumblr.com/*
-//these sites were used by animage.tumblr.com (RIP) to host original images
+//these sites were used by animage.tumblr.com to host original images
 // @include		http://scenario.myweb.hinet.net/*										
 // @include		http*://mywareroom.files.wordpress.com/*
 // @include		http://e.blog.xuite.net/* 
@@ -111,8 +111,7 @@
 		"	ゆかな		"	:	"	 Yukana	"
 	};
 
-	var ignore=			{'歌手':true, 'seiyuu':true, '声優':true};			//These tags will not count towards any category and won't be included into filename
-																			// to disable an entry without removing it use false as value
+	var ignore=			"歌手, seiyuu, 声優";									//These tags will not count towards any category and won't be included into filename	
 
 	var allowUnicode=	false;												//Whether to allow unicode characters in manual translation input, not tested
 	
@@ -211,16 +210,14 @@ var style={																	//In an object so you can fold it in any decent edit
 	}									\
 "};																			//This certainly needs optimisation
 		
-out = document.createElement('div');										//Main layer that holds the GUI
-	out.id = "output" ; 
-	out.innerHTML="<div id='down'> </div>";									//Sublayer for downloadify button
- 
-tb=document.createElement('table');											//Table for entering manual translation of unknown tags
-	tb.id='translations';
-	tagcell='<table class="cell"><tr>														\
+var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
+var tb =$('<table id="translations">');										//Table for entering manual translation of unknown tags
+
+var	tagcell='<table class="cell"><tr>														\
 		<td class="radio"><input type="radio" class="category"  value="name"/></td>			\
 		<td class="radio"><input type="radio" class="category"  value="meta"/></td>			\
-		</tr><tr><td colspan="2"><a href="#" title="Click to ignore this tag for now" class="ignr">';
+	</tr><tr>																				\
+		<td colspan="2"><a href="#" title="Click to ignore this tag for now" class="ignr">';
 																			//Each cell has the following in it:
 																			//	two radiobuttons to choose a category for the tag - name or meta
 																			//	the tag itself, either in roman or in kanji
@@ -229,17 +226,19 @@ tb=document.createElement('table');											//Table for entering manual transl
 																			// 		if there are also roman tags, they are used as options for quick input into the text field
 																			//	if the tag is in roman and consists of two words, cell has a button enabled to swap their order
 																			//		otherwise the button is disabled
-	foot=tb.createTFoot();
-	row=foot.insertRow(0);
-	row.innerHTML='<input type="submit" id="submit" onclick=submit() value="submit">';
-	head=tb.createTHead();													//At the bottom of the table there is the "submit" button that stores changes
-	row=head.insertRow(0);													// and relaunches tag analysis without reloading the image
-	row.insertCell(0).innerHTML='<table class="cell" style="font-width:95%; font-size:small;">\
-		<tr class="cell" ><th class="cell">name</th><th class="cell">meta</th></tr></table>';	
-	tb.hidden="hidden";
+var tfoot=$('<tfoot><tr><td>														\
+	<input type="submit" id="submit" value="submit">								\
+</td></tr></tfoot>');														//At the bottom of the table there is the "submit" button that applies changes
+var thead=$('<thead><tr><td			>												\
+	<table class="cell" style="font-width:95%; font-size:small;">					\
+		<tr class="cell"><th class="cell">name</th><th class="cell">meta</th></tr>	\
+	</table>																		\
+</td></tr></thead>');
+
+tb.append(thead).append(tfoot).hide();
+
 	
 port=document.createElement('table');										//Subtable for settings and im/export of tag databases
-	st2=port.style;
 	row= port.insertRow(0);
 	cell=row.insertCell(0);
 	cell.setAttribute('class','settings');
@@ -255,9 +254,6 @@ port=document.createElement('table');										//Subtable for settings and im/ex
 	row4=port.insertRow(5);
 	row4.insertCell(0).id='im';
 	port.id='port';
-
-trimObj(folders, useFolderNames);											//Run checks on user-input content and format it
-trimObj(ignore);	
 
 window.onerror = function(msg, url, line, col, error) {						//General error handler
    var extra = !col ? '' : '\ncolumn: ' + col;
@@ -289,30 +285,40 @@ var xhr = new XMLHttpRequest();												//Redownloads opened image as blob
 			throw new Error('404');
 		};
 		throw new Error('Error getting image: '+this.status);
-	};							//TODO: add fallback to the tumblr hosted image if link url fails (requires storing post id and blog name)
+	};							
 };
 
-function trimObj(obj, ufn){													//Remove trailing whitespace in object keys and values & check correctness of user input
-	rootrgxp=/^(?:[\w]\:)\\.+\\$/g;											//makes sure that folder names have no illegal characters
-  try {
-	roota=root.split('\\');
-	if (!(rootrgxp.test(root))||(exclrgxp.test(roota.splice(1,roota.length).join('\\')))) 
+function expandFolders(){													 //Complement DB with tags produced from folders names
+	var t,rx,x;
+	for (var key in folders) {													 
+		if (folders.hasOwnProperty(key)&&(['!group','!solo','!unsorted'].indexOf(key)==-1)) { 
+			t=folders[key];		
+			rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
+			x=getFileName(t).toLowerCase().replace(rx,'');
+			folders[x]=t;
+		};
+	};													 
+}; 	
+  
+rootrgxp=/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/gi;
+try {
+	if (!(rootrgxp.test(root))) 
 		throw new Error('Illegal characters in root folder path: "'+root+'"');
 	ms=ms[0];																//It's a symbol, not a string, after all
-	if ((exclrgxp.test(ms))||(/\\/.test(ms)))  
+	if ((exclrgxp.test(ms))||(/\\|\s/.test(ms)))  
 		throw new Error ('Illegal character as metasymbol: "'+ms+'"');
+} catch (err) {
+	if (!debug)
+		alert(err.name+': '+err.message);									 
+	throw err;
+};				
+
+function checkMatch(obj){													//Remove trailing whitespace in object keys and values & check correctness of user input 
+  try {																		//make sure that folder names have no illegal characters
 	for (var key in obj) {													//Convert keys to lower case for better matching
 		if (obj.hasOwnProperty(key)) { 
-			t=obj[key];			
+			t=obj[key].trim().replace(/^\\|\\$/g, '');			
 			delete obj[key];
-			if (typeof t == 'string') {
-				t=t.trim();
-				if (ufn) {													//Expand DB with tags produced from folders names
-					rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			
-					x=getFname(t).toLowerCase().replace(rx,'');
-					obj[x]=t;
-				};
-			};
 			k=key.trim().toLowerCase();
 			obj[k]=t;
 			if (exclrgxp.test(obj[k]))  									//Can't continue until the problem is fixed
@@ -348,12 +354,20 @@ function debugSwitch(checkbox){												//Toggling debug mode requires page r
 
 onDOMcontentLoaded();
 function onDOMcontentLoaded(){ 												//Load plugins and databases
+
+	checkMatch(folders);													//Run checks on user-input content and format it
+	if (useFolderNames)
+		expandFolders();
+	ignore=$.map(ignore.split(','), function(v,i){
+		return v.trim().toLowerCase();
+	});
+	
 	href=document.location.href;
 	if (href.indexOf('tumblr')==-1) 										//If not on tumblr
 		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))			// check if this is actually an image link
 			return;
 	$('img').wrap("<center></center>");
-	$('body')[0].appendChild(out);
+	$('body').append(out);
 
 	names = new SwfStore({													//Auxiliary database for names that don't have folders
 		namespace: "names",
@@ -396,7 +410,7 @@ function onDOMcontentLoaded(){ 												//Load plugins and databases
 };
 
 function getTags(retry){													//Manages tags acquisition for current image file name from db
-	DBrec=JSON.parse(tagsDB.get(getFname(document.location.href)));			// first attempt at getting taglist for current filename is done upon the beginning of image load
+	DBrec=JSON.parse(tagsDB.get(getFileName(document.location.href)));			// first attempt at getting taglist for current filename is done upon the beginning of image load
 	if ((DBrec!=null) || (debug)) {											// if tags are found report readiness
 		T=true;																// or if we're in debug mode, proceed anyway
 		mutex();		
@@ -449,7 +463,7 @@ function isANSI(s) {														//Some tags might be already in roman and do n
 };
 
 function analyzeTags() {   													//This is where the tag matching magic occurs
-	filename=getFname(document.location.href, true);
+	filename=getFileName(document.location.href, true);
  	if (!DBrec) return;														// if there are any tags, that is
 	folder='';
 
@@ -484,7 +498,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 		if (!v) 
 			return null;
 																
-		if ((ignore[v])||(ignore[v.split(' ').reverse().join(' ')]))
+		if ((ignore.indexOf(v)!=-1)||(ignore.indexOf(v.split(' ').reverse().join(' '))!=-1))
 			return null														//Remove ignored tags so that they don't affect the tag amount
 		else return v;
 	});		
@@ -512,7 +526,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 				}
 				ansi[v]=true;											
 			};
-		}										//TODO: add checks for common mistakes in kanji names like 実/美 & 奈/菜
+		}				 
 		else
 			rest.push(v);													//	finally the "untranslated" category
 	});
@@ -520,7 +534,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 																			//It's time to filter the "ansi" category further
 	$.each(fldrs.concat(nms.concat(mt)), function(i,v){						//Some bloggers put both kanji and translated names into tags
 		rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');
-		x=getFname(v).toLowerCase().replace(rx,'');
+		x=getFileName(v).toLowerCase().replace(rx,'');
 		y=x.split(' ').reverse().join(' ');									// check if we already have a name translated to avoid duplicates
 		delete ansi[x];														//I have to again check for both orders even though I deleted one of them before,
 		delete ansi[y];														// but at the time of deletion there was no way to know yet which one would match the kanji tag
@@ -530,7 +544,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	fldrs2=[];			
 	
 	fldrs=$.grep(fldrs,function(v,i){										//A trick to process folders for meta tags, having subfolders for names inside
-		fmeta=getFname(v);
+		fmeta=getFileName(v);
 		if ((fmeta.indexOf(ms)==0)) {										// such folders must have the metasymbol as the first character
 			fldrs2.push(fmeta);
 			if (fldrs.concat(nms).length==1)								//In the rare case when there are no name tags at all we put the image to meta folder
@@ -549,7 +563,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	};		
 	
 	fldrs2=$.map(fldrs,function(vl,ix){
-		return getFname(vl);												//Extract names from folder paths
+		return getFileName(vl);												//Extract names from folder paths
 	});		
 	
 	mt=mt.concat(Object.keys(ansi));										//Roman tags have to go somewhere until assigned a category manually	
@@ -560,11 +574,14 @@ function analyzeTags() {   													//This is where the tag matching magic o
 																			// any existing commas will be replaced with spaces as well	
 																			//this way the images are ready to be uploaded to boorus using the mass booru uploader script
 																		
-	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);					//Unsorted flag is set if there are tags outside of 3 main categories 
-	tb.setAttribute("hidden","hidden");				
-	fn='';																	//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
+	unsorted=(rest.length>0)||(Object.keys(ansi).length>0);					//Unsorted flag is set if there are tags outside of 3 main categories  
+	
+																			//Final, 3rd sorting stage, assign a folder to the image based on found tags and categories
 	nms=mkUniq(nms);
 	if (unsorted)  {														//If there are any untranslated tags, make a table with text fields to provide manual translation
+		var fn=rest.reduce(function (fn, v){
+			return fn+' '+'['+v.replace(/\s/g,'_')+']';						// such tags are enclosed in [ ]  in filename for better searchability on disk
+		},'');	
 		buildTable(ansi, rest);
 		folder=folders["!!unsorted"]+'\\';   								//Mark image as going to "unsorted" folder if it still has untranslated tags
 		filename=fn+' '+filename;
@@ -588,15 +605,13 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	folder=(root+folder).replace(/\\\\/g,'\\');								//If no name or folder tags were found, folder will be set to root directory
 	
 	if (DBrec.s=='1') document.title='♥ '+document.title;					//Indicate if the image has been marked as saved before
-	title=document.title;
-	return unsorted;
+	title=document.title; 
 };
 
 function buildTable(ansi, rest) {											//Create table of untranslated tags for manual translation input
-
-	tb.removeAttribute("hidden");
+	tb.show(); 
 	options='';
-	tbd=tb.appendChild(document.createElement('tbody'));
+	tbd=tb[0].appendChild(document.createElement('tbody'));
 	$.each(ansi, function(i,v){												//First process the unassigned roman tags
 		row1=tbd.insertRow(0);
 		cell1=row1.insertCell(0);  
@@ -612,7 +627,6 @@ function buildTable(ansi, rest) {											//Create table of untranslated tags 
 	});																		// so they can be used for translating kanji tags if possible
  
 	$.each(rest, function(i,v){												//Now come the untranslated kanji tags
-		fn+='['+v.replace(/\s/g,'_')+']'+' '; 								// such tags are enclosed in [ ]  in filename for better searchability on disk
 		row1=tbd.insertRow(0);
 		cell1=row1.insertCell(0); 
 		cell1.id=v;
@@ -626,7 +640,7 @@ function buildTable(ansi, rest) {											//Create table of untranslated tags 
 };
 
 function ignor3(anc){														//Remove clicked tag from results for current session (until page reload)
-	ignore[anc.textContent]=true;												// this way you don't have to fill in the "ignore" list, 
+	ignore.push(anc.textContent);											// this way you don't have to fill in the "ignore" list, 
 																			// while still being able to control which tags will be counted
 	tdc=$(anc).parent().parent().parent().parent().parent().parent();		//a long way up from tag link to tag cell table					
 	tdc.attr('hidden','hidden');
@@ -688,7 +702,7 @@ function mkUniq(arr){														//Sorts an array and ensures uniqueness of it
 	return arr2.sort();														//I thought key names are already sorted in an object but for some reason they're not
 };
 
-function getFname(fullName, full){											//Source URL processing for filename
+function getFileName(fullName, full){											//Source URL processing for filename
 	full=full || false;
 	fullName=fullName.replace(/(#|\?).*$/gim,'');							//first remove url parameters
 	if (fullName.indexOf('xuite')!=-1) {									//This blog names their images as "(digit).jpg" causing filename collisions
@@ -725,7 +739,7 @@ function dl(base64data){													//Make downloadify button with base64 encod
 function onCmplt(){															//Mark image as saved in the tag database
 	if (DBrec)	{															// it is used to mark saved images on tumblr pages
 		DBrec.s='1';							
-		tagsDB.set(getFname(document.location.href), JSON.stringify(DBrec));
+		tagsDB.set(getFileName(document.location.href), JSON.stringify(DBrec));
 		document.title='♥ '+document.title;									//Actually I wanted to put a diskette symbol there,
 	};																		// but because chromse sucks it does not support extended unicode in title
 }
@@ -735,7 +749,7 @@ function submit(){															//Collects entered translations for missing tag
 	missing=false;
 	$.each(tgs,function(i,v){
 		if ($(v).parent().attr('ignore')) {
-			ignore[v.id]=true;												//Mark hidden tags as ignored
+			ignore.push(v.id);												//Mark hidden tags as ignored
 			return true;
 		};
 		tg=$(v).find('input.txt');
@@ -774,6 +788,7 @@ function submit(){															//Collects entered translations for missing tag
 	to=missing?1000:10;														//If there was missing input, delay before applying changes to show that
 	setTimeout(function(){
 		tbd.parentNode.removeChild(tbd);
+		tb.hide();
 		analyzeTags();
 	}, to);
 };
@@ -808,6 +823,8 @@ function im(){																//Import auxiliary tag databases as text file
 
 function handleFileSelect(evt) {											//Fill in databases with data from imported file
     var file = evt.target.files[0]; 
+	
+	$('input#files')[0].value='';
 	if (file.type!='text/plain') {
 		alert('Wrong filetype: must be text');
 		return false;
@@ -822,7 +839,7 @@ function handleFileSelect(evt) {											//Fill in databases with data from im
 		return false;
 	  };
 	    if (o.meta) {
-			trimObj(o.meta);
+			checkMatch(o.meta);
 			if (clear) 
 				meta.clearAll();
 			$.each(o.meta, function(i,v){
@@ -831,7 +848,7 @@ function handleFileSelect(evt) {											//Fill in databases with data from im
 		else
 			alert('No meta DB found');
 	    if (o.names) {
-			trimObj(o.names);
+			checkMatch(o.names);
 			if (clear) 
 				names.clearAll();
 			$.each(o.names, function(i,v){
@@ -845,3 +862,6 @@ function handleFileSelect(evt) {											//Fill in databases with data from im
 //TODO: add save button activation via keyboard
 //TODO: improve the button: open assigned folder directly, use modern dialog
 //TODO: ^ try to set last used directory in flash save dialog so as to avoid clipboard usage
+//TODO: add fallback to the tumblr hosted image if link url fails (requires storing post id and blog name)
+//TODO: add checks for common mistakes in unicode names like 実/美 & 奈/菜
+//TODO: option to disable unsorted category if translations are not required by user 
