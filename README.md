@@ -1,6 +1,6 @@
 [русскоязычная версия](README.rus.md)
 # Tumblr-image-sorter
-A userscript for image file name and save path formatting based on tags.
+A userscript & an addon for image file name and save path formatting based on tags.
 
 ## Table of contents
 1. [Introduction](#introduction)
@@ -39,7 +39,7 @@ Both name tag categories are referred to as "primary tier" tags.
 * **folder meta** tag - a non-name folder which can, for example, be used to group other name folders together by some attribute. Such folders should have a certain symbol as the first character in their name, by default '!'. Can also be referred to as "!meta" tag for short.
 Both meta tag categories are "secondary tier" tags.
 * **unknown** - any unrecognized tag, the tag that is not found in any database
-* **group, solo and unsorted** - these are pointers to special folders that you might have for images having several people in them, only a single person that doesn't have own folder and finally, a folder for images having some unrecognized tags, respectively. Of course you can have all these pointers direct to a single folder if you don't have such a deliberate organization. Note that in the current version pointers can't direct to the root folder itself, only a subdir.
+* **group, solo and unsorted** - these are pointers to special folders that you might have for images having several people in them, only a single person that doesn't have own folder and finally, a folder for images having some unrecognized tags, respectively. Of course you can have all these pointers direct to a single folder if you don't have such a deliberate organization.
 
 The table below shows all the possible combinations of tags in every category and the folder that will be assigned to an image in every case. Destination is relative to the root folder and assumes you have separate directories for every special folder pointer as described above.
 Before '\' is the folder name, after is the filename composed by the script, followed by any meta tags if present. The original image filename is appended to the end of all that, ensuring uniqueness.
@@ -57,11 +57,13 @@ Before '\' is the folder name, after is the filename composed by the script, fol
 As you can see, the effect of having a single !meta tag is that it replaces solo or group folder if they were to be used in that particular case. Having more than one !meta tag, however, makes the script act like with the usual meta tags, because we can't choose any particular !meta folder among them.
 In case of unrecognized tags presence they're all added to filename; if there are tags requiring translation they are enclosed in [ ] brackets for better searchability.
 
-## Script contents
+## Сontents
 Currently the project consists of two userscripts, called "animage-post" and "animage-get". Note that despite having "animage" in the name they are configured to work with the majority of tumblr blogs, or, rather, popular themes, and also on the dashboard. "Animage" is there just for legacy and tribute reasons, because I started development of this project when I was only using http://animage.tumblr.com.
 * animage-**post** runs on tumblr pages that have posts - including /search/, /tagged/, /dashboard and pretty much every page within a personal tumblr blog except for /archive so far. This script collects tag data for every post and *posts* it to the tag DB (thus the name) for later use. The script usually does not require user interaction; it shows a progressbar in page title that gets filled with numbers representing amount of images in every found photo post on page or empty space if no tags or photos are found. 
 * animage-**get** runs on directly-linked images opened in separate tabs. It gets the tag data from the DB for the currently opened image, prepares filename and path and allows you to *get* the image and this information required to save it. The file name is formed with Downloadify flash button, the path is copied to system clipboard upon clicking it. 
 The GET script provides a GUI, allowing the user to fill in missing tags and their translations if required. GUI also can be used to toggle debug mode and export or import auxiliary tag databases.
+
+There's also an addon version with same functionality for Firefox that incorporates both scripts and provides a GUI, get it [here](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/!Firefox%20addon). 
 
 ## Data required for the script
 In order to make proper decisions, the script needs to consult several databases of tags, namely, the folder, name and meta databases.
@@ -101,7 +103,7 @@ Basically, every theme that has post containers with `'class="post"'` and contai
 
 PixelUnion Fluid is very weird and I coudln't find enough blogs using it to test all features. The Minimalist theme might miss the saved images indication feature.
 
-Themes with inbuilt flash content such as music players are not supported. It seems that flash presence makes flash cookies DB unable to load. There is a chance that it might be not an issue of my script but rather of the flash cookies themselves. So far I have no idea how to fix this, but such themes are a minority anyway.  
+Themes with inbuilt WikPlayer are not supported. It seems that said player wraps the entire page into an iframe hosted elsewhere which breaks things.  
   Blogs with password-only access or custom domains aren't supported either due to API limitations.
 
 ## Additional features
@@ -116,7 +118,7 @@ Other features include changing destination of links on single image posts direc
 #### First-time configuration
 Once you've installed the scripts (for instructions see README in the version folder of your choice) you'll need to fill in at least the **Folders** database which is located in the GET script. You can use the `dir /s/b/o:n/A:D > folders.txt` command from the root directory to get the list of all folders and subfolders in text format, then use software like Excel to format the list further.  Make sure to avoid using symbols illegal for file paths in your OS and don't forget to use double '\\' instead of single everywhere. Note that if you intend to use both unicode and ansi tags, you can avoid having to enter both variations of a single tag pointing to one folder. Just enter the unicode tag : roman folder name  pair and enable "useFolderNames" option in settings.
 
-By default the DB has the configuration that I'm using myself, around 80 japanese name tags in kanji translating to folder names in English. Additionally you might want to fill in the auxiliary **name** and **meta** databases if your use case happens to be the same as mine. Use the import feature for that. From a tab with opened image  enable debug via `+settings+` menu in GUI. Then choose `import db` there, and select the [`names&meta tags DB.txt`](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/names%26meta%20tags%20DB.txt) file that I provided in the repository. You can edit it to your liking beforehand (use something better than just Notepad, I recommend Notepad++), just make sure not to violate it's structure. The auxiliary DB has around 150+ more names and 20 meta tags with translations. You might want to disable debug mode afterwards.
+By default the DB has the configuration that I'm using myself, around 80 japanese name tags in kanji translating to folder names in English. Additionally you might want to fill in the auxiliary **name** and **meta** databases if your use case happens to be the same as mine. Use the import feature for that. From a tab with opened image  enable debug via `+settings+` menu in GUI. Then choose `import db` there, and select the [`names&meta tags DB.txt`](https://github.com/Seedmanc/Tumblr-image-sorter/blob/master/names%26meta%20tags%20DB.json.txt) file that I provided in the repository. You can edit it to your liking beforehand (use something better than just Notepad, I recommend Notepad++), just make sure not to violate it's structure. The auxiliary DB has around 150+ more names and 20 meta tags with translations. You might want to disable debug mode afterwards.
 
 Note that if there are duplicating tag entries among these 3 DBs, the following hierarchy takes place: **Folders > names > meta**.
 
@@ -124,7 +126,7 @@ Another thing to note, there are limits on the amount of data stored in flash co
 
 #### Settings
 
-In the current version most settings are changed via editing the values inside the scripts, no centralized GUI so far.
+In the userscript version most settings are changed via editing the values inside the scripts, no centralized GUI so far. Addon has a specialized GUI.
 
 The settings area can be found in the beginning of each script, right after the userscript header. Default values should be fine for usage right away.
 
@@ -201,18 +203,16 @@ By default the script is configured to use pre-hosted libraries and media linked
 
 ### Current status
 
-v[1.1](https://github.com/Seedmanc/Tumblr-image-sorter/releases)
+v[1.2](https://github.com/Seedmanc/Tumblr-image-sorter/releases)
 
 * [Opera Native](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Opera%20native) version - **released**
 * [Chrome port](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Chrome%20tampermonkey) - **released**
-* Firefox - planned? Use Chrome version for now.
-
-Since non-native versions are pretty much scripts for Greasemonkey and its clones, perhaps Chrome version should be working for Firefox and other browsers too.
+* [Firefox addon](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/!Firefox%20addon) - **release**. You can also use Chrome userscript version in Greasemonkey.
 
 ### Major TODOs  
   (aka "How you can help")
 
-* Make the Folder database into a separate file instead of it being inside the script. If impossible, have it stored in a flashDB with a decent GUI for editing.
+* Make the Folder database into a separate file instead of it being inside the script. If impossible, have it stored in a flashDB with a decent GUI for editing (actual for userscript version, in addon you can export and import it as text)
 
 I still have yet to find a way for a userscript to load information from a file on HDD automatically.
 
@@ -222,7 +222,7 @@ Should help with lazy rebloggers never properly tagging anything.
 
 * Add support for infinite scroll
 
-Will probably have to hook on the post retrieval events or something. Oh the glitches.
+Will probably have to hook on the post retrieval events or something. Oh the glitches. You can use no-scroll addons so far.
 
 * Add ability to enter new tags in addition to editing existing, plus implement propagation of changes among images of same post. 
 
@@ -236,9 +236,7 @@ Will have to think of a way to store folder lists more efficiently than in an ob
 
 * Make a no-flash version, depending entirely on HTML5 and *monkey API for its functionality
 
-Should ensure support for pages with inbuilt flash content, which currently prevents the script from functioning.  
-  Although there's literally nothing wrong with using Flash in your app, there's still enough of flashephobes around refusing to install it (while being perfectly fine with using this piece of s..oftware called Chrome). Therefore I challenge you to prove your point and find me a solution just as elegant as I'm using here, allowing for crossdomain data storage, but without Flash.
-
+Already done in addon version.  
 
 ## Future possibilities
 * Add a third script which would create and show a statistics page about information collected over time. For example, it would track the amount of images collected to every folder as well as the most saved tags without a folder and make suggestions about making a directory for that particular tag. Such a page would also allow for a more functional GUI than the one the GET script has to offer.
