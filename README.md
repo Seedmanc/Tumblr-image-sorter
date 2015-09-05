@@ -201,13 +201,13 @@ This userscript uses the following libraries:
 
 By default the script is configured to use pre-hosted libraries and media linked to my Dropbox, so you don't have to worry about hosting them yourself, unless specified otherwise in the installation notes of a particular script version. Should you want to do that regardless, take a look at the [dependencies](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/dependencies) and [media](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/media) folders, they have the necessary files or links to repositories containing them.
 
-### Current status
+### Current status & versions
 
 v[1.2](https://github.com/Seedmanc/Tumblr-image-sorter/releases)
 
-* [Opera Native](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Opera%20native) version - **released**
+* [Opera Native](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Opera%20native) - **released**
 * [Chrome port](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/Chrome%20tampermonkey) - **released**
-* [Firefox addon](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/!Firefox%20addon) - **release**. You can also use Chrome userscript version in Greasemonkey.
+* [Firefox addon](https://github.com/Seedmanc/Tumblr-image-sorter/tree/master/!Firefox%20addon) - **released**. You can also use Chrome userscript version in Greasemonkey.
 
 ### Major TODOs  
   (aka "How you can help")
