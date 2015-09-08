@@ -101,7 +101,6 @@ addon.port.on("stored", function(response){
 				
 var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);					//characters not allowed in filenames
 var merge=false;
-var panelData={lists:{}, options:{}};
 
 function storePanelData(){
 	var lists={}; var options={post:{}, image:{}};
@@ -121,11 +120,12 @@ function storePanelData(){
 
 function applyPanelData(panelData){ 
 	var lists=panelData.lists; var options=panelData.options;
-	assignFolderData(panelData.lists.folders);
-	assignNaMeData(panelData.lists.name);
-	$('input#ignore').prop('value', panelData.lists.ignore.join(', ')).change();
 	
-	$('#highlightColor').prop('value', panelData.options.post.highlightColor);
+	assignFolderData(lists.folders);
+	assignNaMeData(lists.name);
+	$('input#ignore').prop('value', lists.ignore.join(', ')).change();
+	
+	$('#highlightColor').prop('value', options.post.highlightColor);
 	$('#enableOnDashboard').prop('checked', options.post.enableOnDashboard);
 	$('#linkify').prop('checked', options.post.linkify);
 	$('#allowUnicode').prop('checked', options.image.allowUnicode);

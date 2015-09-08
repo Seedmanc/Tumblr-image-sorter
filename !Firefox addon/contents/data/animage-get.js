@@ -121,7 +121,7 @@ function main(record){ 														//Launch tag processing and handle afterwor
 
 function isANSI(s) {														//Some tags might be already in roman and do not require translation
 	var is=true;
-	var s=s.split('');
+	s=s.split('');
 	$.each(s,function(i,v){
 		is=is&&(/[\u0000-\u00ff]/.test(v));});
     return is;
@@ -136,7 +136,7 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 	var fldrs=[];
 	var nms=[];
 	var mt=[];
-	var ansi={}
+	var ansi={};
 	var rest=[];
 	var sp;
 	tags=$.map(tags, function(v,i){											//Some formatting is applied to the taglist before processing
@@ -344,12 +344,12 @@ function swap(txt){															//Swap roman tags consisting of 2 words
 	);
 };
 
-function selected(inp){														//Hide the corresponding roman tag from results when it has been selected 
+function selected(){														//Hide the corresponding roman tag from results when it has been selected 
 	var ansi=$('td.ansi');													// as a translation for unicode tag
 	var unicode=$('td.unicode').find('input.txt');								 
-	var knj={};
+	var unc={};
 	$.each(unicode,function(i,v){
-		knj[v.value]=true;
+		unc[v.value]=true;
 		$.each(ansi,function(ix,vl){ 										//Have to show a previously hidden tag if another was selected
 			if (vl.textContent.trim()==v.value.trim())
 				$(vl).parent().attr('hidden','hidden');
@@ -358,7 +358,7 @@ function selected(inp){														//Hide the corresponding roman tag from res
 		}
 	);
 	$.each(ansi,function(ix,vl){											 
-			if ((!knj[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
+			if ((!unc[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
 				$(vl).parent().removeAttr('hidden');						 
 			}
 		);

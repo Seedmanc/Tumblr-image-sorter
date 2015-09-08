@@ -162,10 +162,8 @@ function process(postData) {														//Process information obtained from AP
 	var img=jQuery([]);
 	var bar='';	var href='';														//Piece of progressbar, (№) for amount of photos in a post,
 																					// space for non-photo posts, ✗ for errors
-	if (res.meta.status!='200') {
+	if (res.meta.status!='200') 
 		throw  new Error('API error: '+res.meta.msg);
-		return;
-	};
 	
 	var isPhoto=res.response.posts[0].type=='photo';
 
@@ -187,7 +185,7 @@ function process(postData) {														//Process information obtained from AP
 			
 			var a='<a href="'+href+'" style=""></a>';
 			i=$(vl);
-			x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;		//Basically either direct parent or grandparent of the image can be a link already
+			var x=i.parent().is('a')?i:i.parent().parent().is('a')?i.parent():i;	//Basically either direct parent or grandparent of the image can be a link already
 			if ((x.parent().is('a'))||(i.width()<128)) 								// in which case we need to skip processing to avoid problems
 				return false;														// as well as if the image is in fact a button and not a part of the post
 			i.wrap(a);
