@@ -3,15 +3,10 @@ var panels = require("sdk/panel");
 var pageMod = require("sdk/page-mod");
 var ss = require("sdk/simple-storage"); 
 var common = require("./data/common-functions.js");  
- 
- var system = require("sdk/system");
- 
-// operating system
-console.log("platform = " + system.platform);
-
+var system = require("sdk/system");
 
  
-var defaults={files:{}, settings:{ root:'', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
+var defaults={files:{}, settings:{ root:system.pathFor('Desk'), metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
 if (!ss.storage.animage)  														//Main storage object
 	ss.storage.animage=defaults; 
@@ -58,7 +53,7 @@ function settingsObject(){
 	return {
 		lists:{
 			folders: {
-				root:		ss.storage.animage.settings.root,
+				root:		ss.storage.animage.settings.root?ss.storage.animage.settings.root:system.pathFor('Desk'),
 				metasymbol:	ss.storage.animage.settings.metasymbol,
 				folders:	ss.storage.animage.folders
 			},
@@ -154,7 +149,7 @@ function isSaved(imageName, worker){
 };
 
 function storeImageData(data, worker){												//Add/modify database record for a filename
-	var oldRec=ss.storage.animage.files[data.fname];									//Check if there's already a record in database for this image	
+	var oldRec=ss.storage.animage.files[data.fname];								//Check if there's already a record in database for this image	
 	var DBrec={s:0, t:data.tags};
 	if ((oldRec)&&(data.merge)) {													// if there is we need to merge existing tags with the new ones 
 		var oldtags=oldRec.t; 
@@ -215,6 +210,3 @@ function attachListeners(worker){
 	});
 	worker.port.emit("init", settingsObject());
 };
-
-
-

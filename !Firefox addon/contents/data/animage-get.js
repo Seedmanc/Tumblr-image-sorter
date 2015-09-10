@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name			Animage-get
 // @description		Format file name & save path for current image by its tags
-// @version	    1.2
+// @version	    1.3
 // @author			Seedmanc
 // @namespace		https://github.com/Seedmanc/Tumblr-image-sorter
 
@@ -37,8 +37,8 @@ var folders={};
 var ignore=[];	
 var names={};
 var meta={};	
-var unsorted;														 
-var platform="windows";	
+var unsorted;
+var slash='\\';
 
 var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
 var tb =$('<table id="translations">');										//Table for entering manual translation of unknown tags
@@ -92,10 +92,12 @@ self.port.on ('init', function(obj){
 	ignore =		obj.lists.ignore;
 	if (useFolderNames)
 		expandFolders();	
-	if (obj.platform=="winnt")
-		platform="windows"
-	else
-		platform="unix";
+	if (obj.platform=="winnt") {
+		slash='\\';
+	}
+	else {
+		slash='/';
+	}
 	self.port.emit('getImageData', getFileName(document.location.href)); 
 }); 
 	
@@ -146,7 +148,7 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 	tags=$.map(tags, function(v,i){											//Some formatting is applied to the taglist before processing
 
 		v=v.replace(/’/g,"\'").replace(/"/g,"''");					
-		v=v.replace(/\\/g, '-');									
+		v=v.replace(/\\|\//g, '-');									
 		v=v.replace(/(ou$)|(ou )/gim,'o ').trim();							//Eliminate variations in writing 'ō' as o/ou at the end of the name in favor of 'o'
 																			// I dunno if it should be done in the middle of the name as well		
 		sp=v.split(' ');	
@@ -203,7 +205,7 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 		delete ansi[y];														// but at the time of deletion there was no way to know yet which one would match
 	});																		//This also gets rid of reverse duplicates between recognized tags and ansi
 	fldrs=mkUniq(fldrs, true);	
-	nms=$(nms).not(fldrs).get();											//subtract fldrs from nms if they happen to have repeating elements
+	nms=$(nms).not(fldrs).get();											//subtract fldrs from nms if they happen to intersect
 	var fldrs2=[];			
 	var fmeta;
 	fldrs=$.grep(fldrs,function(v,i){										//A trick to process folders for meta tags, having subfolders for names inside
@@ -211,7 +213,7 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 		if ((fmeta.indexOf(ms)==0)) {										// such folders must have the metasymbol as the first character
 			fldrs2.push(fmeta);
 			if (fldrs.concat(nms).length==1)								//In the rare case when there are no name tags at all we put the image to meta folder
-				folder+=v+'\\'												// no need to put meta tag into filename this way, since the image will be in the same folder
+				folder+=v+slash												// no need to put meta tag into filename this way, since the image will be in the same folder
 			else
 				mt.push(fmeta.replace(ms,''));	 							//usually it needs to be done though
 			return false;													//exclude processed meta tags from folder category
@@ -246,27 +248,27 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 			return fn+' '+'['+v.replace(/\s/g,'_')+']';						// such tags are enclosed in [ ]  in filename for better searchability on disk
 		},''); 											
 		buildTable(ansi, rest);
-		folder=folders["!unsorted"]+'\\';   								//Mark image as going to "unsorted" folder if it still has untranslated tags
+		folder=folders["!unsorted"]+slash;   								//Mark image as going to "unsorted" folder if it still has untranslated tags
 		filename=fn+' '+filename;
 		document.title+='? ';												//no match ;_;
 	} else											
 	 if ((fldrs.length==1)&&(nms.length==0)){								//Otherwise if there's only one tag and it's a folder tag, assign the image right there
-		folder=fldrs[0]+'\\';
+		folder=fldrs[0]+slash;
 		filename=filename.split(' ');
 		filename.shift();													//Remove the folder name from file name since the image goes into that folder anyway
 		filename=filename.join(' ').trim();
 		document.title+='✓ '; 												//100% match, yay
 	} else
 	 if ((fldrs.length==0)&&(nms.length==1)){								//If there's only one name tag without a folder for it, goes into default "solo" folder
-		folder=folders['!solo']+'\\'; 										// unless we had a !meta folder tag earlier, then the solo folder 
+		folder=folders['!solo']+slash; 										// unless we had a !meta folder tag earlier, then the solo folder 
 																			// would have been replaced with the appropriate !meta folder
 	} else 
 	 if (nms.length+fldrs.length>1)											//Otherwise if there are several name tags, folder or not, move to the default "group" folder
-		folder=folders['!group']+'\\';										// same as the above applies for meta
+		folder=folders['!group']+slash;										// same as the above applies for meta
 		
 	filename=filename.replace(exclrgxp, '-').trim();						//Make sure there are no forbidden characters in the resulting name 
-	document.title+=' \\'+folder+filename;
-	folder=(root+folder).replace(/\\\\/g,'\\');								//If no name or folder tags were found, folder will be set to root directory
+	document.title+=' '+slash+folder+filename;
+	folder=(root+folder).replace(slash+slash, slash);						//If no name or folder tags were found, folder will be set to root directory
 	
 	if (DBrec.s==1) 
 		document.title=('💾 '+document.title).replace('💾 💾','💾');			//Indicate if the image has been marked as saved before

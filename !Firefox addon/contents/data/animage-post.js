@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name		Animage-post
 // @description	Store tags for images and indicate saved state
-// @version		1.2
+// @version		1.3
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 
@@ -88,7 +88,6 @@ function identifyPost(i){															//Find the ID of post in question and re
 				id=getID(pht)
 			else {				
 				throw new Error('IDs not found');
-				return false;
 			};
 		};			
 	};											

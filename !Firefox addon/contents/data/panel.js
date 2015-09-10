@@ -1,5 +1,5 @@
 var merge=false;
-var platform="windows";
+var platform="winnt";
 
 $("#tabs").tabs();
 $("#accordion").accordion({
@@ -81,8 +81,8 @@ $('input#root').on('change', function(e){
 		
 	var winrootrgxp =/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\?$/gi;
 	var unixrootrgxp=/^~?\/(.+\/)*.*\/?$/gi;
-	
-	if (platform=="windows") {
+	var rootrgxp;
+	if (platform=="winnt") {
 		rootrgxp=winrootrgxp;
 		if ((e.target.value)&&(e.target.value[e.target.value.length-1]!='\\'))
 			e.target.value+='\\';
@@ -131,11 +131,7 @@ function storePanelData(){
 
 function applyPanelData(panelData){ 
 	var lists=panelData.lists; var options=panelData.options;
-	
-	if (panelData.platform=="winnt")
-		platform="windows"
-	else
-		platform="unix";
+	platform=panelData.platform;
 	
 	assignFolderData(lists.folders);
 	assignNaMeData(lists.name);
@@ -158,32 +154,6 @@ function checkTag(e){
 	if (!e.target.value)
 		$(e.target).css('background-color', '#FF8080');
 };
-/*
-function checkMatch(e){
-	$(e.target).css('background-color', '');
-	var addrgxp;
-	
-	if (platform=="windows") 
-		addrgxp='|\/';
-	else
-		addrgxp='|\\\\';
-	
-	if ($(e.target).attr("class")=="translation")
-		var newexclrgxp=new RegExp(exclrgxp.source+"|\\\\|\\/", 'g')
-	else
-		newexclrgxp =new RegExp(exclrgxp.source+addrgxp, 'g');
-		
-	e.target.value=e.target.value.trim();
-	e.target.value=e.target.value.replace(/^\\|\\$|^\/|\/$/g, '');		//remove unneeded slashes in the beginning and the end of subfolder names
-	
-	if (newexclrgxp.test(e.target.value)) {
-		$(e.target).css('background-color', '#ffff00');
-		e.target.value=e.target.value.replace(newexclrgxp, '-');
-	};		
-		
-	if (!e.target.value)
-		$(e.target).css('background-color', '#FF8080');
-};*/
 
 function addRow(t){
 	var oldrow=$(t.target).parents('tr:first');
@@ -267,7 +237,7 @@ function imprt(e){
 		var reader = new FileReader();
 		reader.onloadend = function(e) {
 			try {	
-					o=JSON.parse(e.target.result);
+				o=JSON.parse(e.target.result);
 			} catch(err){
 				$('#dialog div').text('Error: '+err.message);
 				$("#dialog").dialog("open"); 
@@ -299,8 +269,9 @@ function imprt(e){
 						obj.folders={};
 
 					$.each(Object.keys(o.folders), function(i, v){
+						var fixed=(platform=="winnt")?o.folders[v].replace(/\//g,'\\') : o.folders[v].replace(/\\/g,'/');
 						if (!obj.folders[v])
-							obj.folders[v]=o.folders[v];
+							obj.folders[v]=fixed;
 					});
 				}
 				else {

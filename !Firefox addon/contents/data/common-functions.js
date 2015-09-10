@@ -15,29 +15,29 @@ function getFileName(fullName, full){										//Source URL processing for filen
 		fullName=fullName.replace(/(tumblr_)|(_\d{2}\d{0,2})(?=\.)/gim,'');
 	fullName=fullName.replace(/\\/g,'/');									//Function is used both for URLs and folder paths which have opposite slashes
 	return fullName.split('/').pop();
-};
+}
 
 
 function mkUniq(arr, sort){													//Ensures uniqueness of array elements, optionally sorting them
 	var to={};
 	for (var i=0;i<arr.length;i++){
 		to[arr[i].toLowerCase()]=true;
-	};
+	}
 	var arr2=Object.keys(to);
 	return (sort)?arr2.sort():arr2;
-};
+}
 
 function checkMatch(e){
 	$(e.target).css('background-color', '');
-	var addrgxp;
+	var addrgxp, newexclrgxp;
 	
-	if (platform=="windows") 
+	if (platform=="winnt") 
 		addrgxp='|\/';
 	else
 		addrgxp='|\\\\';
 	
 	if (($(e.target).attr("class")=="translation")||($(e.target).attr("class")=="txt"))
-		var newexclrgxp=new RegExp(exclrgxp.source+"|\\\\|\\/", 'g')
+		newexclrgxp=new RegExp(exclrgxp.source+"|\\\\|\\/", 'g')
 	else
 		newexclrgxp =new RegExp(exclrgxp.source+addrgxp, 'g');
 		
@@ -47,12 +47,12 @@ function checkMatch(e){
 	if (newexclrgxp.test(e.target.value)) {
 		$(e.target).css('background-color', '#ffff00');
 		e.target.value=e.target.value.replace(newexclrgxp, '-');
-	};		
+	}		
 		
 	if (!e.target.value)
 		$(e.target).css('background-color', '#FF8080');
-};
+}
 
 if ( typeof exports !== "undefined") {										//This is used in both index.js and content script
 	exports.mkUniq = mkUniq;
-};
+}
