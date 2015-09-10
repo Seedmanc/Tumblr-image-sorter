@@ -145,12 +145,20 @@ function checkTag(e){
 
 function checkMatch(e){
 	$(e.target).css('background-color', '');
-	if (exclrgxp.test(e.target.value)) {
-		$(e.target).css('background-color', '#FFBF80');
-		e.target.value=e.target.value.replace(exclrgxp, '-');
-	};		
+	
+	if ($(e.target).attr("class")=="translation")
+		var newexclrgxp=new RegExp(exclrgxp.source+"|\\\\", 'g')
+	else
+		newexclrgxp = exclrgxp;
+		
 	e.target.value=e.target.value.trim();
-	e.target.value=e.target.value.replace(/^\\|\\$/g, '');		
+	e.target.value=e.target.value.replace(/^\\|\\$/g, '');
+	
+	if (newexclrgxp.test(e.target.value)) {
+		$(e.target).css('background-color', '#FFBF80');
+		e.target.value=e.target.value.replace(newexclrgxp, '-');
+	};		
+		
 	if (!e.target.value)
 		$(e.target).css('background-color', '#FF8080');
 };
@@ -204,11 +212,11 @@ function collectNaMeData(){
 	}); 
 	$.each(names, function(i, row){
 		if (row[0]&&row[1])
-			obj.names[row[0]]=row[1].replace('\\', '-');
+			obj.names[row[0]]=row[1];
 	});
 	$.each(meta, function(i, row){
 		if (row[0]&&row[1])
-			obj.meta[row[0]]=row[1].replace('\\', '-');
+			obj.meta[row[0]]=row[1];
 	});
 	return obj;
 };

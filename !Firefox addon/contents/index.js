@@ -4,7 +4,14 @@ var pageMod = require("sdk/page-mod");
 var ss = require("sdk/simple-storage"); 
 var common = require("./data/common-functions.js");  
  
-var defaults={files:{}, settings:{ root:'C:\\my\\collection\\', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
+ var system = require("sdk/system");
+ 
+// operating system
+console.log("platform = " + system.platform);
+
+
+ 
+var defaults={files:{}, settings:{ root:'', metasymbol:'!' ,highlightColor:'#000', enableOnDashboard:true, linkify:true, allowUnicode:false, useFolderNames:true}, folders:{'!group':'!group','!solo':'!solo','!unsorted':'!unsorted' }, auxdb:{names:{ }, meta:{ }}, ignore:[ ]};
 
 if (!ss.storage.animage)  														//Main storage object
 	ss.storage.animage=defaults; 
@@ -208,12 +215,5 @@ function attachListeners(worker){
 	worker.port.emit("init", settingsObject());
 };
 
-/*const { setTimeout } = require("sdk/timers");
 
-     
 
-function handleChange(state) {
-  if (state.checked) {
-    setTimeout(() => panel.show({ position: button }), 100);
-  }
-}*/
