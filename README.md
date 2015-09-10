@@ -236,7 +236,7 @@ Will have to think of a way to store folder lists more efficiently than in an ob
 
 * Make a no-flash version, depending entirely on HTML5 and *monkey API for its functionality
 
-Already done in addon version.  
+This will also make support of OS other than Windows possible. Already done in addon version.  
 
 ## Future possibilities
 * Add a third script which would create and show a statistics page about information collected over time. For example, it would track the amount of images collected to every folder as well as the most saved tags without a folder and make suggestions about making a directory for that particular tag. Such a page would also allow for a more functional GUI than the one the GET script has to offer.
