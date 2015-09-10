@@ -38,7 +38,7 @@ var ignore=[];
 var names={};
 var meta={};	
 var unsorted;														 
-var exclrgxp=/%|\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to be used in filepaths
+var exclrgxp=/\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to be used in filepaths
  	
 var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
 var tb =$('<table id="translations">');										//Table for entering manual translation of unknown tags
@@ -419,7 +419,7 @@ function submit(){															//Collects entered translations for missing tag
 		}
 	);						
 	var tbd=$('#translations > tbody')[0];
-	var to=missing?1000:10;														//If there was missing input, delay before applying changes to show that
+	var to=missing?1000:10;													//If there was missing input, delay before applying changes to show that
 	setTimeout(function(){
 		tbd.parentNode.removeChild(tbd);
 		tb.hide();

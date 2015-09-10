@@ -1,3 +1,6 @@
+var exclrgxp=new RegExp(/:|\||>|<|\?|"|\*/g);					//characters not allowed in filenames
+var merge=false;
+var platform="windows";
 
 $("#tabs").tabs();
 $("#accordion").accordion({
@@ -67,22 +70,34 @@ $('input#ignore').on('change', function(e){							//most of the onchange functio
 });
 $('input#ms').on('change', function(e){
 	$(e.target).css('background-color', '');
-	var msexclrgxp=new RegExp(exclrgxp.source+"|\\s|\\\\", 'g');
+	var msexclrgxp=new RegExp(exclrgxp.source+"|\\/|\\s|\\\\", 'g');
 	if ((!e.target.value)||(msexclrgxp.test(e.target.value))) {
-		e.target.value=e.target.value.replace(msexclrgxp, '!');
+		e.target.value='!';
 		$(e.target).css('background-color', '#FFBF80');				//orange color indicates where the script attempted to fix input mistakes
 	};			
 });	
 $('input#root').on('change', function(e){
-	if ((e.target.value)&&(e.target.value[e.target.value.length-1]!='\\'))
-		e.target.value+='\\';
-	var rootrgxp=/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/gi;
-	$(e.target).css('background-color', ''); 
+	e.target.value=e.target.value.trim();
+		$(e.target).css('background-color', ''); 
+		
+	var winrootrgxp =/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/gi;
+	var unixrootrgxp=/^~?\/(.+\/)*.*\/$/gi;
+	
+	if (platform=="windows") {
+		rootrgxp=winrootrgxp;
+		if ((e.target.value)&&(e.target.value[e.target.value.length-1]!='\\'))
+			e.target.value+='\\';
+	} else {
+		rootrgxp=unixrootrgxp;
+		if ((e.target.value)&&(e.target.value[e.target.value.length-1]!='/'))
+			e.target.value+='/';
+	}
 	if (!rootrgxp.test(e.target.value)) {
 		e.target.focus();											//no idea how to replace wrong characters here
 		$(e.target).css('background-color', '#FF8080');				//red color indicates unfixable errors, user input won't be saved until corrected
-	};			
+	}		
 });	
+
 
 addon.port.on('show', applyPanelData);  
 
@@ -98,9 +113,6 @@ addon.port.on("stored", function(response){
 		$("#dialog").dialog("open");
 	};
 });
-				
-var exclrgxp=new RegExp(/\/|:|\||>|<|\?|"|\*/g);					//characters not allowed in filenames
-var merge=false;
 
 function storePanelData(){
 	var lists={}; var options={post:{}, image:{}};
@@ -120,6 +132,11 @@ function storePanelData(){
 
 function applyPanelData(panelData){ 
 	var lists=panelData.lists; var options=panelData.options;
+	
+	if (panelData.platform=="winnt")
+		platform="windows"
+	else
+		platform="unix";
 	
 	assignFolderData(lists.folders);
 	assignNaMeData(lists.name);
@@ -145,14 +162,20 @@ function checkTag(e){
 
 function checkMatch(e){
 	$(e.target).css('background-color', '');
+	var addrgxp;
+	
+	if (platform=="windows") 
+		addrgxp='|\/';
+	else
+		addrgxp='|\\\\';
 	
 	if ($(e.target).attr("class")=="translation")
-		var newexclrgxp=new RegExp(exclrgxp.source+"|\\\\", 'g')
+		var newexclrgxp=new RegExp(exclrgxp.source+"|\\\\|\\/", 'g')
 	else
-		newexclrgxp = exclrgxp;
+		newexclrgxp =new RegExp(exclrgxp.source+addrgxp, 'g');
 		
 	e.target.value=e.target.value.trim();
-	e.target.value=e.target.value.replace(/^\\|\\$/g, '');
+	e.target.value=e.target.value.replace(/^\\|\\$|^\/|\/$/g, '');		//remove unneeded slashes in the beginning and the end of subfolder names
 	
 	if (newexclrgxp.test(e.target.value)) {
 		$(e.target).css('background-color', '#FFBF80');

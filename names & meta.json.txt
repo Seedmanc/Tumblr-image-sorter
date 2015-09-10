@@ -1,4 +1,4 @@
-{
+﻿{
 	"names": {
 		"津田美波": "Tsuda Minami",
 		"黒沢ともよ": "Kurosawa Tomoyo",

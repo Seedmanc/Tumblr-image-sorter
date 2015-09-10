@@ -78,7 +78,8 @@ function settingsObject(){
 				allowUnicode:		ss.storage.animage.settings.allowUnicode,
 				useFolderNames:		ss.storage.animage.settings.useFolderNames
 			}
-		}
+		},
+		platform:	system.platform
 	};
 };
 
