@@ -38,8 +38,8 @@ var ignore=[];
 var names={};
 var meta={};	
 var unsorted;														 
-var exclrgxp=/\/|:|\||>|<|\?|"|\*/g;										//Pattern of characters not to be used in filepaths
- 	
+var platform="windows";	
+
 var out=$('<div id="output"><div id="down"></div></div>');					//Main layer that holds the GUI 
 var tb =$('<table id="translations">');										//Table for entering manual translation of unknown tags
 
@@ -92,6 +92,10 @@ self.port.on ('init', function(obj){
 	ignore =		obj.lists.ignore;
 	if (useFolderNames)
 		expandFolders();	
+	if (obj.platform=="winnt")
+		platform="windows"
+	else
+		platform="unix";
 	self.port.emit('getImageData', getFileName(document.location.href)); 
 }); 
 	
@@ -344,7 +348,7 @@ function swap(txt){															//Swap roman tags consisting of 2 words
 	);
 };
 
-function selected(){														//Hide the corresponding roman tag from results when it has been selected 
+function selected(e){														//Hide the corresponding roman tag from results when it has been selected 
 	var ansi=$('td.ansi');													// as a translation for unicode tag
 	var unicode=$('td.unicode').find('input.txt');								 
 	var unc={};
@@ -358,10 +362,10 @@ function selected(){														//Hide the corresponding roman tag from result
 		}
 	);
 	$.each(ansi,function(ix,vl){											 
-			if ((!unc[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
-				$(vl).parent().removeAttr('hidden');						 
-			}
-		);
+		if ((!unc[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
+			$(vl).parent().removeAttr('hidden');						 
+	});
+	checkMatch(e);
 };
  
 
@@ -378,6 +382,9 @@ self.port.on('stored', function(){
 });	
 
 function submit(){															//Collects entered translations for missing tags
+	$('input.txt').css("background-color","");
+	$('input.category').parent().parent().css("background-color","");
+	
 	var tgs=$('td.cell');													// saves them to databases and relaunches tag analysis with new data
 	var missing=false;
 	var tg,t;
@@ -403,9 +410,9 @@ function submit(){															//Collects entered translations for missing tag
 				missing=true;												//Indicate unicode characters in user input unless allowed
 			} 
 			else if (cat[0].checked) 										//name category was selected for this tag
-				names[v.textContent.trim().toLowerCase()]=tg.replace(exclrgxp,'-')		
+				names[v.textContent.trim().toLowerCase()]=tg		
 			else if (cat[1].checked)										//meta category was selected
-				meta[v.textContent.trim().toLowerCase()]=tg.replace(exclrgxp,'-')
+				meta[v.textContent.trim().toLowerCase()]=tg
 			else { 															//no category was selected, indicate missing input
 				$(cat[0].parentNode.parentNode ).css("background-color","#ff8080");
 				missing=true;
@@ -419,12 +426,12 @@ function submit(){															//Collects entered translations for missing tag
 		}
 	);						
 	var tbd=$('#translations > tbody')[0];
-	var to=missing?1000:10;													//If there was missing input, delay before applying changes to show that
-	setTimeout(function(){
+	
+	if (!missing) {
 		tbd.parentNode.removeChild(tbd);
 		tb.hide();
 		analyzeTags();
-	}, to);
+	}
 };
 	
 //TODO: add checks for common mistakes in unicode names like 実/美 & 奈/菜

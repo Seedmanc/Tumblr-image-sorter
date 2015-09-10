@@ -1,4 +1,5 @@
-﻿
+﻿var exclrgxp=/:|\||>|<|\?|"|\*/g;											//Pattern of characters not to be used in filepaths
+
 function getFileName(fullName, full){										//Source URL processing for filename
 	var i;
 	full=full || false;
@@ -26,6 +27,31 @@ function mkUniq(arr, sort){													//Ensures uniqueness of array elements, 
 	return (sort)?arr2.sort():arr2;
 };
 
+function checkMatch(e){
+	$(e.target).css('background-color', '');
+	var addrgxp;
+	
+	if (platform=="windows") 
+		addrgxp='|\/';
+	else
+		addrgxp='|\\\\';
+	
+	if (($(e.target).attr("class")=="translation")||($(e.target).attr("class")=="txt"))
+		var newexclrgxp=new RegExp(exclrgxp.source+"|\\\\|\\/", 'g')
+	else
+		newexclrgxp =new RegExp(exclrgxp.source+addrgxp, 'g');
+		
+	e.target.value=e.target.value.trim();
+	e.target.value=e.target.value.replace(/^\\|\\$|^\/|\/$/g, '').trim();	//remove unneeded slashes in the beginning and the end of subfolder names
+	
+	if (newexclrgxp.test(e.target.value)) {
+		$(e.target).css('background-color', '#ffff00');
+		e.target.value=e.target.value.replace(newexclrgxp, '-');
+	};		
+		
+	if (!e.target.value)
+		$(e.target).css('background-color', '#FF8080');
+};
 
 if ( typeof exports !== "undefined") {										//This is used in both index.js and content script
 	exports.mkUniq = mkUniq;

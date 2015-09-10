@@ -1,4 +1,3 @@
-var exclrgxp=new RegExp(/:|\||>|<|\?|"|\*/g);					//characters not allowed in filenames
 var merge=false;
 var platform="windows";
 
@@ -73,15 +72,15 @@ $('input#ms').on('change', function(e){
 	var msexclrgxp=new RegExp(exclrgxp.source+"|\\/|\\s|\\\\", 'g');
 	if ((!e.target.value)||(msexclrgxp.test(e.target.value))) {
 		e.target.value='!';
-		$(e.target).css('background-color', '#FFBF80');				//orange color indicates where the script attempted to fix input mistakes
+		$(e.target).css('background-color', '#ffff00');				//orange color indicates where the script attempted to fix input mistakes
 	};			
 });	
 $('input#root').on('change', function(e){
 	e.target.value=e.target.value.trim();
 		$(e.target).css('background-color', ''); 
 		
-	var winrootrgxp =/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\$/gi;
-	var unixrootrgxp=/^~?\/(.+\/)*.*\/$/gi;
+	var winrootrgxp =/^([a-z]:){1}(\\[^<>:"/\\|?*]+)+\\?$/gi;
+	var unixrootrgxp=/^~?\/(.+\/)*.*\/?$/gi;
 	
 	if (platform=="windows") {
 		rootrgxp=winrootrgxp;
@@ -152,14 +151,14 @@ function applyPanelData(panelData){
 function checkTag(e){
 	$(e.target).css('background-color', '');
 	if (e.target.value.indexOf(',')!=-1) {
-		$(e.target).css('background-color', '#FFBF80');
+		$(e.target).css('background-color', '#ffff00');
 		e.target.value=e.target.value.replace(',', ' ');
 	};		
 	e.target.value=e.target.value.toLowerCase().trim();
 	if (!e.target.value)
 		$(e.target).css('background-color', '#FF8080');
 };
-
+/*
 function checkMatch(e){
 	$(e.target).css('background-color', '');
 	var addrgxp;
@@ -178,13 +177,13 @@ function checkMatch(e){
 	e.target.value=e.target.value.replace(/^\\|\\$|^\/|\/$/g, '');		//remove unneeded slashes in the beginning and the end of subfolder names
 	
 	if (newexclrgxp.test(e.target.value)) {
-		$(e.target).css('background-color', '#FFBF80');
+		$(e.target).css('background-color', '#ffff00');
 		e.target.value=e.target.value.replace(newexclrgxp, '-');
 	};		
 		
 	if (!e.target.value)
 		$(e.target).css('background-color', '#FF8080');
-};
+};*/
 
 function addRow(t){
 	var oldrow=$(t.target).parents('tr:first');
