@@ -122,7 +122,6 @@ function identifyPost(i){															//Find the ID of post in question and re
 				id=getID(pht)
 			else {				
 				throw new Error('IDs not found');
-				return false;
 			};
 		};			
 	};												 

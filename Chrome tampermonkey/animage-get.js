@@ -313,22 +313,26 @@ try {
 	throw err;
 };				
 
-function checkMatch(obj){													//Remove trailing whitespace in object keys and values & check correctness of user input 
+function checkMatch(obj,fix){												//Remove trailing whitespace in object keys and values & check correctness of user input 
+	fix=fix||false;
   try {																		//make sure that folder names have no illegal characters
 	for (var key in obj) {													//Convert keys to lower case for better matching
 		if (obj.hasOwnProperty(key)) { 
-			t=obj[key].trim().replace(/^\\|\\$/g, '');			
+			t=obj[key].trim().replace(/^\\|\\$/g, '').trim();			
 			delete obj[key];
 			k=key.trim().toLowerCase();
 			obj[k]=t;
 			if (exclrgxp.test(obj[k]))  									//Can't continue until the problem is fixed
-				throw new Error('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"'); 
+				if (!fix)
+					throw new Error('Illegal characters in folder name entry: "'+obj[k]+'" for name "'+k+'"')
+				else
+					obj[k]=t.replace(exclrgxp, '-');
 		};
 	};
   } catch (err) {
-		if (!debug)
-			alert(err.name+': '+err.message);								//Gotta always notify the user 
-		throw err;
+	if (!debug)
+		alert(err.name+': '+err.message);								//Gotta always notify the user 
+	throw err;
   };														//TODO: even more checks here
 }; 															
 
@@ -674,7 +678,8 @@ function swap(txt){															//Swap roman tags consisting of 2 words
 	);
 };
 
-function selected(inp){														//Hide the corresponding roman tag from results when it has been selected 
+function selected(e){														//Hide the corresponding roman tag from results when it has been selected 
+	$(e.target).css('background-color','');
 	ansi=$('td.ansi');														// as a translation for kanji tag
 	kanji=$('td.kanji').find('input.txt');									//that's not a filename, fyi
 	knj={};
@@ -683,16 +688,19 @@ function selected(inp){														//Hide the corresponding roman tag from res
 		$.each(ansi,function(ix,vl){ 										//Have to show a previously hidden tag if another was selected
 			if (vl.textContent.trim()==v.value.trim())
 				$(vl).parent().attr('hidden','hidden');
-			}
-		);
-		}
-	);
-	$.each(ansi,function(ix,vl){											//I don't even remember how and why this works
-			if ((!knj[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
-				$(vl).parent().removeAttr('hidden');						// but it does
-			}
-		);
-};
+		});
+	});
+	$.each(ansi,function(ix,vl){
+		if ((!knj[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
+			$(vl).parent().removeAttr('hidden');
+	});
+	var test={tag:e.target.value};
+	checkMatch(test, true);
+	if (test.tag!=e.target.value) {
+		$(e.target).css('background-color','#ffff00');
+		e.target.value=test.tag;
+	}
+}
 
 function mkUniq(arr){														//Sorts an array and ensures uniqueness of its elements
 	to={};
@@ -746,6 +754,7 @@ function onCmplt(){															//Mark image as saved in the tag database
 
 function submit(){															//Collects entered translations for missing tags
 	tgs=$('td.cell');														//saves them to databases and relaunches tag analysis with new data
+	$('input.category').parent().parent().css("background-color","");
 	missing=false;
 	$.each(tgs,function(i,v){
 		if ($(v).parent().attr('ignore')) {
@@ -765,13 +774,13 @@ function submit(){															//Collects entered translations for missing tag
 		cat=$(v).find('input.category');
 		if (tg.length){
 			if (!isANSI(tg)&&!allowUnicode) {
-				$(v).find('input.txt').css("background-color","#ffC080");
+				$(v).find('input.txt').css("background-color","#ffb080");
 				missing=true;												//Indicate unicode characters in user input
 			} 
 			else if (cat[0].checked) 										//name category was selected for this tag
-				names.set(v.textContent.trim().toLowerCase(),tg.replace(exclrgxp,'-'))		
+				names.set(v.textContent.trim().toLowerCase(),tg)		
 			else if (cat[1].checked)										//meta category was selected
-				meta.set(v.textContent.trim().toLowerCase(), tg.replace(exclrgxp,'-'))
+				meta.set(v.textContent.trim().toLowerCase(), tg)
 			else { 															//no category was selected, indicate missing input
 				$(cat[0].parentNode.parentNode ).css("background-color","#ff8080");
 				missing=true;
@@ -785,12 +794,11 @@ function submit(){															//Collects entered translations for missing tag
 		}
 	);						
 	tbd=$('#translations > tbody')[0];
-	to=missing?1000:10;														//If there was missing input, delay before applying changes to show that
-	setTimeout(function(){
+	if (!missing){
 		tbd.parentNode.removeChild(tbd);
 		tb.hide();
 		analyzeTags();
-	}, to);
+	};
 };
 
 function ex(){																//Export auxiliary tag databases as a text file
