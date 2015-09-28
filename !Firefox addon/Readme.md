@@ -8,7 +8,7 @@ Finally a version with an actual GUI, ability to save/load both folder and name 
 
 #### Get it from AMO here:  [https://addons.mozilla.org/firefox/addon/tumblr-image-sorter/](https://addons.mozilla.org/firefox/addon/tumblr-image-sorter/) 
 
-If for some reason it's unavailable there, you download the .xpi file from here and drop it on your browser's window, that'll install it. Note that in this case for FF starting with 41 it'll refuse launching unsigned addons at all, so you'll need to go to about:config#xpinstall.signatures.required and change that to false.  
+If for some reason it's unavailable there, you can download the .xpi file from here and drop it on your browser's window, that'll install it. Note that in this case for FF starting with 41 it'll refuse launching unsigned addons at all, so you'll need to go to about:config#xpinstall.signatures.required and change that to false.  
 
 ## GUI manual
 
@@ -29,13 +29,13 @@ Addon provides input validation for all fields. The rules are as follows:
 |:-:          |---  |---              |
 |Ignore|Words separated by commas|Trailing whitespace and extra commas removed|
 |Root| Full path to a folder including disc letter  |Marked red, input discarded|  
-|Metasymbol|Characters legal for file names, except space| Marked orange, replaced by '!'|
-|Folders left pane| Any characters except commas, not empty|Marked orange, commas replaced by spaces. Marked red on empty, whole row discarded|
-|Folders right pane|Characters legal for file paths (including backslash), not empty|Marked orange, illegal characters replaced by dashes. Marked red on empty, whole row discarded|
+|Metasymbol|Characters legal for file names, except space| Marked yellow, replaced by '!'|
+|Folders left pane| Any characters except commas, not empty|Marked yellow, commas replaced by spaces. Marked red on empty, whole row discarded|
+|Folders right pane|Characters legal for file paths (including backslash), not empty|Marked yellow, illegal characters replaced by dashes. Marked red on empty, whole row discarded|
 |Name & meta left pane|Same as folders|Same as folders|
 |Name & meta right pane|Same as folders (excluding backslash)|Same as folders|
 
-In short, only the root and the three special folder entries (solo, group and unsorted) are essential and will be marked red if filled incorrectly/left blank. Other input mistakes are not critical and the addon will attempt to fix them by removing/replacing incorrect characters, while marking the input orange for user attention.
+In short, only the root and the three special folder entries (solo, group and unsorted) are essential and will be marked red if filled incorrectly/left blank. Other input mistakes are not critical and the addon will attempt to fix them by removing/replacing incorrect characters, while marking the input yellow for user attention.
 
 ### Loading and saving databases.
 
@@ -69,4 +69,4 @@ Refer to the [main readme entry](https://github.com/Seedmanc/Tumblr-image-sorter
 ### Version-specific TODOs
 
 * Make the addon open save dialog directly at the determined folder, avoiding clipboard usage.
-* Add ability to parse `dir /s/b/o:n/A:D > folders.txt` output to fill in right pane of the Folder List, saving time on entering it manually.
+* Add ability to parse `dir /s/b/o:n/A:D > folders.txt` output to fill in the right pane of the Folder List, saving time on entering it manually.
