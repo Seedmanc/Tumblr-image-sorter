@@ -98,9 +98,9 @@ function getID(lnk){															//extract numerical post ID from self-link
 
 function main(){																//search for post IDs on page and call API to get info about them
 	if (debug) 
-		jQuery("div[id^='SwfStore_animage_']").css('top','0').css('left','0').css("position",'absolute')
+		jQuery("div[id^='SwfStore_animage_']").css({'top':'0','left':'0',"position":'absolute'})
 	else																		//bring the flash window in or out of the view depending on the debug mode
-		jQuery("div[id^='SwfStore_animage_']").css('top','-2000px').css('left','-2000px').css("position",'absolute');
+		jQuery("div[id^='SwfStore_animage_']").css({'top':'-2000px','left':'-2000px',"position":'absolute'});
 	if (isDash)
 		posts=jQuery('ol.posts').find('div.post').not('.new_post')				//getting posts on dashboard is straightforward with its constant design,
 	else {																		// but outside of it are all kinds of faulty designs, so we have to experiment

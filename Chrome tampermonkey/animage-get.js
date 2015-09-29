@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name		Animage-get
 // @description	Format file name & save path for current image by its tags
-// @version	    1.2
+// @version	    1.3.1
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 
@@ -331,7 +331,7 @@ function checkMatch(obj,fix){												//Remove trailing whitespace in object 
 	};
   } catch (err) {
 	if (!debug)
-		alert(err.name+': '+err.message);								//Gotta always notify the user 
+		alert(err.name+': '+err.message);									//Gotta always notify the user 
 	throw err;
   };														//TODO: even more checks here
 }; 															
@@ -368,7 +368,7 @@ function onDOMcontentLoaded(){ 												//Load plugins and databases
 	
 	href=document.location.href;
 	if (href.indexOf('tumblr')==-1) 										//If not on tumblr
-		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))			// check if this is actually an image link
+		if (!(/(jpe?g|bmp|png|gif)/gi).test(href.split('.').pop()))			// check if this is actually an image link
 			return;
 	$('img').wrap("<center></center>");
 	$('body').append(out);
@@ -435,7 +435,7 @@ function mutex(){															//Check readiness of plugins and databases when 
 };
 	
 function main(){ 															//Launch tag processing and handle afterwork
-	$( "<style>"+style.s+"</style>" ).appendTo( "head" );					//assign functions to events and whatnot
+	$("<style>"+style.s+"</style>" ).appendTo( "head" );					//assign functions to events and whatnot
 	$('div#output').append(port);	
 	toggleSettings();	
 	$('input#debug').prop('checked',debug);	
@@ -508,7 +508,7 @@ function analyzeTags() {   													//This is where the tag matching magic o
 	});		
 																			//1st sorting stage, no prior knowledge about found categories
 	$.each(tags, function(i,v){ 											//Divide tags for the image into 5 categories
-		if (folders[v]) 													//	the "has folder" category
+		if (folders.hasOwnProperty(v)) 										//	the "has folder" category
 			fldrs.push(folders[v])
 		else if (names.get(v)) 												//	the "no folder name tag" category
 			nms.push(names.get(v))
@@ -525,13 +525,13 @@ function analyzeTags() {   													//This is where the tag matching magic o
 						nms.push(names.get(rvrs))							// try to find database entry for reversed order first,
 						return true;									
 					}
-					else if (ansi[rvrs])									// then check for duplicates		
+					else if (ansi.hasOwnProperty(rvrs))									// then check for duplicates		
 						return true;
 				}
 				ansi[v]=true;											
 			};
 		}				 
-		else
+		else 
 			rest.push(v);													//	finally the "untranslated" category
 	});
 																			//2nd sorting stage, now we know how many tags of each category there are
@@ -691,7 +691,7 @@ function selected(e){														//Hide the corresponding roman tag from resul
 		});
 	});
 	$.each(ansi,function(ix,vl){
-		if ((!knj[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
+		if ((!knj.hasOwnProperty(vl.textContent.trim()))&&(!$(vl).parent().attr('ignore')))
 			$(vl).parent().removeAttr('hidden');
 	});
 	var test={tag:e.target.value};
@@ -710,7 +710,7 @@ function mkUniq(arr){														//Sorts an array and ensures uniqueness of it
 	return arr2.sort();														//I thought key names are already sorted in an object but for some reason they're not
 };
 
-function getFileName(fullName, full){											//Source URL processing for filename
+function getFileName(fullName, full){										//Source URL processing for filename
 	full=full || false;
 	fullName=fullName.replace(/(#|\?).*$/gim,'');							//first remove url parameters
 	if (fullName.indexOf('xuite')!=-1) {									//This blog names their images as "(digit).jpg" causing filename collisions
@@ -761,6 +761,8 @@ function submit(){															//Collects entered translations for missing tag
 			ignore.push(v.id);												//Mark hidden tags as ignored
 			return true;
 		};
+		if ($(v).parent().attr('hidden'))
+			return true;
 		tg=$(v).find('input.txt');
 		if (tg.length)
 			tg=tg[0].value.trim();											//found translation tag

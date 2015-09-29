@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name		Animage-post
 // @description	Store tags for images and indicate saved state
-// @version		1.2
+// @version		1.3.1
 // @author		Seedmanc
 // @namespace	https://github.com/Seedmanc/Tumblr-image-sorter
 
@@ -149,9 +149,9 @@ function loadAndExecute(url, callback){												//Load specified js library a
 
 function main(){																	//Search for post IDs on page and call API to get info about them 
 	if (debug) 
-		jQuery("div[id^='SwfStore_animage_']").css('top','0').css('left','0').css("position",'absolute').css('opacity','0.8');
+		jQuery("div[id^='SwfStore_animage_']").css({'top':'0','left':'0',"position":'absolute','opacity':'0.8'});
 	else																			//Bring the flash window in or out of the view depending on the debug mode
-		jQuery("div[id^='SwfStore_animage_']").css('top','-2000px').css('left','-2000px').css("position",'absolute');
+		jQuery("div[id^='SwfStore_animage_']").css({'top':'-2000px', 'left':'-2000px', "position":'absolute'});
 	if (isDash)
 		posts=jQuery('ol.posts').find('div.post').not('.new_post')					//Getting posts on dashboard is straightforward with its constant design,
 	else {																			// but outside of it are all kinds of faulty designs, so we have to experiment
@@ -204,13 +204,6 @@ function mutex(){																	//Check readiness of libraries being loaded si
 		main();																		//when everything is loaded, proceed further
 	}
 };
-
-/*if (typeof masonite != 'undefined')
-	jQuery(window).load(function(){													//some themes require waiting till their own functions finish
-		onDOMContentLoaded();
-	})
-else
-	onDOMContentLoaded();*/
 	
 function onDOMContentLoaded(){														//Load plugins 
 

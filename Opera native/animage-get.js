@@ -350,7 +350,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		return;
 	href=document.location.href;
 	if (href.indexOf('tumblr')==-1) 									//if not on tumblr
-		if (!(/(jpe*g|bmp|png|gif)/gi).test(href.split('.').pop()))		//check if this is actually an image link
+		if (!(/(jpe?g|bmp|png|gif)/gi).test(href.split('.').pop()))		//check if this is actually an image link
 			return;
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){
 		$('body')[0].appendChild(out);
@@ -505,7 +505,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	});		
 																		//1st sorting stage, no prior knowledge about found categories
 	$.each(tags, function(i,v){ 										//divide tags for the image into 5 categories
-		if (folders[v]) 												//	the "has folder" category
+		if (folders.hasOwnProperty(v)) 									//	the "has folder" category
 			fldrs.push(folders[v])
 		else if (names.get(v)) 											//	the "no folder name tag" category
 			nms.push(names.get(v))
@@ -522,7 +522,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 						nms.push(names.get(rvrs))						//try to find database entry for reversed order first,
 						return true;									
 					}
-					else if (ansi[rvrs])								// then check for duplicates		
+					else if (ansi.hasOwnProperty(rvrs))					// then check for duplicates		
 						return true;
 				}
 				ansi[v]=true;											
@@ -686,7 +686,7 @@ function selected(inp){													//hide the corresponding roman tag from resu
 		}
 	);
 	$.each(ansi,function(ix,vl){										//I don't even remember how and why this works
-			if ((!knj[vl.innerText.trim()])&&(!$(vl).parent().attr('ignore')))
+			if ((!knj.hasOwnProperty(vl.innerText.trim()))&&(!$(vl).parent().attr('ignore')))
 				$(vl).parent().removeAttr('hidden');					//but it does
 			}
 		);

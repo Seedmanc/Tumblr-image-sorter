@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name			Animage-get
 // @description		Format file name & save path for current image by its tags
-// @version	    1.3
+// @version	    1.3.1
 // @author			Seedmanc
 // @namespace		https://github.com/Seedmanc/Tumblr-image-sorter
 
@@ -103,7 +103,7 @@ self.port.on ('init', function(obj){
 	
 function main(record){ 														//Launch tag processing and handle afterwork
 	if (document.location.href.indexOf('tumblr')==-1) 						//If not on tumblr
-		if (!(/(jpe*g|bmp|png|gif)/gi).test(document.location.href.split('.').pop()))
+		if (!(/(jpe?g|bmp|png|gif)/gi).test(document.location.href.split('.').pop()))
 			return;															// check if this is actually an image link
 			
 	DBrec=record;
@@ -169,11 +169,11 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 	});		
 																			//1st sorting stage, no prior knowledge about found categories
 	$.each(tags, function(i,v){ 											//Divide tags for the image into 5 categories
-		if (folders[v]) 													//	the "has folder" category
+		if (folders.hasOwnProperty(v)) 										//	the "has folder" category
 			fldrs.push(folders[v])
-		else if (names[v]) 													//	the "no folder name tag" category
+		else if (names.hasOwnProperty(v)) 									//	the "no folder name tag" category
 			nms.push(names[v])
-		else if (meta[v])													//	the "no folder meta tag" category,
+		else if (meta.hasOwnProperty(v))									//	the "no folder meta tag" category,
 			mt.push(meta[v])												// which doesn't count towards final folder decision, but simply adds to filename;
 		else if (isANSI(v)) {											
 			if (tags.length==1)												//If the tag is already in roman and has no folder it might be either name or meta
@@ -182,11 +182,11 @@ function analyzeTags( ) {   												//This is where the tag matching magic o
 				var splt=v.split(' ');
 				if (splt.length==2)	{										//Some bloggers put tags for both name reading orders (name<->surname),
 					var rvrs=splt.reverse().join(' ');
-					if (names[rvrs]) {										// thus creating duplicating tags
+					if (names.hasOwnProperty(rvrs)) {						// thus creating duplicating tags
 						nms.push(names[rvrs])								// try to find database entry for reversed order first,
 						return true;									
 					}
-					else if (ansi[rvrs])									// then check for duplicates		
+					else if (ansi.hasOwnProperty(rvrs))						// then check for duplicates		
 						return true;
 				}
 				ansi[v]=true;											
@@ -364,7 +364,7 @@ function selected(e){														//Hide the corresponding roman tag from resul
 		}
 	);
 	$.each(ansi,function(ix,vl){											 
-		if ((!unc[vl.textContent.trim()])&&(!$(vl).parent().attr('ignore')))
+		if ((!unc.hasOwnProperty(vl.textContent.trim()))&&(!$(vl).parent().attr('ignore')))
 			$(vl).parent().removeAttr('hidden');						 
 	});
 	checkMatch(e);
@@ -395,6 +395,8 @@ function submit(){															//Collects entered translations for missing tag
 			ignore.push(v.id);												//Mark hidden tags as ignored
 			return true;
 		};
+		if ($(v).parent().attr('hidden'))
+			return true;
 		tg=$(v).find('input.txt');
 		if (tg.length)
 			tg=tg[0].value.trim();											//found translation tag
