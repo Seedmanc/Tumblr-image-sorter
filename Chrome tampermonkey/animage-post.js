@@ -198,7 +198,7 @@ function mkUniq(arr){																//Sorts an array and ensures uniqueness of 
 	return arr2;
 };
 
-function mutex(){																	//Check readiness of libraries being loaded simultaneously
+function gate(){																	//Check readiness of libraries being loaded simultaneously
 	if (J&&T){		
 		J=T=false;													
 		main();																		//when everything is loaded, proceed further
@@ -214,7 +214,7 @@ function onDOMContentLoaded(){														//Load plugins
 		loadAndExecute('//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js', function(){ 
 			$.noConflict();															// but existing version might be older than required (1.5)
 			J=true;
-			mutex();																// force load the newer jQuery if that's the case
+			gate();																// force load the newer jQuery if that's the case
 		});			
 	}
 	else 
@@ -241,7 +241,7 @@ function loadTagsDB(nmspc){															//Main tag database, holds pairs "file
 			debug=(tagsDB.get(':debug:')=='true');									//Update initial debug value with the one saved in DB
 			tagsDB.config.debug=debug;			
 			T=true;
-			mutex();
+			gate();
 		},
 		onerror: function() {			
 			document.title="✗ tagsDB error";	

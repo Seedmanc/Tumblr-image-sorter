@@ -379,7 +379,7 @@ function onDOMcontentLoaded(){ 												//Load plugins and databases
 		onready: function(){
 			document.title+=(debug)?' NM ':'';
 			N=true;
-			mutex();
+			gate();
 		},
 		onerror: function() {
 			document.title+=' ✗ names failed to load';}
@@ -390,7 +390,7 @@ function onDOMcontentLoaded(){ 												//Load plugins and databases
 		swf_url: storeUrl,   
 		onready: function(){	
 			M=true;
-			mutex();
+			gate();
 		},
 		onerror: function() {
 			document.title+=' ✗ meta failed to load';}
@@ -417,7 +417,7 @@ function getTags(retry){													//Manages tags acquisition for current imag
 	DBrec=JSON.parse(tagsDB.get(getFileName(document.location.href)));			// first attempt at getting taglist for current filename is done upon the beginning of image load
 	if ((DBrec!=null) || (debug)) {											// if tags are found report readiness
 		T=true;																// or if we're in debug mode, proceed anyway
-		mutex();		
+		gate();		
 	} else 
 		if ((retry) || (document.readyState=='complete'))					//Otherwise if we ran out of attempts or it's too late 
 			return															// stop execution
@@ -427,7 +427,7 @@ function getTags(retry){													//Manages tags acquisition for current imag
 		};										
 };										//TODO: make getTags actually return  the value to main() to get rid of the global var
 
-function mutex(){															//Check readiness of plugins and databases when they're loading simultaneously 
+function gate(){															//Check readiness of plugins and databases when they're loading simultaneously 
 	if (N && M && T) {														// when everything is loaded, proceed further
 		N=M=T=false;
 		main();

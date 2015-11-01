@@ -361,3 +361,4 @@ function assignNaMeData(obj){
 //TODO hide scrollbar while leaving ability to scroll
 //TODO move to simple prefs? 
 //TODO option to disable clipboard copy?
+//TODO option to disable input checks

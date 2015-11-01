@@ -190,7 +190,7 @@ function mkUniq(arr){																//Sorts an array and ensures uniqueness of 
 	return arr2;
 };
 
-function mutex(){																//check readiness of libraries being loaded simultaneously
+function gate(){																//check readiness of libraries being loaded simultaneously
 	if (J&&T){		
 		J=T=false;																											
 		main();																	//when everything is loaded, proceed further
@@ -206,7 +206,7 @@ function onDOMContentLoaded(){													//load plugins
 		loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js", function(){
 			$.noConflict(); 													//only load jQuery if it is either absent or the existing version is below 1.5
 			J=true; 
-			mutex();
+			gate();
 		})
 	else 
 		J=true; 
@@ -220,7 +220,7 @@ function onDOMContentLoaded(){													//load plugins
 			tagsDB.config.debug=debug;
 			
 			T=true;
-			mutex();
+			gate();
 		},
 		onerror: function() {
 			throw new Error('tagsDB failed to load');

@@ -355,7 +355,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 	loadAndExecute("https://ajax.googleapis.com/ajax/libs/jquery/1.6.0/jquery.min.js",function(){
 		$('body')[0].appendChild(out);
 		J=true; 
-		mutex();
+		gate();
 		}
 	);
 	names = new SwfStore({												//auxiliary database for names that don't have folders
@@ -363,7 +363,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		swf_url: storeUrl,  
 		onready: function(){	
 			N=true;
-			mutex();
+			gate();
 		},
 		onerror: function() {
 			document.title+=' ✗ names failed to load';}
@@ -374,7 +374,7 @@ function onDOMcontentLoaded(){ 											//load plugins and databases
 		swf_url: storeUrl,   
 		onready: function(){	
 			M=true;
-			mutex();
+			gate();
 		},
 		onerror: function() {
 			document.title+=' ✗ meta failed to load';}
@@ -419,7 +419,7 @@ function getTags(retry){												//manages tags acquisition for current image
 	DBrec=JSON.parse(tagsDB.get(getFname(document.location.href)));		//first attempt at getting taglist for current filename is done upon the beginning of image load
 	if ((DBrec!=null) || (debug)) {										//if tags are found, all is fine, report readiness
 		T=true;															//or if we're in debug mode, proceed anyway
-		mutex();		
+		gate();		
 	} else 
 		if ((retry) || (document.readyState=='complete'))				//otherwise if we ran out of attempts or it's too late 
 			cleanup(false)												//remove extra stuff as if nothing happened
@@ -429,7 +429,7 @@ function getTags(retry){												//manages tags acquisition for current image
 		};										
 };											//TODO: make getTags actually return  the value to main() to get rid of global var
 
-function mutex(){														//checks readiness of plugin and databases when they're loading simultaneously 
+function gate(){														//checks readiness of plugin and databases when they're loading simultaneously 
 	if (J && N && M && T) {												//when everything is loaded, proceed further
 		main();
 		J=N=M=T=false;													//no multiple calling anymore for you
