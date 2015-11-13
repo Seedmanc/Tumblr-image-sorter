@@ -482,7 +482,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	
 	tags=$.map(tags,function(v,i){										//some formatting is applied to the taglist before processing
 		
-		sp=v.split(' ');	
+		sp=v.split(/\s+/);	
 		if (sp.length>1) 
 			$.each(tags, function(ii,vv){
 				if (ii==i) return true;
@@ -499,7 +499,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 		v=v.replace(/(ou$)|(ou )/gim,'o ').trim();						//eliminate variations in writing 'ō' as o/ou at the end of the name in favor of 'o'
 																		//I dunno if it should be done in the middle of the name as well
 																
-		if ((ignore[v])||(ignore[v.split(' ').reverse().join(' ')]))
+		if ((ignore[v])||(ignore[v.split(/\s+/).reverse().join(' ')]))
 			return null													//remove ignored tags so that they don't affect the tag amount
 		else return v;
 	});		
@@ -515,7 +515,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 			if (tags.length==1)											//if the tag is already in roman and has no folder it might be either name or meta
 				nms.push(v)												//if it's the only tag it is most likely the name
 			else {														//	otherwise put it into the "ansi" category that does not require translation
-				splt=v.split(' ');
+				splt=v.split(/\s+/);
 				if (splt.length==2)	{									//some bloggers put tags for both name reading orders (name<->surname),
 					rvrs=splt.reverse().join(' ');
 					if (names.get(rvrs)) {								// thus creating duplicating tags
@@ -536,7 +536,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	$.each(fldrs.concat(nms.concat(mt)), function(i,v){					//some bloggers put both kanji and translated names into tags
 		rx=new RegExp('/^'+String.fromCharCode(92)+ms+'/', '');			//potential problem?
 		x=getFname(v).toLowerCase().replace(rx,'');
-		y=x.split(' ').reverse().join(' ');								//check if we already have a name translated to avoid duplicates
+		y=x.split(/\s+/).reverse().join(' ');								//check if we already have a name translated to avoid duplicates
 		delete ansi[x];													//I have to again check for both orders even though I deleted one of them before
 		delete ansi[y];													// but at the time of deletion there was no way to know yet which one would match the kanji tag
 	});																	//this also gets rid of reverse duplicates between recognized tags and ansi
@@ -585,7 +585,7 @@ function analyzeTags() {   												//this is where the tag matching magic oc
 	} else											//TODO: option to disable unsorted category if translation is not required by user
 	 if ((fldrs.length==1)&&(nms.length==0)){							//otherwise if there's only one tag and it's a folder tag, assign the image right there
 		folder=fldrs[0]+'\\';
-		filename=filename.split(' ');
+		filename=filename.split(/\s+/);
 		filename.shift();												//remove the folder name from file name since the image goes into that folder anyway
 		filename=filename.join(' ').trim();
 		document.title+='✓ '; 											//100% match, yay
@@ -615,7 +615,7 @@ function buildTable(ansi, rest) {										//create table for untranslated tags 
 		cell1.id=i;
 		swp='<input type="button" value="swap" onclick="swap(this)" id="swap" />'
 		cell1.innerHTML=tagcell+i+'</a><br>'+swp+'</td></tr></table>'; 
-		if (i.split(' ').length!=2)										//for roman tags consisting of 2 words enable button for swapping their order
+		if (i.split(/\s+/).length!=2)										//for roman tags consisting of 2 words enable button for swapping their order
 			$(cell1).find('input#swap').attr('disabled','disabled');	//script can't know which name/surname order is correct so the choice is left to user
 		$(cell1).attr('class','cell ansi');
 		$(cell1).find('input[type="radio"]').attr('name',i);			
@@ -661,7 +661,7 @@ function swap(txt){														//swap roman tags consisting of 2 words
 			set.push(v);												//collect all options from drop-down lists containing the tag to be swapped
 		}
 	);
-	swapped=theTag.innerText.split(' ').reverse().join(' ');
+	swapped=theTag.innerText.split(/\s+/).reverse().join(' ');
 
 	theTag.innerText=swapped;
 	tdc=$(txt).parent().parent().parent().parent().parent();			//change ids of tag cells as well
@@ -758,7 +758,7 @@ function submit(){														//collects entered translations for missing tags
 		else {
 			tg=v.innerText.trim(); 										//found roman tag
 			if ($(v).prop('swap')) {
-				t=DBrec.t.replace(tg.split(' ').reverse().join(' '),tg);
+				t=DBrec.t.replace(tg.split(/\s+/).reverse().join(' '),tg);
 				DBrec.t=t;												//apply swap changes to the current taglist
 			};
 		}											//TODO: add checks for existing entries in another DB
